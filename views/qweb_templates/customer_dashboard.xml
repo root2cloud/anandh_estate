@@ -1,0 +1,521 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- MAIN PREMIUM DASHBOARD TEMPLATE -->
+    <template id="customer_dashboard_template" name="Premium Customer Dashboard">
+        <t t-call="website.layout">
+            <t t-set="no_footer" t-value="False"/>
+
+            <div class="customer-dash-wrap">
+                <div class="dash-content container py-5">
+
+                    <!-- Header -->
+                    <div class="dash-header mb-5">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                            <div>
+                                <h1 class="dash-title">Welcome back, <t t-esc="user.name"/>!</h1>
+                                <p class="dash-subtitle">Here is an overview of your property portfolio.</p>
+                            </div>
+                            <button type="button" class="gold-btn" id="addPropertyBtn" data-bs-toggle="modal" data-bs-target="#interestModal">
+                                <i class="fa fa-plus me-2"/> Add New Property
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ⭐ "Interested In" Chooser Modal -->
+                    <!-- Mirrors the "Interested In" field on Customer Registration:
+                         Buying / Renting / Investment / Selling. Selling keeps the
+                         existing "register a new property for sale" flow. The other
+                         three redirect to the property listing page so the customer
+                         can browse existing properties (excluding their own). -->
+                    <div class="modal fade interest-modal" id="interestModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content interest-modal-content">
+                                <div class="modal-header interest-modal-header">
+                                    <h5 class="modal-title">What are you interested in?</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"/>
+                                </div>
+                                <div class="modal-body">
+                                    <p class="interest-modal-subtitle">Choose an option to continue.</p>
+                                    <div class="interest-options">
+                                        <button type="button" class="interest-option" data-interest="buy">
+                                            <span class="interest-option-icon"><i class="fa fa-shopping-cart"/></span>
+                                            <span class="interest-option-label">Buying a Property</span>
+                                        </button>
+                                        <button type="button" class="interest-option" data-interest="rent">
+                                            <span class="interest-option-icon"><i class="fa fa-key"/></span>
+                                            <span class="interest-option-label">Renting a Property</span>
+                                        </button>
+                                        <button type="button" class="interest-option" data-interest="invest">
+                                            <span class="interest-option-icon"><i class="fa fa-line-chart"/></span>
+                                            <span class="interest-option-label">Investment</span>
+                                        </button>
+                                        <button type="button" class="interest-option" data-interest="sell">
+                                            <span class="interest-option-icon"><i class="fa fa-home"/></span>
+                                            <span class="interest-option-label">Selling a Property</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="row g-4 mb-5">
+                        <div class="col-md-3 col-sm-6">
+                            <div class="stat-card">
+                                <div class="stat-icon"><i class="fa fa-building"/></div>
+                                <div class="stat-details">
+                                    <h3><t t-esc="stats['total']"/></h3>
+                                    <p>Total Properties</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="stat-card">
+                                <div class="stat-icon text-success"><i class="fa fa-check-circle"/></div>
+                                <div class="stat-details">
+                                    <h3><t t-esc="stats['available']"/></h3>
+                                    <p>Available</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="stat-card">
+                                <div class="stat-icon text-danger"><i class="fa fa-tag"/></div>
+                                <div class="stat-details">
+                                    <h3><t t-esc="stats['sold']"/></h3>
+                                    <p>Sold Out</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <div class="stat-card">
+                                <div class="stat-icon text-info"><i class="fa fa-key"/></div>
+                                <div class="stat-details">
+                                    <h3><t t-esc="stats['rented']"/></h3>
+                                    <p>Rented</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Section -->
+                    <div class="row g-4 mb-5">
+                        <div class="col-lg-6">
+                            <div class="dash-card h-100">
+                                <h4 class="card-title"><i class="fa fa-pie-chart me-2"/> Properties by Category</h4>
+                                <div class="chart-container" style="position: relative; height: 300px; width: 100%;">
+                                    <canvas id="customerCategoryChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="dash-card h-100">
+                                <h4 class="card-title"><i class="fa fa-bar-chart me-2"/> Properties by City</h4>
+                                <div class="chart-container" style="position: relative; height: 300px; width: 100%;">
+                                    <canvas id="customerCityChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Properties Table -->
+                    <div class="dash-card">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4 class="card-title mb-0"><i class="fa fa-list me-2"/> My Recent Properties</h4>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="dash-table">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-3">Property</th>
+                                        <th>Location</th>
+                                        <th>Price</th>
+                                        <th>Status</th>
+                                        <th class="text-end pe-3">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-if="not recent_properties">
+                                        <tr>
+                                            <td colspan="5" class="text-center py-5 text-muted">
+                                                <i class="fa fa-folder-open-o fa-3x mb-3 d-block"/>
+                                                No properties found. Click "Add New Property" to get started.
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <t t-foreach="recent_properties" t-as="prop">
+                                        <tr>
+                                            <td class="ps-3">
+                                                <div class="d-flex align-items-center">
+                                                    <img t-if="prop.image" t-att-src="'data:image/png;base64,' + prop.image.decode('utf-8')" class="prop-img shadow-sm"/>
+                                                    <img t-else="" src="/web/static/img/placeholder.png" class="prop-img shadow-sm"/>
+                                                    <div>
+                                                        <span class="d-block fw-bold"><t t-esc="prop.name or 'Unnamed Property'"/></span>
+                                                        <small class="text-gold"><t t-esc="prop.category_id.name or 'General'"/></small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td><i class="fa fa-map-marker text-danger me-1"/> <t t-esc="prop.city or 'Unknown'"/></td>
+
+                                            <!-- FAILSAFE: If price is empty, default to 0 -->
+                                            <td class="text-gold fw-bold">₹ <t t-esc="'{:,.0f}'.format(prop.price or 0)"/></td>
+
+                                            <!-- FAILSAFE: If status is empty, handle gracefully -->
+                                            <td>
+                                                <span t-attf-class="status-badge status-{{prop.status or 'unknown'}}">
+                                                    <t t-esc="prop.status.upper() if prop.status else 'UNKNOWN'"/>
+                                                </span>
+                                            </td>
+
+                                            <td class="text-end pe-3">
+                                                <a t-att-href="'/property/' + str(prop.id)" class="action-link">View</a>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 💎 Premium Black & Gold CSS -->
+            <style>
+                :root {
+                    --bg-main: #070A0F;
+                    --bg-card: #0D111A;
+                    --text-main: #F8FAFC;
+                    --text-muted: rgba(248, 250, 252, 0.65);
+                    --gold: #D4AF37;
+                    --gold-hover: #B88B1E;
+                    --border-color: rgba(212, 175, 55, 0.15);
+                }
+
+                .customer-dash-wrap {
+                    background-color: var(--bg-main);
+                    min-height: 100vh;
+                    color: var(--text-main);
+                    font-family: "Poppins", "Inter", sans-serif;
+                }
+
+                .dash-title {
+                    font-size: 2.2rem;
+                    font-weight: 800;
+                    margin-bottom: 0.5rem;
+                }
+
+                .dash-subtitle {
+                    color: var(--text-muted);
+                    font-size: 1.1rem;
+                    margin-bottom: 0;
+                }
+
+                .gold-btn {
+                    display: inline-flex;
+                    align-items: center;
+                    background: var(--gold);
+                    color: #070A0F;
+                    padding: 0.8rem 1.8rem;
+                    border-radius: 50px;
+                    font-weight: 800;
+                    text-decoration: none;
+                    transition: all 0.3s ease;
+                    box-shadow: 0 10px 20px rgba(212,175,55,0.2);
+                }
+
+                .gold-btn:hover {
+                    background: var(--gold-hover);
+                    color: #070A0F;
+                    transform: translateY(-2px);
+                    box-shadow: 0 15px 25px rgba(212,175,55,0.3);
+                }
+
+                .stat-card {
+                    background: var(--bg-card);
+                    border: 1px solid var(--border-color);
+                    border-radius: 16px;
+                    padding: 1.5rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 1.5rem;
+                    transition: all 0.3s ease;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                }
+
+                .stat-card:hover {
+                    transform: translateY(-5px);
+                    border-color: var(--gold);
+                    box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+                }
+
+                .stat-icon {
+                    width: 60px;
+                    height: 60px;
+                    background: rgba(212, 175, 55, 0.08);
+                    color: var(--gold);
+                    border-radius: 14px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1.8rem;
+                }
+
+                .stat-icon.text-success { color: #2ecc71; background: rgba(46, 204, 113, 0.1); }
+                .stat-icon.text-danger { color: #e74c3c; background: rgba(231, 76, 60, 0.1); }
+                .stat-icon.text-info { color: #3498db; background: rgba(52, 152, 219, 0.1); }
+
+                .stat-details h3 {
+                    font-size: 1.8rem;
+                    font-weight: 800;
+                    margin: 0;
+                }
+
+                .stat-details p {
+                    color: var(--text-muted);
+                    margin: 0;
+                    font-size: 0.85rem;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                }
+
+                .dash-card {
+                    background: var(--bg-card);
+                    border: 1px solid var(--border-color);
+                    border-radius: 16px;
+                    padding: 1.5rem;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                }
+
+                .card-title {
+                    font-size: 1.2rem;
+                    font-weight: 700;
+                    color: var(--gold);
+                    margin-bottom: 1.5rem;
+                }
+
+                .dash-table {
+                    width: 100%;
+                    color: var(--text-main);
+                    border-collapse: separate;
+                    border-spacing: 0;
+                }
+
+                .dash-table th {
+                    color: var(--text-muted);
+                    padding: 1rem 0;
+                    border-bottom: 1px solid rgba(255,255,255,0.05);
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    font-size: 0.85rem;
+                    letter-spacing: 0.5px;
+                }
+
+                .dash-table td {
+                    padding: 1.2rem 0;
+                    border-bottom: 1px solid rgba(255,255,255,0.05);
+                    vertical-align: middle;
+                }
+
+                .prop-img {
+                    width: 50px;
+                    height: 50px;
+                    border-radius: 10px;
+                    object-fit: cover;
+                    margin-right: 15px;
+                }
+
+                .text-gold { color: var(--gold); }
+
+                .status-badge {
+                    padding: 0.4rem 0.8rem;
+                    border-radius: 20px;
+                    font-size: 0.75rem;
+                    font-weight: 700;
+                    letter-spacing: 0.5px;
+                }
+                .status-available { background: rgba(212, 175, 55, 0.2); color: var(--gold); }
+                .status-sold { background: rgba(220, 38, 38, 0.2); color: #ef4444; }
+                .status-rented { background: rgba(52, 152, 219, 0.2); color: #3498db; }
+                .status-unknown { background: rgba(255, 255, 255, 0.1); color: #fff; }
+
+                .action-link {
+                    display: inline-block;
+                    color: var(--text-main);
+                    text-decoration: none;
+                    border: 1px solid var(--border-color);
+                    padding: 0.5rem 1.2rem;
+                    border-radius: 8px;
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    transition: all 0.3s ease;
+                }
+
+                .action-link:hover {
+                    background: var(--gold);
+                    color: #000;
+                    border-color: var(--gold);
+                }
+
+                /* ⭐ "Interested In" Chooser Modal */
+                .interest-modal-content {
+                    background: var(--bg-card);
+                    color: var(--text-main);
+                    border: 1px solid var(--border-color);
+                    border-radius: 16px;
+                }
+
+                .interest-modal-header {
+                    border-bottom: 1px solid var(--border-color);
+                }
+
+                .interest-modal-header .modal-title {
+                    font-weight: 800;
+                }
+
+                .interest-modal-subtitle {
+                    color: var(--text-muted);
+                    margin-bottom: 1.25rem;
+                }
+
+                .interest-options {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 1rem;
+                }
+
+                .interest-option {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 0.6rem;
+                    background: var(--bg-main);
+                    border: 1px solid var(--border-color);
+                    border-radius: 14px;
+                    padding: 1.4rem 1rem;
+                    color: var(--text-main);
+                    cursor: pointer;
+                    transition: all 0.25s ease;
+                }
+
+                .interest-option:hover {
+                    border-color: var(--gold);
+                    transform: translateY(-3px);
+                    box-shadow: 0 10px 20px rgba(212,175,55,0.15);
+                }
+
+                .interest-option-icon {
+                    width: 46px;
+                    height: 46px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: rgba(212,175,55,0.12);
+                    color: var(--gold);
+                    font-size: 1.2rem;
+                }
+
+                .interest-option-label {
+                    font-weight: 700;
+                    font-size: 0.95rem;
+                    text-align: center;
+                }
+
+                @media (max-width: 480px) {
+                    .interest-options {
+                        grid-template-columns: 1fr;
+                    }
+                }
+            </style>
+
+            <!-- 1. Safely define QWeb JSON Data outside of CDATA -->
+            <script type="text/javascript">
+                var dashboardChartData = <t t-out="chart_data_json"/>;
+            </script>
+
+            <!-- 2. Wrap heavy JS logic in CDATA to prevent XML parser crash -->
+            <script type="text/javascript">
+            <![CDATA[
+                document.addEventListener('DOMContentLoaded', function() {
+                    // ⭐ "Interested In" chooser -> route to the right page.
+                    // "sell" keeps the existing property registration flow.
+                    // "buy" / "rent" / "invest" go browse existing listings,
+                    // excluding the customer's own properties.
+                    var interestButtons = document.querySelectorAll('.interest-option');
+                    interestButtons.forEach(function(btn) {
+                        btn.addEventListener('click', function() {
+                            var choice = btn.getAttribute('data-interest');
+                            if (choice === 'sell') {
+                                window.location.href = '/property/register';
+                            } else {
+                                window.location.href = '/properties?exclude_own=1&interested_in=' + encodeURIComponent(choice);
+                            }
+                        });
+                    });
+
+                    if (typeof Chart === 'undefined') {
+                        var script = document.createElement('script');
+                        script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+                        script.onload = renderCharts;
+                        document.head.appendChild(script);
+                    } else {
+                        renderCharts();
+                    }
+
+                    function renderCharts() {
+                        Chart.defaults.color = 'rgba(248, 250, 252, 0.65)';
+
+                        var ctxCat = document.getElementById('customerCategoryChart');
+                        if (ctxCat && dashboardChartData && dashboardChartData.categories.labels.length > 0) {
+                            new Chart(ctxCat, {
+                                type: 'doughnut',
+                                data: {
+                                    labels: dashboardChartData.categories.labels,
+                                    datasets: [{
+                                        data: dashboardChartData.categories.data,
+                                        backgroundColor: ['#D4AF37', '#2ecc71', '#e74c3c', '#3498db', '#9b59b6'],
+                                        borderWidth: 0
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: { legend: { position: 'bottom' } },
+                                    cutout: '75%'
+                                }
+                            });
+                        }
+
+                        var ctxCity = document.getElementById('customerCityChart');
+                        if (ctxCity && dashboardChartData && dashboardChartData.cities.labels.length > 0) {
+                            new Chart(ctxCity, {
+                                type: 'bar',
+                                data: {
+                                    labels: dashboardChartData.cities.labels,
+                                    datasets: [{
+                                        label: 'Properties',
+                                        data: dashboardChartData.cities.data,
+                                        backgroundColor: '#D4AF37',
+                                        borderRadius: 6
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: { legend: { display: false } },
+                                    scales: {
+                                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+                                        x: { grid: { display: false } }
+                                    }
+                                }
+                            });
+                        }
+                    }
+                });
+            ]]>
+            </script>
+        </t>
+    </template>
+</odoo>

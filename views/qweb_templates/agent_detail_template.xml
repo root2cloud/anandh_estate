@@ -1,0 +1,397 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="agent_detail_template" name="Agent Detail Profile">
+        <t t-call="website.layout">
+
+            <!-- Load Custom CSS -->
+            <t t-set="head">
+                <link rel="stylesheet" href="/real_estate_management/static/src/css/agent_detail.css"/>
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+                <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&amp;family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+
+                <!-- SEO Meta Tags -->
+                <meta name="description" t-attf-content="Contact #{agent.name}, experienced real estate agent in #{agent.city}. View properties, ratings, and get in touch today."/>
+                <meta property="og:title" t-attf-content="#{agent.name} - Real Estate Agent"/>
+                <meta property="og:description" t-attf-content="#{agent.short_bio or 'Professional real estate agent'}"/>
+            </t>
+
+            <div id="wrap" class="agent-detail-wrap">
+
+                <!-- Agent Profile Header -->
+                <section class="agent-profile-header">
+                    <div class="header-overlay"></div>
+                    <div class="container">
+                        <div class="profile-content">
+
+                            <!-- Agent Image Column -->
+                            <div class="profile-image-col">
+                                <div class="profile-image-wrapper">
+                                    <t t-if="agent.image">
+                                        <img t-att-src="'data:image/png;base64,' + agent.image.decode('utf-8')"
+                                             class="profile-image"
+                                             t-att-alt="agent.name"/>
+                                    </t>
+                                    <t t-else="">
+                                        <div class="profile-image-placeholder">
+                                            <span t-esc="agent.name[:1]"/>
+                                        </div>
+                                    </t>
+
+                                    <!-- Status Badge -->
+                                    <t t-if="agent.is_accepting_clients">
+                                        <div class="status-badge status-active">
+                                            <i class="fas fa-check-circle"></i>
+                                            Accepting Clients
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+
+                            <!-- Agent Info Column -->
+                            <div class="profile-info-col">
+                                <div class="profile-header-content">
+
+                                    <!-- Name and Title -->
+                                    <h1 class="agent-title">
+                                        <t t-esc="agent.name"/>
+                                        <t t-if="agent.expertise_level == 'luxury'">
+                                            <span class="luxury-badge-inline">
+                                                <i class="fas fa-crown"></i>
+                                                LUXURY EXPERT
+                                            </span>
+                                        </t>
+                                    </h1>
+
+                                    <h2 class="agent-designation">
+                                        <i class="fas fa-briefcase"></i>
+                                        <t t-esc="dict(agent._fields['designation'].selection).get(agent.designation)"/>
+                                    </h2>
+
+                                    <p class="agent-location-header">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        <t t-esc="agent.city"/>, <t t-esc="agent.state_id.name"/>
+                                    </p>
+
+                                    <!-- Short Bio -->
+                                    <p class="agent-bio-short" t-if="agent.short_bio">
+                                        <t t-esc="agent.short_bio"/>
+                                    </p>
+
+                                    <!-- Performance Stats -->
+                                    <div class="performance-stats">
+                                        <div class="stat-item stat-sales">
+                                            <div class="stat-icon">
+                                                <i class="fas fa-rupee-sign"></i>
+                                            </div>
+                                            <div class="stat-content">
+                                                <div class="stat-value">
+                                                    ₹<t t-esc="'%.1f' % (agent.total_sales_volume / 10000000)"/>M
+                                                </div>
+                                                <div class="stat-label">Sales Volume</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="stat-item stat-deals">
+                                            <div class="stat-icon">
+                                                <i class="fas fa-handshake"></i>
+                                            </div>
+                                            <div class="stat-content">
+                                                <div class="stat-value" t-esc="agent.total_deals"/>
+                                                <div class="stat-label">Total Deals</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="stat-item stat-rating">
+                                            <div class="stat-icon">
+                                                <i class="fas fa-star"></i>
+                                            </div>
+                                            <div class="stat-content">
+                                                <div class="stat-value">
+                                                    <t t-esc="'%.1f' % agent.avg_rating"/>
+                                                    <span class="rating-stars">★★★★★</span>
+                                                </div>
+                                                <div class="stat-label">Average Rating</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="stat-item stat-listings">
+                                            <div class="stat-icon">
+                                                <i class="fas fa-home"></i>
+                                            </div>
+                                            <div class="stat-content">
+                                                <div class="stat-value" t-esc="agent.active_property_count"/>
+                                                <div class="stat-label">Active Listings</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Contact Actions Column -->
+                            <div class="profile-actions-col">
+                                <div class="contact-card">
+                                    <h3 class="contact-title">
+                                        <i class="fas fa-phone-alt"></i>
+                                        Get In Touch
+                                    </h3>
+
+                                    <a t-attf-href="tel:#{agent.phone}" class="btn-contact btn-phone">
+                                        <i class="fas fa-phone"></i>
+                                        <span t-esc="agent.phone"/>
+                                    </a>
+
+                                    <a t-attf-href="mailto:#{agent.email}" class="btn-contact btn-email">
+                                        <i class="fas fa-envelope"></i>
+                                        <span>Send Email</span>
+                                    </a>
+
+                                    <t t-if="agent.whatsapp">
+                                        <a t-attf-href="https://wa.me/#{agent.whatsapp.replace(' ', '').replace('-', '')}"
+                                           class="btn-contact btn-whatsapp"
+                                           target="_blank">
+                                            <i class="fab fa-whatsapp"></i>
+                                            <span>WhatsApp</span>
+                                        </a>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Main Content Section -->
+                <section class="agent-main-content">
+                    <div class="container">
+                        <div class="content-grid">
+
+                            <!-- Left Column: Biography & Listings -->
+                            <div class="content-main">
+
+                                <!-- About Section -->
+                                <div class="content-section about-section">
+                                    <h2 class="section-heading">
+                                        <i class="fas fa-user-circle"></i>
+                                        About <t t-esc="agent.name"/>
+                                    </h2>
+
+                                    <div class="about-content">
+                                        <t t-if="agent.detailed_bio">
+                                            <div t-raw="agent.detailed_bio"/>
+                                        </t>
+                                        <t t-else="">
+                                            <p t-esc="agent.short_bio or 'Experienced real estate professional dedicated to helping clients find their perfect property.'"/>
+                                        </t>
+                                    </div>
+
+                                    <!-- Specializations -->
+                                    <t t-if="agent.specializations">
+                                        <div class="specializations-wrapper">
+                                            <h4 class="subsection-title">
+                                                <i class="fas fa-star"></i>
+                                                Specializations
+                                            </h4>
+                                            <div class="specialization-tags">
+                                                <t t-foreach="agent.specializations" t-as="spec">
+                                                    <span class="spec-tag">
+                                                        <i class="fas fa-check"></i>
+                                                        <t t-esc="spec.name"/>
+                                                    </span>
+                                                </t>
+                                            </div>
+                                        </div>
+                                    </t>
+                                </div>
+
+                                <!-- Current Listings -->
+                                <div class="content-section listings-section">
+                                    <h2 class="section-heading">
+                                        <i class="fas fa-building"></i>
+                                        Current Listings
+                                        <span class="listing-count">(<t t-esc="len(properties)"/>)</span>
+                                    </h2>
+
+                                    <t t-if="properties">
+                                        <div class="properties-grid">
+                                            <t t-foreach="properties" t-as="prop">
+                                                <div class="property-card">
+                                                    <div class="property-image-wrapper">
+                                                        <t t-if="prop['image_url']">
+                                                            <img t-att-src="prop['image_url']"
+                                                                 class="property-image"
+                                                                 t-att-alt="prop['name']"/>
+                                                        </t>
+                                                        <t t-else="">
+                                                            <div class="property-image-placeholder">
+                                                                <i class="fas fa-home"></i>
+                                                            </div>
+                                                        </t>
+
+                                                        <div class="property-category-badge">
+                                                            <t t-esc="prop['category']"/>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="property-details">
+                                                        <h3 class="property-title">
+                                                            <a t-attf-href="/property/#{prop['id']}">
+                                                                <t t-esc="prop['name']"/>
+                                                            </a>
+                                                        </h3>
+
+                                                        <p class="property-location">
+                                                            <i class="fas fa-map-marker-alt"></i>
+                                                            <t t-esc="prop['city']"/>
+                                                        </p>
+
+                                                        <div class="property-meta">
+                                                            <div class="property-price">
+                                                                ₹<t t-esc="'{:,.0f}'.format(prop['price'])"/>
+                                                            </div>
+                                                            <div class="property-area">
+                                                                <i class="fas fa-ruler-combined"></i>
+                                                                <t t-esc="'{:,.0f}'.format(prop['plot_area'])"/> sq.ft
+                                                            </div>
+                                                        </div>
+
+                                                        <a t-attf-href="/property/#{prop['id']}" class="btn-view-property">
+                                                            <span>View Details</span>
+                                                            <i class="fas fa-arrow-right"></i>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                        </div>
+                                    </t>
+                                    <t t-else="">
+                                        <div class="no-listings">
+                                            <i class="fas fa-home"></i>
+                                            <p>No active listings at the moment</p>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+
+                            <!-- Right Sidebar: Contact & Details -->
+                            <div class="content-sidebar">
+
+                                <!-- Contact Info Card -->
+                                <div class="sidebar-card contact-info-card">
+                                    <h3 class="sidebar-card-title">
+                                        <i class="fas fa-address-card"></i>
+                                        Contact Information
+                                    </h3>
+
+                                    <div class="info-list">
+                                        <div class="info-item">
+                                            <div class="info-icon">
+                                                <i class="fas fa-envelope"></i>
+                                            </div>
+                                            <div class="info-content">
+                                                <div class="info-label">Email</div>
+                                                <a t-attf-href="mailto:#{agent.email}" class="info-value">
+                                                    <t t-esc="agent.email"/>
+                                                </a>
+                                            </div>
+                                        </div>
+
+                                        <div class="info-item">
+                                            <div class="info-icon">
+                                                <i class="fas fa-phone"></i>
+                                            </div>
+                                            <div class="info-content">
+                                                <div class="info-label">Phone</div>
+                                                <a t-attf-href="tel:#{agent.phone}" class="info-value">
+                                                    <t t-esc="agent.phone"/>
+                                                </a>
+                                            </div>
+                                        </div>
+
+                                        <t t-if="agent.license_number">
+                                            <div class="info-item">
+                                                <div class="info-icon">
+                                                    <i class="fas fa-id-card"></i>
+                                                </div>
+                                                <div class="info-content">
+                                                    <div class="info-label">License</div>
+                                                    <div class="info-value" t-esc="agent.license_number"/>
+                                                </div>
+                                            </div>
+                                        </t>
+
+                                        <t t-if="agent.experience_years">
+                                            <div class="info-item">
+                                                <div class="info-icon">
+                                                    <i class="fas fa-calendar-alt"></i>
+                                                </div>
+                                                <div class="info-content">
+                                                    <div class="info-label">Experience</div>
+                                                    <div class="info-value">
+                                                        <t t-esc="agent.experience_years"/> years
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </t>
+
+                                        <t t-if="agent.languages_spoken">
+                                            <div class="info-item">
+                                                <div class="info-icon">
+                                                    <i class="fas fa-language"></i>
+                                                </div>
+                                                <div class="info-content">
+                                                    <div class="info-label">Languages</div>
+                                                    <div class="info-value" t-esc="agent.languages_spoken"/>
+                                                </div>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </div>
+
+                                <!-- Social Links Card -->
+                                <t t-if="agent.linkedin_url or agent.facebook_url">
+                                    <div class="sidebar-card social-links-card">
+                                        <h3 class="sidebar-card-title">
+                                            <i class="fas fa-share-alt"></i>
+                                            Connect on Social Media
+                                        </h3>
+
+                                        <div class="social-links">
+                                            <t t-if="agent.linkedin_url">
+                                                <a t-att-href="agent.linkedin_url"
+                                                   class="social-link social-linkedin"
+                                                   target="_blank">
+                                                    <i class="fab fa-linkedin-in"></i>
+                                                    <span>LinkedIn</span>
+                                                </a>
+                                            </t>
+
+                                            <t t-if="agent.facebook_url">
+                                                <a t-att-href="agent.facebook_url"
+                                                   class="social-link social-facebook"
+                                                   target="_blank">
+                                                    <i class="fab fa-facebook-f"></i>
+                                                    <span>Facebook</span>
+                                                </a>
+                                            </t>
+                                        </div>
+                                    </div>
+                                </t>
+
+                                <!-- Awards Card -->
+                                <t t-if="agent.awards">
+                                    <div class="sidebar-card awards-card">
+                                        <h3 class="sidebar-card-title">
+                                            <i class="fas fa-trophy"></i>
+                                            Awards &amp; Recognition
+                                        </h3>
+                                        <div class="awards-content" t-esc="agent.awards"/>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </t>
+    </template>
+</odoo>

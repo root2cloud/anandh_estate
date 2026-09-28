@@ -1,0 +1,428 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- =========================================================
+         CUSTOMER REGISTRATION FORM (Premium)
+    ========================================================== -->
+    <template id="customer_registration_form" name="Customer Registration Form - Premium">
+        <t t-call="website.layout">
+            <div class="re-cust-wrap">
+
+                <section class="re-cust-hero">
+                    <div class="re-cust-hero-bg"></div>
+                    <div class="container position-relative">
+                        <div class="row justify-content-center">
+                            <div class="col-lg-9 text-center">
+                                <div class="re-cust-hero-badge mb-3">
+                                    <span class="re-cust-dot"></span>
+                                    <span>Customer Account • Free Registration</span>
+                                </div>
+                                <h1 class="re-cust-hero-title mb-2">Create Your Customer Account</h1>
+                                <p class="re-cust-hero-subtitle mb-0">
+                                    Register as a customer to save your favorite properties, track enquiries,
+                                    and access your personal dashboard once approved by our team.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <main class="re-cust-main">
+                    <div class="container">
+                        <div class="row justify-content-center">
+                            <div class="col-lg-8 col-xl-7">
+                                <div class="re-cust-card">
+                                    <!-- Added enctype="multipart/form-data" for image uploading -->
+                                    <form action="/customer/register/submit" method="POST" class="re-cust-form" enctype="multipart/form-data">
+                                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+
+                                        <div class="re-cust-section-title">Personal Details</div>
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label class="re-cust-label">Full Name *</label>
+                                                <input type="text" name="customer_name" class="re-cust-input" required="required" placeholder="John Doe"/>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="re-cust-label">Email Address *</label>
+                                                <input type="email" name="email" class="re-cust-input" required="required" placeholder="john@example.com"/>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="re-cust-label">Phone Number *</label>
+                                                <input type="tel" name="phone" class="re-cust-input" required="required" placeholder="+91 98765 43210"/>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="re-cust-label">Interested In</label>
+                                                <select name="interested_in" id="re_interested_in" class="re-cust-input">
+                                                    <option value="buy">Buying a Property</option>
+                                                    <option value="rent">Renting a Property</option>
+                                                    <option value="sell">Selling a Property</option>
+                                                    <option value="invest">Investment</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- =========================================================
+                                             PROPERTY SELECTION (Dynamic - Visible on Buy/Rent/Invest)
+                                        ========================================================== -->
+                                        <div id="re_buying_property_box" style="display: none;">
+                                            <div class="re-cust-section-title mt-4">Property Selection</div>
+                                            <div class="row g-3">
+                                                <div class="col-md-12">
+                                                    <label class="re-cust-label">Select Property of Interest</label>
+                                                    <select name="property_id" class="re-cust-input">
+                                                        <option value="">-- Select a Property --</option>
+                                                        <!-- Replace 'property.property' below if your model name is different -->
+                                                        <t t-foreach="request.env['property.property'].sudo().search([])" t-as="prop">
+                                                            <option t-att-value="prop.id" t-esc="prop.name"/>
+                                                        </t>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- =========================================================
+                                             PROPERTY DETAILS (Dynamic - Visible only on "Selling")
+                                        ========================================================== -->
+                                        <div id="re_selling_property_box" style="display: none;">
+                                            <div class="re-cust-section-title mt-4">Property Details (For Sale)</div>
+                                            <div class="row g-3">
+                                                <div class="col-md-12">
+                                                    <label class="re-cust-label">Property Title / Type</label>
+                                                    <input type="text" name="property_title" class="re-cust-input" placeholder="e.g., Luxury 3 BHK Villa in Gachibowli"/>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="re-cust-label">Property Category *</label>
+                                                    <select name="property_category" class="re-cust-input">
+                                                        <option value="residential">Residential</option>
+                                                        <option value="commercial">Commercial</option>
+                                                        <option value="agricultural">Agricultural</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="re-cust-label">Expected Price (₹)</label>
+                                                    <input type="number" name="property_price" class="re-cust-input" placeholder="e.g., 7500000"/>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="re-cust-label">Area (sq. ft.)</label>
+                                                    <input type="number" name="plot_area" class="re-cust-input" placeholder="e.g., 2200"/>
+                                                </div>
+                                                <div class="col-md-12">
+                                                    <label class="re-cust-label">Property Description</label>
+                                                    <textarea name="property_description" class="re-cust-input" rows="3" placeholder="Provide key highlights, furnishing details, and amenities..."></textarea>
+                                                </div>
+                                                <div class="col-md-12">
+                                                    <label class="re-cust-label">Upload Property Images</label>
+                                                    <input type="file" name="property_images" id="re_property_images" class="re-cust-input" accept="image/*" multiple="multiple"/>
+                                                    <small class="text-muted" style="font-size: 0.8rem; display:block; margin-top: 4px;">
+                                                        You can select multiple photos (JPEG, PNG).
+                                                    </small>
+                                                </div>
+
+                                                <!-- Property Location Specifics -->
+                                                <div class="col-md-12 mt-4 mb-1">
+                                                    <div style="font-size: 0.95rem; font-weight: 700; color: #0b1b33; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">
+                                                        Property Location Details
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-12">
+                                                    <label class="re-cust-label">Property Address</label>
+                                                    <input type="text" name="property_address" class="re-cust-input" placeholder="Property street address"/>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="re-cust-label">City</label>
+                                                    <input type="text" name="property_city" class="re-cust-input" placeholder="City"/>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="re-cust-label">State</label>
+                                                    <select name="property_state_id" class="re-cust-input">
+                                                        <option value="">Select State</option>
+                                                        <t t-foreach="states" t-as="state">
+                                                            <option t-att-value="state.id" t-esc="state.name"/>
+                                                        </t>
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="re-cust-label">ZIP Code</label>
+                                                    <input type="text" name="property_zip_code" class="re-cust-input" placeholder="e.g., 500001"/>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="re-cust-section-title mt-4">Personal Location</div>
+                                        <div class="row g-3">
+                                            <div class="col-md-12">
+                                                <label class="re-cust-label">Address</label>
+                                                <input type="text" name="address" class="re-cust-input" placeholder="Street address"/>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="re-cust-label">City</label>
+                                                <input type="text" name="city" class="re-cust-input" placeholder="City"/>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="re-cust-label">State</label>
+                                                <select name="state_id" class="re-cust-input">
+                                                    <option value="">Select State</option>
+                                                    <t t-foreach="states" t-as="state">
+                                                        <option t-att-value="state.id" t-esc="state.name"/>
+                                                    </t>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="re-cust-label">ZIP Code</label>
+                                                <input type="text" name="zip_code" class="re-cust-input" placeholder="500001"/>
+                                            </div>
+                                        </div>
+
+                                        <div class="re-cust-section-title mt-4">Additional Notes</div>
+                                        <div class="row g-3">
+                                            <div class="col-md-12">
+                                                <textarea name="notes" class="re-cust-input" rows="3" placeholder="Tell us what you're looking for..."></textarea>
+                                            </div>
+                                        </div>
+
+                                        <div class="re-cust-note mt-4">
+                                            <i class="fa fa-info-circle"></i>
+                                            Your registration will be reviewed by our team. Once approved, you will
+                                            receive portal login access at the email address provided above.
+                                        </div>
+
+                                        <button type="submit" class="re-cust-submit mt-4">
+                                            <i class="fa fa-user-plus"></i> Submit Registration
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+
+            <!-- Client-side Toggle Script -->
+            <script type="text/javascript">
+                document.addEventListener('DOMContentLoaded', function () {
+                    var interestedSelect = document.getElementById('re_interested_in');
+                    var sellingSection = document.getElementById('re_selling_property_box');
+                    var buyingSection = document.getElementById('re_buying_property_box');
+
+                    function toggleFields() {
+                        if (!interestedSelect) return;
+                        var val = interestedSelect.value;
+
+                        // Toggle Selling section
+                        if (sellingSection) {
+                            sellingSection.style.display = (val === 'sell') ? 'block' : 'none';
+                        }
+
+                        // Toggle Buying/Renting/Investing section
+                        if (buyingSection) {
+                            buyingSection.style.display = (val === 'buy' || val === 'rent' || val === 'invest') ? 'block' : 'none';
+                        }
+                    }
+
+                    if (interestedSelect) {
+                        toggleFields();
+                        interestedSelect.addEventListener('change', toggleFields);
+                    }
+
+                    // ⭐ FIX: prevent duplicate registrations if "Submit
+                    // Registration" is clicked more than once while the
+                    // form (which uploads files) is still processing.
+                    var custForm = document.querySelector('.re-cust-form');
+                    var custSubmitBtn = custForm ? custForm.querySelector('.re-cust-submit') : null;
+                    var custFormSubmitted = false;
+                    if (custForm) {
+                        custForm.addEventListener('submit', function (e) {
+                            if (custFormSubmitted) {
+                                e.preventDefault();
+                                return false;
+                            }
+                            custFormSubmitted = true;
+                            if (custSubmitBtn) {
+                                custSubmitBtn.disabled = true;
+                                custSubmitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Submitting...';
+                            }
+                        });
+                    }
+                });
+            </script>
+
+            <style type="text/css">
+                .re-cust-wrap{ background: #f6f5f1; }
+                .re-cust-hero{
+                    position: relative;
+                    padding: 64px 14px 90px;
+                    background:
+                        radial-gradient(circle at 20% 12%, rgba(199,162,74,0.22), transparent 55%),
+                        radial-gradient(circle at 85% 25%, rgba(11,27,51,0.14), transparent 55%),
+                        linear-gradient(135deg, #0b1b33, #102645);
+                    color: #fff;
+                }
+                .re-cust-hero-badge{
+                    display:inline-flex; align-items:center; gap:8px;
+                    background: rgba(199,162,74,0.14);
+                    border: 1px solid rgba(199,162,74,0.35);
+                    color: #f0d998;
+                    padding: 7px 16px;
+                    border-radius: 999px;
+                    font-weight: 700;
+                    font-size: 0.82rem;
+                    letter-spacing: 0.3px;
+                }
+                .re-cust-dot{ width:7px; height:7px; border-radius:50%; background:#c7a24a; display:inline-block; }
+                .re-cust-hero-title{
+                    font-family: Georgia, 'Times New Roman', serif;
+                    font-weight: 800;
+                    font-size: 2.5rem;
+                }
+                .re-cust-hero-subtitle{ color: rgba(255,255,255,0.75); font-weight: 500; max-width: 620px; margin: 0 auto; }
+
+                .re-cust-main{ margin-top: 0; padding-top: 40px; padding-bottom: 70px; }
+                .re-cust-card{
+                    background: #fff;
+                    border-radius: 22px;
+                    padding: 34px 28px;
+                    box-shadow: 0 30px 90px rgba(11,27,51,0.16);
+                    border: 1px solid rgba(11,27,51,0.06);
+                }
+                .re-cust-section-title{
+                    font-weight: 800;
+                    color: #0b1b33;
+                    font-size: 1.02rem;
+                    border-left: 4px solid #c7a24a;
+                    padding-left: 10px;
+                    margin-bottom: 6px;
+                }
+                .re-cust-label{ font-weight: 650; color: #33415a; font-size: 0.88rem; margin-bottom: 4px; display:block; }
+                .re-cust-input{
+                    width: 100%;
+                    border: 1px solid #dbe0e8;
+                    border-radius: 10px;
+                    padding: 10px 12px;
+                    font-size: 0.94rem;
+                    color: #0b1b33;
+                    background: #fbfbfa;
+                }
+                .re-cust-input:focus{ outline: none; border-color: #c7a24a; box-shadow: 0 0 0 3px rgba(199,162,74,0.15); }
+                .re-cust-note{
+                    background: rgba(199,162,74,0.10);
+                    border: 1px solid rgba(199,162,74,0.28);
+                    border-radius: 12px;
+                    padding: 12px 14px;
+                    font-size: 0.86rem;
+                    color: #6b551f;
+                }
+                .re-cust-submit{
+                    width: 100%;
+                    border: none;
+                    border-radius: 12px;
+                    padding: 14px;
+                    font-weight: 800;
+                    font-size: 1rem;
+                    color: #0b1b33;
+                    background: linear-gradient(90deg, #c7a24a, #a9842d);
+                    transition: transform 0.2s ease;
+                }
+                .re-cust-submit:hover{ transform: translateY(-2px); }
+            </style>
+        </t>
+    </template>
+
+    <!-- =========================================================
+         SUCCESS TEMPLATE
+    ========================================================== -->
+    <template id="customer_submission_success" name="Customer Registration Success">
+        <t t-call="website.layout">
+            <div class="re-cust-success-wrap">
+                <div class="container">
+                    <div class="row justify-content-center">
+                        <div class="col-lg-6 col-md-8">
+                            <div class="re-cust-success-card">
+                                <div class="re-cust-success-icon"><i class="fa fa-check"></i></div>
+                                <h1 class="re-cust-success-title">Registration Submitted!</h1>
+                                <p class="re-cust-success-msg">Thank you for registering with us.</p>
+                                <p class="re-cust-success-msg">
+                                    Our team will review your details and, once approved, you will receive
+                                    portal login access with credentials sent to your registered email.
+                                </p>
+                                <a href="/" class="re-cust-success-btn"><i class="fa fa-home"></i> Back to Home</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <style type="text/css">
+                .re-cust-success-wrap{
+                    min-height:100vh; display:flex; align-items:center; padding: 70px 14px;
+                    background:
+                        radial-gradient(circle at 20% 12%, rgba(199,162,74,0.22), transparent 55%),
+                        radial-gradient(circle at 85% 25%, rgba(11,27,51,0.14), transparent 55%),
+                        linear-gradient(135deg, #0b1b33, #102645);
+                }
+                .re-cust-success-card{
+                    background: rgba(255,255,255,0.95); border-radius: 30px; padding: 50px 30px;
+                    text-align:center; border: 1px solid rgba(199,162,74,0.22); box-shadow: 0 40px 120px rgba(0,0,0,0.25);
+                }
+                .re-cust-success-icon{
+                    width: 88px; height: 88px; border-radius: 50%; display:flex; align-items:center; justify-content:center;
+                    margin: 0 auto 18px; background: rgba(199,162,74,0.18); border: 1px solid rgba(199,162,74,0.35);
+                    color: #0b1b33; font-size: 32px;
+                }
+                .re-cust-success-title{ font-family: Georgia, serif; font-weight: 800; font-size: 1.9rem; color: rgba(11,27,51,0.95); margin-bottom: 14px; }
+                .re-cust-success-msg{ margin: 0 0 10px; font-weight: 600; color: rgba(11,27,51,0.68); line-height: 1.6; }
+                .re-cust-success-btn{
+                    display:inline-flex; align-items:center; gap:8px; margin-top: 20px; padding: 12px 20px;
+                    border-radius: 14px; font-weight: 800; text-decoration:none;
+                    background: linear-gradient(90deg, #c7a24a, #a9842d); color: #0b1b33;
+                }
+            </style>
+        </t>
+    </template>
+
+    <!-- =========================================================
+         ERROR TEMPLATE
+    ========================================================== -->
+    <template id="customer_submission_error" name="Customer Registration Error">
+        <t t-call="website.layout">
+            <div class="re-cust-error-wrap">
+                <div class="container">
+                    <div class="row justify-content-center">
+                        <div class="col-lg-6 col-md-8">
+                            <div class="re-cust-error-card">
+                                <div class="re-cust-error-icon"><i class="fa fa-exclamation-triangle"></i></div>
+                                <h1 class="re-cust-error-title">Registration Failed</h1>
+                                <p class="re-cust-error-msg text-danger" t-esc="error"/>
+                                <a href="/customer/register" class="re-cust-error-btn"><i class="fa fa-refresh"></i> Try Again</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <style type="text/css">
+                .re-cust-error-wrap{
+                    min-height:100vh; display:flex; align-items:center; padding: 70px 14px;
+                    background:
+                        radial-gradient(circle at 20% 12%, rgba(199,162,74,0.22), transparent 55%),
+                        radial-gradient(circle at 85% 25%, rgba(220,38,38,0.16), transparent 55%),
+                        linear-gradient(135deg, #0b1b33, #102645);
+                }
+                .re-cust-error-card{
+                    background: rgba(255,255,255,0.95); border-radius: 30px; padding: 50px 30px;
+                    text-align:center; border: 1px solid rgba(199,162,74,0.22); box-shadow: 0 40px 120px rgba(0,0,0,0.25);
+                }
+                .re-cust-error-icon{
+                    width: 88px; height: 88px; border-radius: 50%; display:flex; align-items:center; justify-content:center;
+                    margin: 0 auto 18px; background: rgba(220,38,38,0.10); border: 1px solid rgba(220,38,38,0.25);
+                    color: #b91c1c; font-size: 32px;
+                }
+                .re-cust-error-title{ font-family: Georgia, serif; font-weight: 800; font-size: 1.9rem; color: rgba(11,27,51,0.95); margin-bottom: 14px; }
+                .re-cust-error-msg{ margin: 0 0 10px; font-weight: 600; line-height: 1.6; }
+                .re-cust-error-btn{
+                    display:inline-flex; align-items:center; gap:8px; margin-top: 20px; padding: 12px 20px;
+                    border-radius: 14px; font-weight: 800; text-decoration:none;
+                    background: linear-gradient(90deg, #c7a24a, #a9842d); color: #0b1b33;
+                }
+            </style>
+        </t>
+    </template>
+
+</odoo>

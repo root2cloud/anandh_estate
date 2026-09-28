@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Main Menu for Real Estate Management -->
+    <menuitem id="menu_real_estate_root" name="Real Estate Management" sequence="10"/>
+
+    <!--    Submenu for Properties-->
+    <menuitem id="menu_real_estate_properties" name="Properties"
+              parent="menu_real_estate_root" action="real_estate_management.action_property_management" sequence="10"/>
+
+    <menuitem id="menu_property_categories" name="Property Categories"
+              parent="menu_real_estate_root" action="real_estate_management.action_property_category" sequence="20"/>
+    <!-- Property Submissions: menu_property_registration (sequence 15, property_registration_views.xml) -->
+    <!-- Customer Registrations: menu_customer_registration (sequence 30, customer_registration_views.xml) -->
+    <!-- Agent Registrations: menu_agent_registration (sequence 40, agent_registration_views.xml) -->
+    <!-- Customers: menu_real_estate_customer (sequence 50, customer_views.xml) -->
+    <!-- Agents: menu_real_estate_agent (sequence 60, agent_views.xml) -->
+
+
+
+
+</odoo>

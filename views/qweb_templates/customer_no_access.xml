@@ -1,0 +1,390 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="customer_no_access" name="Customer No Access - Ultra Premium">
+        <t t-call="portal.portal_layout">
+
+            <div class="re-lux-noaccess">
+
+                <div class="container">
+                    <div class="row justify-content-center">
+                        <div class="col-lg-7 col-xl-6">
+
+                            <div class="re-lux-card">
+
+                                <!-- Top Badge -->
+                                <div class="re-lux-top-badge">
+                                    <i class="fa fa-shield"></i>
+                                    <span>SECURE CUSTOMER PORTAL</span>
+                                </div>
+
+                                <!-- Icon -->
+                                <div class="re-lux-icon">
+                                    <div class="re-lux-icon-ring"></div>
+                                    <i class="fa fa-lock"></i>
+                                </div>
+
+                                <!-- Title -->
+                                <h2 class="re-lux-title">Access Restricted</h2>
+
+                                <!-- Message -->
+                                <p class="re-lux-text">
+                                    <t t-if="message">
+                                        <t t-esc="message"/>
+                                    </t>
+                                    <t t-else="">
+                                        You do not have customer portal access.<br/>
+                                        Please log in with your customer account, or contact the administrator.
+                                    </t>
+                                </p>
+
+                                <!-- Divider -->
+                                <div class="re-lux-divider"></div>
+
+                                <!-- Actions -->
+                                <div class="re-lux-actions">
+
+                                    <!-- ⭐ When an Agent is blocked from the Customer
+                                         Dashboard, send them straight to their own
+                                         dashboard instead of the generic /my page. -->
+                                    <a t-if="agent_redirect" href="/my/agent/dashboard" class="re-lux-btn re-lux-btn-gold">
+                                        <span class="re-btn-ic">
+                                            <i class="fa fa-briefcase"></i>
+                                        </span>
+                                        <span class="re-btn-txt">Go to Agent Dashboard</span>
+                                        <span class="re-btn-arrow">
+                                            <i class="fa fa-arrow-right"></i>
+                                        </span>
+                                    </a>
+
+                                    <a t-if="not agent_redirect" href="/my" class="re-lux-btn re-lux-btn-gold">
+                                        <span class="re-btn-ic">
+                                            <i class="fa fa-home"></i>
+                                        </span>
+                                        <span class="re-btn-txt">My Account</span>
+                                        <span class="re-btn-arrow">
+                                            <i class="fa fa-arrow-right"></i>
+                                        </span>
+                                    </a>
+
+                                    <a t-if="not agent_redirect" href="/web/login" class="re-lux-btn re-lux-btn-dark">
+                                        <span class="re-btn-ic">
+                                            <i class="fa fa-sign-in"></i>
+                                        </span>
+                                        <span class="re-btn-txt">Log In</span>
+                                        <span class="re-btn-arrow">
+                                            <i class="fa fa-arrow-right"></i>
+                                        </span>
+                                    </a>
+
+                                </div>
+
+                                <!-- Footer Note -->
+                                <div class="re-lux-note">
+                                    <i class="fa fa-info-circle"></i>
+                                    <span>If you believe this is a mistake, please contact support.</span>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <style type="text/css">
+
+                :root{
+                    --lux-black: #07090f;
+                    --lux-black-2: #0b1220;
+                    --lux-black-3: #111827;
+
+                    --lux-gold: #d4af37;
+                    --lux-gold-2: #f6d365;
+                    --lux-gold-dark: #a67c00;
+
+                    --lux-white: #ffffff;
+                    --lux-text: rgba(255,255,255,0.92);
+                    --lux-muted: rgba(255,255,255,0.62);
+
+                    --lux-border: rgba(212,175,55,0.22);
+                    --lux-border-soft: rgba(255,255,255,0.10);
+
+                    --lux-shadow: 0 35px 90px rgba(0,0,0,0.55);
+                    --lux-radius-xl: 34px;
+                    --lux-radius-lg: 22px;
+
+                    --lux-trans: all .28s cubic-bezier(.2,.8,.2,1);
+                }
+
+                /* Full Page Background */
+                .re-lux-noaccess{
+                    min-height: 82vh;
+                    padding: 70px 14px;
+
+                    display: flex;
+                    align-items: center;
+
+                    background:
+                        radial-gradient(circle at 18% 18%, rgba(212,175,55,0.16), transparent 55%),
+                        radial-gradient(circle at 85% 30%, rgba(255,255,255,0.07), transparent 55%),
+                        radial-gradient(circle at 50% 95%, rgba(212,175,55,0.12), transparent 60%),
+                        linear-gradient(135deg, var(--lux-black), var(--lux-black-2));
+                    border-radius: 28px;
+                }
+
+                /* Main Card */
+                .re-lux-card{
+                    position: relative;
+                    overflow: hidden;
+
+                    padding: 44px 34px 34px;
+                    border-radius: var(--lux-radius-xl);
+
+                    background: rgba(255,255,255,0.06);
+                    backdrop-filter: blur(18px) saturate(140%);
+
+                    border: 1px solid var(--lux-border);
+                    box-shadow: var(--lux-shadow);
+                    text-align: center;
+
+                    transition: var(--lux-trans);
+                }
+
+                .re-lux-card:hover{
+                    transform: translateY(-6px);
+                    box-shadow: 0 45px 110px rgba(0,0,0,0.65);
+                }
+
+                /* Gold Glow Border */
+                .re-lux-card:before{
+                    content: "";
+                    position: absolute;
+                    inset: -2px;
+                    border-radius: var(--lux-radius-xl);
+                    padding: 2px;
+                    background: linear-gradient(90deg,
+                        rgba(212,175,55,0.55),
+                        rgba(255,255,255,0.12),
+                        rgba(212,175,55,0.55)
+                    );
+                    -webkit-mask:
+                        linear-gradient(#000 0 0) content-box,
+                        linear-gradient(#000 0 0);
+                    -webkit-mask-composite: xor;
+                    mask-composite: exclude;
+                    pointer-events: none;
+                    opacity: 0.8;
+                }
+
+                /* Top Badge */
+                .re-lux-top-badge{
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 10px;
+
+                    padding: 10px 18px;
+                    border-radius: 999px;
+
+                    background: rgba(212,175,55,0.10);
+                    border: 1px solid rgba(212,175,55,0.20);
+
+                    font-weight: 900;
+                    font-size: 12px;
+                    letter-spacing: 0.14em;
+
+                    color: rgba(246,211,101,0.95);
+                    margin-bottom: 26px;
+                    text-transform: uppercase;
+                }
+
+                .re-lux-top-badge i{
+                    font-size: 14px;
+                }
+
+                /* Icon */
+                .re-lux-icon{
+                    position: relative;
+                    width: 96px;
+                    height: 96px;
+                    margin: 0 auto 20px;
+
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+
+                    border-radius: 50%;
+                    background: rgba(212,175,55,0.10);
+                    border: 1px solid rgba(212,175,55,0.22);
+                }
+
+                .re-lux-icon i{
+                    font-size: 38px;
+                    color: var(--lux-gold);
+                    z-index: 2;
+                }
+
+                /* Animated Ring */
+                .re-lux-icon-ring{
+                    position: absolute;
+                    inset: -8px;
+                    border-radius: 50%;
+                    border: 2px solid rgba(212,175,55,0.18);
+                    animation: rePulse 1.8s infinite ease-in-out;
+                }
+
+                @keyframes rePulse{
+                    0%{ transform: scale(0.9); opacity: 0.4; }
+                    50%{ transform: scale(1.05); opacity: 0.9; }
+                    100%{ transform: scale(0.9); opacity: 0.4; }
+                }
+
+                /* Title */
+                .re-lux-title{
+                    font-size: 30px;
+                    font-weight: 950;
+                    color: var(--lux-white);
+                    margin: 0 0 12px;
+                    letter-spacing: 0.2px;
+                }
+
+                /* Text */
+                .re-lux-text{
+                    margin: 0;
+                    font-size: 15px;
+                    line-height: 1.7;
+                    font-weight: 600;
+                    color: var(--lux-muted);
+                }
+
+                /* Divider */
+                .re-lux-divider{
+                    height: 1px;
+                    width: 100%;
+                    margin: 26px 0 22px;
+                    background: linear-gradient(90deg,
+                        rgba(255,255,255,0),
+                        rgba(212,175,55,0.28),
+                        rgba(255,255,255,0)
+                    );
+                }
+
+                /* Actions */
+                .re-lux-actions{
+                    display: grid;
+                    gap: 14px;
+                }
+
+                .re-lux-btn{
+                    width: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+
+                    padding: 15px 18px;
+                    border-radius: var(--lux-radius-lg);
+                    text-decoration: none;
+
+                    font-weight: 900;
+                    font-size: 15px;
+
+                    transition: var(--lux-trans);
+                    border: 1px solid transparent;
+                }
+
+                .re-btn-ic{
+                    width: 44px;
+                    height: 44px;
+                    border-radius: 14px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 16px;
+                }
+
+                .re-btn-arrow{
+                    opacity: 0.75;
+                    transition: var(--lux-trans);
+                }
+
+                .re-lux-btn:hover .re-btn-arrow{
+                    transform: translateX(6px);
+                    opacity: 1;
+                }
+
+                /* GOLD BUTTON */
+                .re-lux-btn-gold{
+                    background: linear-gradient(90deg, var(--lux-gold), var(--lux-gold-2));
+                    color: #0b1220;
+                    border: 1px solid rgba(212,175,55,0.35);
+                    box-shadow: 0 20px 60px rgba(212,175,55,0.18);
+                }
+
+                .re-lux-btn-gold .re-btn-ic{
+                    background: rgba(11,18,32,0.12);
+                    color: #0b1220;
+                }
+
+                .re-lux-btn-gold:hover{
+                    transform: translateY(-4px);
+                    box-shadow: 0 28px 80px rgba(212,175,55,0.25);
+                    color: #0b1220;
+                }
+
+                /* DARK BUTTON */
+                .re-lux-btn-dark{
+                    background: rgba(255,255,255,0.05);
+                    color: rgba(255,255,255,0.90);
+                    border: 1px solid rgba(255,255,255,0.12);
+                }
+
+                .re-lux-btn-dark .re-btn-ic{
+                    background: rgba(255,255,255,0.06);
+                    color: rgba(255,255,255,0.85);
+                }
+
+                .re-lux-btn-dark:hover{
+                    transform: translateY(-3px);
+                    border-color: rgba(212,175,55,0.28);
+                    box-shadow: 0 22px 70px rgba(0,0,0,0.35);
+                    color: rgba(255,255,255,0.92);
+                }
+
+                /* Note */
+                .re-lux-note{
+                    margin-top: 22px;
+
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 10px;
+
+                    font-size: 13px;
+                    font-weight: 650;
+                    color: rgba(255,255,255,0.55);
+                }
+
+                .re-lux-note i{
+                    color: rgba(212,175,55,0.85);
+                }
+
+                /* Responsive */
+                @media (max-width: 576px){
+                    .re-lux-card{
+                        padding: 34px 18px 24px;
+                    }
+
+                    .re-lux-title{
+                        font-size: 24px;
+                    }
+
+                    .re-lux-btn{
+                        padding: 14px 14px;
+                    }
+                }
+
+            </style>
+
+        </t>
+    </template>
+</odoo>

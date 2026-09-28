@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="menu_properties_top" model="website.menu">
+            <field name="name">Properties</field>
+            <field name="url">/properties</field>
+            <field name="parent_id" ref="website.main_menu"/>
+            <field name="sequence" type="int">10</field>
+        </record>
+
+        <record id="menu_customer_registration_top" model="website.menu">
+            <field name="name">Customer Registration</field>
+            <field name="url">/customer/register</field>
+            <field name="parent_id" ref="website.main_menu"/>
+            <field name="sequence" type="int">20</field>
+        </record>
+
+        <record id="menu_agent_registration_top" model="website.menu">
+            <field name="name">Agent Registration</field>
+            <field name="url">/agent/register</field>
+            <field name="parent_id" ref="website.main_menu"/>
+            <field name="sequence" type="int">30</field>
+        </record>
+
+        <record id="menu_customer_dashboard_top" model="website.menu">
+            <field name="name">Customer Dashboard</field>
+            <field name="url">/my/customer/dashboard</field>
+            <field name="parent_id" ref="website.main_menu"/>
+            <field name="sequence" type="int">40</field>
+        </record>
+
+        <record id="menu_agent_dashboard_top" model="website.menu">
+            <field name="name">Agent Dashboard</field>
+            <field name="url">/my/agent/dashboard</field>
+            <field name="parent_id" ref="website.main_menu"/>
+            <field name="sequence" type="int">50</field>
+        </record>
+    </data>
+</odoo>

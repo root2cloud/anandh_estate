@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="sequence_agent_registration" model="ir.sequence">
+            <field name="name">Agent Registration Sequence</field>
+            <field name="code">agent.registration</field>
+            <field name="prefix">AGT-REG-</field>
+            <field name="padding">5</field>
+            <field name="number_next">1</field>
+            <field name="number_increment">1</field>
+        </record>
+
+        <record id="sequence_customer_registration" model="ir.sequence">
+            <field name="name">Customer Registration Sequence</field>
+            <field name="code">customer.registration</field>
+            <field name="prefix">CUST-REG-</field>
+            <field name="padding">5</field>
+            <field name="number_next">1</field>
+            <field name="number_increment">1</field>
+        </record>
+    </data>
+</odoo>

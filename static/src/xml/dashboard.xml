@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="real_estate_management.PropertyDashboard">
+        <div class="property_dashboard">
+            <!-- Header -->
+            <div class="dashboard-header">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="dashboard-title">
+                        <i class="fa fa-building-o me-2"></i>Real Estate Dashboard
+                    </h2>
+                    <button class="btn btn-primary" t-on-click="refreshDashboard">
+                        <i class="fa fa-refresh me-1"></i>Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div t-if="state.loading" class="text-center py-5">
+                <i class="fa fa-spinner fa-spin fa-3x text-primary"></i>
+                <p class="mt-3">Loading dashboard data...</p>
+            </div>
+
+            <!-- Dashboard Content -->
+            <div t-else="">
+                <!-- KPI Cards Row 1 -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <div class="dashboard-card card-blue" t-on-click="() => this.openPropertyList([])">
+                            <div class="card-icon"><i class="fa fa-home"></i></div>
+                            <div class="card-content">
+                                <h3 t-esc="state.data.stats.total_properties"></h3>
+                                <p>Total Properties</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="dashboard-card card-green" t-on-click="() => this.openPropertyList([['status', '=', 'available']])">
+                            <div class="card-icon"><i class="fa fa-check-circle"></i></div>
+                            <div class="card-content">
+                                <h3 t-esc="state.data.stats.available"></h3>
+                                <p>Available</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="dashboard-card card-orange" t-on-click="() => this.openPropertyList([['status', '=', 'sold']])">
+                            <div class="card-icon"><i class="fa fa-handshake-o"></i></div>
+                            <div class="card-content">
+                                <h3 t-esc="state.data.stats.sold"></h3>
+                                <p>Sold Properties</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="dashboard-card card-purple" t-on-click="() => this.openPropertyList([['is_featured', '=', true]])">
+                            <div class="card-icon"><i class="fa fa-star"></i></div>
+                            <div class="card-content">
+                                <h3 t-esc="state.data.stats.featured"></h3>
+                                <p>Featured</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="chart-card">
+                            <h5 class="chart-title"><i class="fa fa-pie-chart me-2"></i>Category Distribution</h5>
+                            <div class="chart-container"><canvas id="categoryChart"></canvas></div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="chart-card">
+                            <h5 class="chart-title"><i class="fa fa-map-marker me-2"></i>Top 10 Cities</h5>
+                            <div class="chart-container"><canvas id="cityChart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Properties -->
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <div class="list-card">
+                            <h5 class="list-title"><i class="fa fa-clock-o me-2"></i>Recent Properties</h5>
+                            <div class="property-list">
+                                <t t-foreach="state.data.recent_properties" t-as="prop" t-key="prop.id">
+                                    <div class="property-item">
+                                        <div class="property-info">
+                                            <strong t-esc="prop.name"></strong>
+                                            <small class="text-muted d-block">
+                                                <i class="fa fa-map-marker me-1"></i><t t-esc="prop.city"></t> | <t t-esc="prop.category"></t>
+                                            </small>
+                                        </div>
+                                        <div class="property-price">
+                                            <span class="price" t-esc="formatNumber(prop.price)"></span>
+                                            <span t-if="prop.status === 'available'" class="badge bg-success">Available</span>
+                                            <span t-elif="prop.status === 'sold'" class="badge bg-danger">Sold</span>
+                                            <span t-else="" class="badge bg-warning">Rented</span>
+                                        </div>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

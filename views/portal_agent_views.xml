@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Agent Portal Menu -->
+    <record id="portal_agent_menu" model="website.menu">
+        <field name="name">My Properties</field>
+        <field name="url">/my/properties</field>
+        <field name="parent_id" ref="website.main_menu"/>
+        <field name="sequence">40</field>
+    </record>
+
+    <!-- Property Form View for Portal (Simplified) -->
+    <record id="property_form_portal" model="ir.ui.view">
+        <field name="name">property.property.form.portal</field>
+        <field name="model">property.property</field>
+        <field name="arch" type="xml">
+            <form string="Property">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" placeholder="e.g. Luxury Villa in Goa"/>
+                            <field name="category_id"/>
+                            <field name="price"/>
+                            <field name="plot_area"/>
+                        </group>
+                        <group>
+                            <field name="city"/>
+                            <field name="zip_code"/>
+                            <field name="street"/>
+                            <field name="latitude"/>
+                            <field name="longitude"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="short_description" placeholder="Brief description..."/>
+                        <field name="image" widget="image"/>
+                        <field name="is_published"/>
+                    </group>
+                    <notebook>
+                        <page string="Gallery">
+                            <field name="gallery_image_ids">
+                                <list editable="bottom">
+                                    <field name="datas" widget="image"/>
+<!--                                    <field name="caption"/>-->
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Contact Details">
+                            <group>
+                                <field name="contact_name"/>
+                                <field name="contact_phone"/>
+                                <field name="contact_email"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Property List View for Portal -->
+    <record id="property_tree_portal" model="ir.ui.view">
+        <field name="name">property.property.tree.portal</field>
+        <field name="model">property.property</field>
+        <field name="arch" type="xml">
+            <list string="My Properties">
+                <field name="name"/>
+                <field name="city"/>
+                <field name="price"/>
+                <field name="category_id"/>
+                <field name="is_published"/>
+                <field name="views"/>
+                <field name="create_date"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Property Action for Portal Users -->
+    <record id="action_property_portal" model="ir.actions.act_window">
+        <field name="name">My Properties</field>
+        <field name="res_model">property.property</field>
+        <field name="view_mode">lit,form</field>
+        <field name="domain">[]</field> <!-- Record rule will filter automatically -->
+        <field name="context">{}</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('property_tree_portal')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('property_form_portal')})]"/>
+    </record>
+
+    <!-- Menu for Portal Users -->
+    <menuitem id="menu_portal_properties"
+              name="My Properties"
+              action="action_property_portal"
+              groups="base.group_portal"
+              sequence="10"/>
+
+</odoo>

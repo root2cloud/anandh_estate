@@ -1,0 +1,394 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ==================== TREE VIEW ==================== -->
+    <record id="view_agent_registration_tree" model="ir.ui.view">
+        <field name="name">agent.registration.tree</field>
+        <field name="model">agent.registration</field>
+        <field name="arch" type="xml">
+            <list string="Agent Registrations"
+                  decoration-info="status=='submitted'"
+                  decoration-warning="status=='under_review'"
+                  decoration-success="status=='approved'"
+                  decoration-danger="status=='rejected'"
+                  sample="1">
+                <field name="name" string="Registration ID"/>
+                <field name="agent_name" string="Full Name"/>
+                <field name="email"/>
+                <field name="phone" string="Phone Number"/>
+                <field name="city"/>
+                <field name="designation" string="Desired Designation"/>
+                <field name="experience_years" string="Years of Experience"/>
+                <field name="submission_date" string="Submitted On"/>
+                <field name="status" widget="badge"
+                       decoration-info="status=='submitted'"
+                       decoration-warning="status=='under_review'"
+                       decoration-success="status=='approved'"
+                       decoration-danger="status=='rejected'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ==================== FORM VIEW ==================== -->
+    <record id="view_agent_registration_form" model="ir.ui.view">
+        <field name="name">agent.registration.form</field>
+        <field name="model">agent.registration</field>
+        <field name="arch" type="xml">
+            <form string="Agent Registration">
+                <!-- HEADER WITH BUTTONS -->
+                <header>
+                    <button name="action_approve"
+                            string="✓ Approve &amp; Create Agent"
+                            type="object"
+                            class="oe_highlight"
+                            invisible="status in ['approved', 'rejected']"
+                            confirm="Are you sure you want to approve this agent registration? This will create an agent profile."/>
+
+                    <button name="action_reject"
+                            string="✗ Reject Registration"
+                            type="object"
+                            class="btn-danger"
+                            invisible="status in ['approved', 'rejected']"/>
+
+                    <button name="action_view_agent_profile"
+                            string="👤 View Agent Profile"
+                            type="object"
+                            class="btn-info"
+                            invisible="not agent_id"/>
+
+                    <field name="status" widget="statusbar"
+                           statusbar_visible="submitted,under_review,approved"/>
+                </header>
+
+                <!-- MAIN FORM CONTENT -->
+                <sheet>
+                    <!-- Button Box -->
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_agent_profile"
+                                type="object"
+                                class="oe_stat_button"
+                                icon="fa-user"
+                                invisible="not agent_id">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_text">View</span>
+                                <span class="o_stat_text">Agent Profile</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <!-- Profile Image -->
+                    <field name="profile_image"
+                           widget="image"
+                           class="oe_avatar"
+                           options="{'size': [150, 150]}"/>
+
+                    <!-- Title Section -->
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1" class="o_text_overflow"/>
+                        </h1>
+                        <h2>
+                            <field name="agent_name"
+                                   placeholder="Enter Agent Full Name"
+                                   class="o_text_overflow"
+                                   required="1"/>
+                        </h2>
+                    </div>
+
+                    <!-- Basic Information Groups -->
+                    <group>
+                        <group string="📧 Contact Information">
+                            <field name="email"
+                                   widget="email"
+                                   placeholder="email@example.com"
+                                   required="1"/>
+                            <field name="phone"
+                                   widget="phone"
+                                   placeholder="+91 98765 43210"
+                                   required="1"/>
+                            <field name="whatsapp"
+                                   widget="phone"
+                                   placeholder="+91 98765 43210"/>
+                        </group>
+
+                        <group string="💼 Professional Details">
+                            <field name="designation" required="1"/>
+                            <field name="expertise_level" required="1"/>
+                            <field name="experience_years"/>
+                            <field name="license_number" placeholder="License Number (if applicable)"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <group string="📍 Location Details">
+                            <field name="city" placeholder="City" required="1"/>
+                            <field name="state_id"
+                                   options="{'no_create': True, 'no_open': True}"
+                                   required="1"/>
+                            <field name="zip_code" placeholder="500001"/>
+                            <field name="country_id"
+                                   options="{'no_create': True, 'no_open': True}"/>
+                        </group>
+
+                        <group string="🌐 Additional Information">
+                            <field name="languages_spoken" placeholder="English, Hindi, Telugu"/>
+                            <field name="submission_date" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <!-- Notebook Tabs -->
+                    <notebook>
+                        <!-- Biography Tab -->
+                        <page string="📝 Biography" name="biography">
+                            <group>
+                                <group string="Short Bio">
+                                    <field name="short_bio"
+                                           placeholder="Write a brief introduction (100-200 words)..."
+                                           nolabel="1"
+                                           widget="text"/>
+                                </group>
+
+                                <group string="Detailed Biography">
+                                    <field name="detailed_bio"
+                                           widget="html"
+                                           placeholder="Detailed professional background and experience..."
+                                           nolabel="1"/>
+                                </group>
+
+                                <group string="Qualifications &amp; Certifications">
+                                    <field name="qualifications"
+                                           placeholder="List degrees, certifications, awards, etc."
+                                           nolabel="1"
+                                           widget="text"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- Specializations Tab -->
+                        <page string="⭐ Specializations" name="specializations">
+                            <field name="specialization_ids"
+                                   widget="many2many_tags"
+                                   placeholder="Select property types this agent specializes in..."
+                                   nolabel="1"
+                                   options="{'color_field': 'color', 'no_create': True}"/>
+                        </page>
+
+                        <!-- Documents Tab -->
+                        <page string="📄 Documents" name="documents">
+                            <group>
+                                <group string="ID Proof (Aadhaar/PAN) *">
+                                    <field name="id_proof"
+                                           filename="id_proof_filename"
+                                           nolabel="1"/>
+                                    <field name="id_proof_filename" invisible="1"/>
+                                </group>
+
+                                <group string="License Document">
+                                    <field name="license_document"
+                                           filename="license_filename"
+                                           nolabel="1"/>
+                                    <field name="license_filename" invisible="1"/>
+                                </group>
+                            </group>
+
+                            <group>
+                                <group string="Resume/CV">
+                                    <field name="resume"
+                                           filename="resume_filename"
+                                           nolabel="1"/>
+                                    <field name="resume_filename" invisible="1"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- Portfolio Tab -->
+                        <page string="🖼️ Portfolio Images" name="portfolio">
+                            <field name="attachment_ids"
+                                   widget="many2many_binary"
+                                   string="Upload Portfolio Images"
+                                   nolabel="1"
+                                   options="{'accepted_file_extensions': 'image/*'}"/>
+                        </page>
+
+                        <!-- Social Media Tab -->
+                        <page string="🌐 Social Media" name="social">
+                            <group>
+                                <field name="linkedin_url"
+                                       widget="url"
+                                       placeholder="https://linkedin.com/in/yourprofile"/>
+                                <field name="facebook_url"
+                                       widget="url"
+                                       placeholder="https://facebook.com/yourprofile"/>
+                            </group>
+                        </page>
+
+                        <!-- Review Details Tab (Only visible after approval/rejection) -->
+                        <page string="✅ Review Details"
+                              name="review"
+                              invisible="status not in ['approved', 'rejected']">
+                            <group>
+                                <group string="Approval Information"
+                                       invisible="status != 'approved'">
+                                    <field name="reviewed_by" readonly="1"/>
+                                    <field name="review_date" readonly="1"/>
+                                    <field name="agent_id" readonly="1"/>
+                                </group>
+
+                                <group string="Rejection Information"
+                                       invisible="status != 'rejected'">
+                                    <field name="reviewed_by" readonly="1"/>
+                                    <field name="review_date" readonly="1"/>
+                                    <field name="rejection_reason"
+                                           readonly="1"
+                                           widget="text"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- Metadata Tab -->
+                        <page string="ℹ️ System Information" name="metadata">
+                            <group>
+                                <group string="Timestamps">
+                                    <field name="submission_date" readonly="1"/>
+                                    <field name="create_date" readonly="1" string="Created On"/>
+                                    <field name="write_date" readonly="1" string="Last Updated"/>
+                                </group>
+
+                                <group string="User Information">
+                                    <field name="create_uid" readonly="1" string="Created By"/>
+                                    <field name="write_uid" readonly="1" string="Last Updated By"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+
+                <!-- Chatter (Messages & Activities) -->
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- ==================== SEARCH VIEW ==================== -->
+    <record id="view_agent_registration_search" model="ir.ui.view">
+        <field name="name">agent.registration.search</field>
+        <field name="model">agent.registration</field>
+        <field name="arch" type="xml">
+            <search string="Search Agent Registrations">
+                <!-- Search Fields -->
+                <field name="name" string="Registration ID"/>
+                <field name="agent_name" string="Agent Name"/>
+                <field name="email"/>
+                <field name="phone"/>
+                <field name="city"/>
+                <field name="state_id" string="State"/>
+
+                <!-- Filters -->
+                <separator/>
+                <filter string="📥 Submitted"
+                        name="filter_submitted"
+                        domain="[('status', '=', 'submitted')]"/>
+                <filter string="🔍 Under Review"
+                        name="filter_under_review"
+                        domain="[('status', '=', 'under_review')]"/>
+                <filter string="✅ Approved"
+                        name="filter_approved"
+                        domain="[('status', '=', 'approved')]"/>
+                <filter string="❌ Rejected"
+                        name="filter_rejected"
+                        domain="[('status', '=', 'rejected')]"/>
+
+                <separator/>
+                <filter string="🌟 Luxury Experts"
+                        name="filter_luxury"
+                        domain="[('expertise_level', '=', 'luxury')]"/>
+                <filter string="Standard Agents"
+                        name="filter_standard"
+                        domain="[('expertise_level', '=', 'standard')]"/>
+
+                <separator/>
+                <filter string="📅 This Month"
+                        name="filter_this_month"
+                        domain="[('submission_date', '&gt;=', (context_today() - relativedelta(months=1)).strftime('%Y-%m-%d'))]"/>
+                <filter string="📅 This Week"
+                        name="filter_this_week"
+                        domain="[('submission_date', '&gt;=', (context_today() - relativedelta(weeks=1)).strftime('%Y-%m-%d'))]"/>
+
+                <!-- Group By -->
+                <group expand="0" string="Group By">
+                    <filter name="group_status"
+                            string="Status"
+                            context="{'group_by': 'status'}"/>
+                    <filter name="group_city"
+                            string="City"
+                            context="{'group_by': 'city'}"/>
+                    <filter name="group_state"
+                            string="State"
+                            context="{'group_by': 'state_id'}"/>
+                    <filter name="group_designation"
+                            string="Designation"
+                            context="{'group_by': 'designation'}"/>
+                    <filter name="group_expertise"
+                            string="Expertise Level"
+                            context="{'group_by': 'expertise_level'}"/>
+                    <filter name="group_submission_date"
+                            string="Submission Date"
+                            context="{'group_by': 'submission_date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action for Rejected Registrations -->
+    <record id="action_agent_registration_rejected" model="ir.actions.act_window">
+        <field name="name">Rejected Registrations</field>
+        <field name="res_model">agent.registration</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('status', '=', 'rejected')]</field>
+        <field name="context">{'create': False}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No rejected registrations found!
+            </p>
+            <p>
+                Rejected agent registrations will appear here.
+            </p>
+        </field>
+    </record>
+
+    <!-- Submenu for Rejected -->
+<!--    <menuitem id="menu_agent_registration_rejected"-->
+<!--              name="Rejected Registrations"-->
+<!--              parent="menu_agent_registration"-->
+<!--              action="action_agent_registration_rejected"-->
+<!--              sequence="30"/>-->
+
+
+    <!-- ==================== ACTION ==================== -->
+    <record id="action_agent_registration" model="ir.actions.act_window">
+        <field name="name">Agent Registrations</field>
+        <field name="res_model">agent.registration</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No agent registrations found!
+            </p>
+            <p>
+                Agent registrations will appear here when submitted through the website or created manually.
+            </p>
+        </field>
+    </record>
+
+    <!-- ==================== MENU ==================== -->
+
+    <menuitem id="menu_agent_registration"
+              name="Agent Registrations"
+              parent="menu_real_estate_root"
+              action="action_agent_registration"
+              sequence="40"/>
+
+
+
+</odoo>

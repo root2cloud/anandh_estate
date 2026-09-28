@@ -1,0 +1,745 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="property_detail_page" name="Property Detail Page">
+        <t t-call="website.layout">
+            <t t-set="head">
+                <meta name="title" t-att-content="property.seo_title or property.name"/>
+                <meta name="description" t-att-content="property.seo_description or property.short_description"/>
+                <meta name="keywords" content="real estate, premium property, luxury homes, property for sale"/>
+                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+                <link rel="stylesheet" href="/real_estate_management/static/src/css/property_detail.css"/>
+            </t>
+
+            <div class="property-detail-page">
+
+                <!-- STICKY ACTION BAR -->
+                <div class="sticky-action-bar">
+                    <div class="action-bar-container">
+                        <div class="action-bar-left">
+                            <div class="property-price-sticky">
+                                <span t-field="property.price" t-options='{"widget": "monetary"}'></span>
+                            </div>
+                            <div class="property-info-sticky">
+                                <span><i class="fas fa-expand-arrows-alt"></i> <span t-field="property.plot_area"></span> Sq.Ft</span>
+                                <span class="divider">|</span>
+                                <span><i class="fas fa-compass"></i> <span t-field="property.facing_direction"></span></span>
+                            </div>
+                        </div>
+                        <div class="action-bar-right">
+                            <a t-att-href="'tel:%s' % (property.contact_phone or '8187023634')" class="btn-action btn-call">
+                                <i class="fas fa-phone"></i>
+                                <span>Call</span>
+                            </a>
+                            <t t-set="wa_text" t-value="'Hi! Interested in: %s. Location: %s, %s. Price: ₹%s. Please share details.' % (property.name or '', property.street or '', property.city or '', '{:,.0f}'.format(property.price) if property.price else 'N/A')"/>
+                            <t t-set="wa_encoded" t-value="wa_text.replace(' ', '%20').replace('\n','%0A')"/>
+                            <!-- ⭐ NEW: build the WhatsApp number from THIS property's own
+                                 contact_phone instead of a hardcoded number. Strips
+                                 anything that isn't a digit (spaces, +, dashes), then:
+                                   - if it's already 11+ digits, assume a country code is
+                                     already included and uses it as-is
+                                   - if it's a plain 10-digit local number, prepends 91
+                                     (India, matching this app's country default)
+                                   - falls back to the old hardcoded number only if the
+                                     property genuinely has no contact_phone at all
+                            -->
+                            <t t-set="wa_phone_digits" t-value="''.join(ch for ch in (property.contact_phone or '') if ch.isdigit())"/>
+                            <t t-set="wa_phone" t-value="wa_phone_digits if len(wa_phone_digits) > 10 else ('91' + wa_phone_digits if wa_phone_digits else '917032959650')"/>
+                            <a t-att-href="'https://wa.me/%s?text=%s' % (wa_phone, wa_encoded)" class="btn-action btn-whatsapp" target="_blank">
+                                <i class="fab fa-whatsapp"></i>
+                                <span>WhatsApp</span>
+                            </a>
+                            <button class="btn-action btn-schedule" onclick="document.getElementById('contact-form-section').scrollIntoView({behavior: 'smooth'})">
+                                <i class="fas fa-calendar-check"></i>
+                                <span>Schedule Tour</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MAIN CONTENT -->
+                <div class="property-content-wrapper">
+
+                    <!-- PHOTO GALLERY SECTION -->
+                    <section class="photo-gallery-section">
+                        <div class="gallery-container">
+                            <div class="gallery-main">
+                                <div id="mainCarousel" class="carousel slide" data-bs-ride="false">
+                                    <div class="carousel-inner">
+                                        <div class="carousel-item active"  style="position: relative;">
+                                            <img t-att-src="'/web/image/property.property/%s/image' % property.id" alt="Property Main Image"/>
+                                            <t t-raw="property.status_ribbon_html"/>
+                                        </div>
+                                        <t t-foreach="property.gallery_image_ids" t-as="img">
+                                            <div class="carousel-item">
+                                                <img t-att-src="'/web/image/ir.attachment/%s/datas' % img.id" alt="Gallery Image"/>
+                                            </div>
+                                        </t>
+                                    </div>
+                                    <button class="carousel-control-prev" type="button" data-bs-target="#mainCarousel" data-bs-slide="prev">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </button>
+                                    <button class="carousel-control-next" type="button" data-bs-target="#mainCarousel" data-bs-slide="next">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </button>
+                                </div>
+                                <div class="photo-count">
+                                    <i class="fas fa-images"></i>
+                                    <span><span class="current-photo">1</span> / <span class="total-photos" t-out="len(property.gallery_image_ids) + 1"></span></span>
+                                </div>
+                            </div>
+                            <div class="gallery-thumbnails">
+                                <div class="thumbnail-item active" data-bs-target="#mainCarousel" data-bs-slide-to="0">
+                                    <img t-att-src="'/web/image/property.property/%s/image' % property.id" alt="Thumbnail"/>
+                                </div>
+                                <t t-foreach="property.gallery_image_ids[:5]" t-as="img">
+                                    <div class="thumbnail-item" data-bs-target="#mainCarousel" t-att-data-bs-slide-to="img_index + 1">
+                                        <img t-att-src="'/web/image/ir.attachment/%s/datas' % img.id" alt="Thumbnail"/>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- PROPERTY INFO SECTION -->
+                    <section class="property-info-section">
+                        <div class="content-container">
+                            <div class="info-layout">
+
+                                <!-- LEFT COLUMN -->
+                                <div class="info-main">
+
+                                    <!-- HEADER -->
+                                    <div class="property-header-block">
+                                        <div class="header-top">
+                                            <div class="price-block">
+                                                <h1 class="property-price">
+                                                    <span t-field="property.price" t-options='{"widget": "monetary"}'></span>
+                                                </h1>
+                                                <div class="price-details">
+                                                    <span class="price-per-sqft">₹<span t-out="'{:,.0f}'.format(property.price_per_sqft) if property.price_per_sqft else '0'"></span>/sq ft</span>
+                                                </div>
+                                            </div>
+                                            <div class="share-save-block">
+                                                <button class="btn-icon" onclick="toggleShareMenu(event)">
+                                                    <i class="fas fa-share-alt"></i>
+                                                    <span>Share</span>
+                                                </button>
+                                                <div class="share-menu" id="shareMenu">
+                                                    <t t-set="share_url" t-value="request.httprequest.url or ''"/>
+                                                    <t t-set="share_text" t-value="'Check out: %s' % (property.name or '')"/>
+                                                    <t t-set="share_encoded" t-value="share_text.replace(' ', '%20')"/>
+
+                                                    <a t-att-href="'https://wa.me/?text=%s - %s' % (share_encoded, share_url)" target="_blank" class="share-option">
+                                                        <i class="fab fa-whatsapp"></i> WhatsApp
+                                                    </a>
+                                                    <a t-att-href="'https://www.facebook.com/sharer/sharer.php?u=%s' % share_url" target="_blank" class="share-option">
+                                                        <i class="fab fa-facebook-f"></i> Facebook
+                                                    </a>
+                                                    <a t-att-href="'https://twitter.com/intent/tweet?url=%s&amp;text=%s' % (share_url, share_encoded)" target="_blank" class="share-option">
+                                                        <i class="fab fa-twitter"></i> Twitter
+                                                    </a>
+                                                    <a t-att-href="'https://www.linkedin.com/shareArticle?mini=true&amp;url=%s&amp;title=%s' % (share_url, share_encoded)" target="_blank" class="share-option">
+                                                        <i class="fab fa-linkedin-in"></i> LinkedIn
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <h2 class="property-title-main" t-field="property.name"></h2>
+
+                                        <div class="property-detail-rating" t-raw="property.rating_stars_html"/>
+
+                                        <div class="property-address">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                            <span t-out="property.street or ''"></span>
+                                            <t t-if="property.city">, <span t-out="property.city"></span></t>
+                                            <t t-if="property.state_id">, <span t-field="property.state_id.name"></span></t>
+                                        </div>
+
+                                        <div class="property-highlights">
+                                            <div class="highlight-item">
+                                                <i class="fas fa-expand-arrows-alt"></i>
+                                                <span><strong><span t-field="property.plot_area"></span></strong> Sq.Ft</span>
+                                            </div>
+                                            <div class="highlight-item">
+                                                <i class="fas fa-compass"></i>
+                                                <span><strong t-field="property.facing_direction"></strong> Facing</span>
+                                            </div>
+                                            <div class="highlight-item">
+                                                <i class="fas fa-certificate"></i>
+                                                <span><strong t-field="property.title_status"></strong></span>
+                                            </div>
+                                            <div class="highlight-item">
+                                                <i class="fas fa-road"></i>
+                                                <span><strong><span t-out="property.road_width or 'N/A'"></span></strong> Ft Road</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- OVERVIEW -->
+                                    <div class="content-section">
+                                        <h3 class="section-heading">Property Overview</h3>
+                                        <div class="section-content">
+                                            <t t-if="property.ai_key_highlights">
+                                                <div t-field="property.ai_key_highlights" class="rich-content"></div>
+                                            </t>
+                                            <t t-if="property.short_description">
+                                                <div t-field="property.short_description" class="description-text"></div>
+                                            </t>
+                                            <t t-if="not property.ai_key_highlights and not property.short_description">
+                                                <p class="text-muted">This is a premium property offering excellent value and location advantages. Contact us for detailed information about this property.</p>
+                                            </t>
+                                        </div>
+                                    </div>
+
+                                    <!-- FEATURES & AMENITIES -->
+                                    <div class="content-section">
+                                        <h3 class="section-heading">Features &amp; Amenities</h3>
+                                        <div class="amenities-grid">
+                                            <t t-if="property.water_connection">
+                                                <div class="amenity-card">
+                                                    <i class="fas fa-tint"></i>
+                                                    <span>Water Connection</span>
+                                                </div>
+                                            </t>
+                                            <t t-if="property.electricity_connection">
+                                                <div class="amenity-card">
+                                                    <i class="fas fa-bolt"></i>
+                                                    <span>Electricity</span>
+                                                </div>
+                                            </t>
+                                            <t t-if="property.drainage_facility">
+                                                <div class="amenity-card">
+                                                    <i class="fas fa-water"></i>
+                                                    <span>Drainage Facility</span>
+                                                </div>
+                                            </t>
+                                            <t t-if="property.gated_community">
+                                                <div class="amenity-card">
+                                                    <i class="fas fa-shield-alt"></i>
+                                                    <span>Gated Community</span>
+                                                </div>
+                                            </t>
+                                        </div>
+                                    </div>
+
+                                    <!-- DETAILED DESCRIPTION -->
+                                    <div class="content-section">
+                                        <h3 class="section-heading">About This Property</h3>
+                                        <div class="section-content">
+                                            <t t-if="property.detailed_description">
+                                                <div t-field="property.detailed_description" class="rich-content"></div>
+                                            </t>
+                                            <t t-else="">
+                                                <p>This property is strategically located and offers great investment potential. The area is well-connected with excellent infrastructure and amenities nearby.</p>
+                                                <p>Key features include quality construction, proper documentation, and clear title. This makes it an ideal choice for both end-users and investors looking for long-term value appreciation.</p>
+                                            </t>
+                                        </div>
+                                    </div>
+
+                                    <!-- UNIQUE FEATURES -->
+                                    <div class="content-section">
+                                        <h3 class="section-heading">Why Choose This Property</h3>
+                                        <div class="section-content">
+                                            <t t-if="property.ai_unique_features">
+                                                <div t-field="property.ai_unique_features" class="rich-content"></div>
+                                            </t>
+                                            <t t-else="">
+                                                <ul class="feature-list">
+                                                    <li><strong>Prime Location:</strong> Situated in a rapidly developing area with excellent connectivity.</li>
+                                                    <li><strong>Clear Title:</strong> <span t-field="property.title_status"></span> - ensuring hassle-free ownership.</li>
+                                                    <li><strong>Great Infrastructure:</strong> Access to essential amenities and utilities.</li>
+                                                    <li><strong>Investment Potential:</strong> High appreciation potential in this growing locality.</li>
+                                                    <li><strong>Ready Documentation:</strong> All necessary papers and approvals in place.</li>
+                                                    <li><strong>Flexible Payment:</strong> <t t-if="property.emi_available">EMI options available for your convenience.</t><t t-else="">Multiple payment options available.</t></li>
+                                                </ul>
+                                            </t>
+                                        </div>
+                                    </div>
+
+                                    <!-- NEARBY PLACES -->
+                                    <div class="content-section">
+                                        <h3 class="section-heading">Location &amp; Nearby</h3>
+                                        <div class="section-content">
+                                            <t t-if="property.ai_nearby_places">
+                                                <div t-field="property.ai_nearby_places" class="rich-content"></div>
+                                            </t>
+                                            <t t-else="">
+                                                <p>This property enjoys an excellent location with easy access to key areas and facilities.</p>
+                                            </t>
+                                            <t t-if="property.nearby_landmarks">
+                                                <div class="landmark-box">
+                                                    <i class="fas fa-landmark"></i>
+                                                    <div>
+                                                        <strong>Key Landmarks</strong>
+                                                        <p t-out="property.nearby_landmarks"></p>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                        </div>
+                                    </div>
+
+                                    <!-- INVESTMENT DETAILS -->
+                                    <div class="content-section">
+                                        <h3 class="section-heading">Investment Information</h3>
+                                        <div class="investment-grid">
+                                            <div class="investment-card">
+                                                <div class="invest-label">Registration Amount</div>
+                                                <div class="invest-value">
+                                                    <span t-field="property.registration_amount" t-options='{"widget":"monetary"}'></span>
+                                                </div>
+                                            </div>
+                                            <div class="investment-card">
+                                                <div class="invest-label">Price per Sq.Ft</div>
+                                                <div class="invest-value">
+                                                    ₹<span t-out="'{:,.2f}'.format(property.price_per_sqft) if property.price_per_sqft else 'N/A'"></span>
+                                                </div>
+                                            </div>
+                                            <t t-if="property.emi_available">
+                                                <div class="investment-card">
+                                                    <div class="invest-label">EMI Option</div>
+                                                    <div class="invest-value">
+                                                        <span class="badge-available">Available</span>
+                                                    </div>
+                                                </div>
+                                            </t>
+                                        </div>
+                                        <div class="section-content mt-3">
+                                            <t t-if="property.ai_investment_data">
+                                                <div t-field="property.ai_investment_data" class="rich-content"></div>
+                                            </t>
+                                        </div>
+                                    </div>
+
+                                    <!-- ASK A QUESTION (CTA banner) -->
+                                    <div class="content-section ask-question-section">
+                                        <div class="ask-question-cta">
+                                            <div class="ask-question-cta-badge"><i class="fas fa-bolt"></i> AI Powered</div>
+                                            <h3 class="ask-question-cta-title">Have a question about this property?</h3>
+                                            <p class="ask-question-cta-subtitle">Get instant, AI-answered details based on this listing.</p>
+                                            <button type="button" class="ask-question-cta-btn" onclick="openAskChat()">
+                                                <i class="fas fa-comment-dots"></i>
+                                                <span>Ask a Question</span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                                <!-- RIGHT SIDEBAR -->
+                                <div class="info-sidebar">
+
+                                    <!-- CONTACT AGENT CARD -->
+                                    <div class="sidebar-card contact-agent-card">
+                                        <h4 class="card-heading">Contact Agent</h4>
+
+                                        <div class="agent-profile">
+                                            <div class="agent-avatar">
+                                                <i class="fas fa-user-tie"></i>
+                                            </div>
+                                            <div class="agent-details">
+                                                <div class="agent-name" t-out="property.contact_name or 'Property Agent'"></div>
+                                                <div class="agent-title">Licensed Real Estate Agent</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="contact-buttons">
+                                            <a t-att-href="'tel:%s' % (property.contact_phone or '8187023634')" class="btn-contact btn-primary-contact">
+                                                <i class="fas fa-phone"></i>
+                                                <span>Call Now</span>
+                                            </a>
+
+                                            <a t-att-href="'https://wa.me/%s?text=%s' % (wa_phone, wa_encoded)" class="btn-contact btn-whatsapp-contact" target="_blank">
+                                                <i class="fab fa-whatsapp"></i>
+                                                <span>WhatsApp</span>
+                                            </a>
+                                        </div>
+
+                                        <div class="contact-info-list">
+                                            <div class="info-row">
+                                                <i class="fas fa-phone"></i>
+                                                <a t-att-href="'tel:%s' % (property.contact_phone or '')" t-out="property.contact_phone or 'N/A'"></a>
+                                            </div>
+                                            <div class="info-row">
+                                                <i class="fas fa-envelope"></i>
+                                                <a t-att-href="'mailto:%s' % (property.contact_email or '')" t-out="property.contact_email or 'N/A'"></a>
+                                            </div>
+                                        </div>
+
+                                        <button class="btn-schedule-tour" onclick="document.getElementById('contact-form-section').scrollIntoView({behavior: 'smooth'})">
+                                            <i class="fas fa-calendar-check"></i>
+                                            <span>Schedule a Tour</span>
+                                        </button>
+                                    </div>
+
+                                    <!-- CALCULATOR/INFO CARD -->
+                                    <div class="sidebar-card info-card">
+                                        <h4 class="card-heading">Property Details</h4>
+
+                                        <div class="detail-list">
+                                            <div class="detail-row">
+                                                <span class="detail-label">Plot Area</span>
+                                                <span class="detail-value"><span t-field="property.plot_area"></span> Sq.Ft</span>
+                                            </div>
+                                            <div class="detail-row">
+                                                <span class="detail-label">Facing Direction</span>
+                                                <span class="detail-value" t-field="property.facing_direction"></span>
+                                            </div>
+                                            <div class="detail-row">
+                                                <span class="detail-label">Title Status</span>
+                                                <span class="detail-value" t-field="property.title_status"></span>
+                                            </div>
+                                            <div class="detail-row">
+                                                <span class="detail-label">Road Width</span>
+                                                <span class="detail-value"><span t-out="property.road_width or 'N/A'"></span> Ft</span>
+                                            </div>
+                                            <div class="detail-row">
+                                                <span class="detail-label">Category</span>
+                                                <span class="detail-value" t-field="property.category_id.name"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- SIMILAR PROPERTIES -->
+                    <section class="similar-properties-section">
+                        <div class="content-container">
+                            <h2 class="main-section-heading">Similar Properties You May Like</h2>
+
+                            <t t-set="price_min" t-value="property.price * 0.8"/>
+                            <t t-set="price_max" t-value="property.price * 1.2"/>
+
+                            <t t-set="group1" t-value="request.env['property.property'].sudo().search([
+                                ('id','!=',property.id),
+                                ('category_id','=',property.category_id.id),
+                                ('price','&gt;=',price_min),
+                                ('price','&lt;=',price_max),
+                                ('is_published','=',True)
+                            ], limit=3)"/>
+
+                            <t t-set="group2" t-value="request.env['property.property'].sudo().search([
+                                ('id','!=',property.id),
+                                ('category_id','=',property.category_id.id),
+                                ('is_published','=',True)
+                            ], limit=3)"/>
+
+                            <t t-set="all_similar" t-value="list(group1) + [p for p in group2 if p not in group1]"/>
+                            <t t-set="similar_properties" t-value="all_similar[:6]"/>
+
+                            <t t-if="similar_properties">
+                                <div class="properties-grid-layout">
+                                    <t t-foreach="similar_properties" t-as="prop">
+                                        <div class="property-card-modern">
+                                            <a t-att-href="'/property/%s' % prop.id" class="card-link">
+                                                <div class="card-image-wrapper" style="position: relative;">
+                                                    <img t-att-src="'/web/image/property.property/%s/image' % prop.id" alt="Property Image"/>
+                                                    <t t-raw="property.status_ribbon_html"/>
+                                                    <div class="card-overlay">
+                                                        <span class="view-details">View Details</span>
+                                                    </div>
+                                                </div>
+                                                <div class="card-content-wrapper">
+                                                    <div class="card-price-tag">
+                                                        <span t-field="prop.price" t-options='{"widget":"monetary"}'></span>
+                                                    </div>
+                                                    <h3 class="card-title-text" t-field="prop.name"></h3>
+                                                    <div class="card-address-text">
+                                                        <i class="fas fa-map-marker-alt"></i>
+                                                        <span t-out="prop.street or 'Location'"></span>
+                                                        <t t-if="prop.city">, <span t-out="prop.city"></span></t>
+                                                    </div>
+                                                    <div class="card-features-row">
+                                                        <span class="feature-badge">
+                                                            <i class="fas fa-expand-arrows-alt"></i>
+                                                            <span t-field="prop.plot_area"></span> Sq.Ft
+                                                        </span>
+                                                        <span class="feature-badge">
+                                                            <i class="fas fa-compass"></i>
+                                                            <span t-field="prop.facing_direction"></span>
+                                                        </span>
+                                                    </div>
+                                                    <div class="card-action-row">
+                                                        <span class="property-category" t-field="prop.category_id.name"></span>
+                                                        <a t-att-href="'tel:%s' % (prop.contact_phone or '')" class="btn-call-mini" onclick="event.stopPropagation()">
+                                                            <i class="fas fa-phone"></i>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        </div>
+                                    </t>
+                                </div>
+
+                                <div class="view-all-container">
+                                    <a href="/" class="btn-view-all">
+                                        <span>View All Properties</span>
+                                        <i class="fas fa-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </t>
+
+                            <t t-else="">
+                                <div class="no-properties">
+                                    <i class="fas fa-home"></i>
+                                    <p>No similar properties available at the moment</p>
+                                    <a href="/" class="btn-view-all">Browse All Properties</a>
+                                </div>
+                            </t>
+                        </div>
+                    </section>
+
+                    <!-- CONTACT FORM SECTION -->
+                    <section class="contact-form-section" id="contact-form-section">
+                        <div class="content-container">
+                            <div class="form-wrapper">
+                                <div class="form-header">
+                                    <h2>Schedule Your Property Tour</h2>
+                                    <p>Fill out the form below and our agent will contact you shortly</p>
+                                </div>
+                                <div class="form-content">
+                                    <form action="/contactus" method="get" class="property-contact-form">
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label>Your Name</label>
+                                                <input type="text" name="name" placeholder="Enter your full name" required="required"/>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Email Address</label>
+                                                <input type="email" name="email" placeholder="your@email.com" required="required"/>
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label>Phone Number</label>
+                                                <input type="tel" name="phone" placeholder="+91 XXXXX XXXXX" required="required"/>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Preferred Date</label>
+                                                <input type="date" name="date"/>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Message</label>
+                                            <textarea name="message" rows="4" placeholder="Tell us about your requirements..."></textarea>
+                                        </div>
+                                        <button type="submit" class="btn-submit-form">
+                                            <span>Submit Request</span>
+                                            <i class="fas fa-paper-plane"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                </div>
+            </div>
+
+            <!-- ASK A QUESTION CHAT PANEL (slides in from the right) -->
+            <div class="ask-chat-backdrop" id="askChatBackdrop" onclick="closeAskChat()"></div>
+            <div class="ask-chat-panel" id="askChatPanel">
+                <div class="ask-chat-header">
+                    <div class="ask-chat-header-info">
+                        <div class="ask-question-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div>
+                            <div class="ask-chat-title-row">
+                                <h3 class="ask-chat-title">Ask a Question</h3>
+                                <span class="ai-badge"><i class="fas fa-bolt"></i> AI</span>
+                            </div>
+                            <span class="ask-chat-subtitle">Answers based on this listing</span>
+                        </div>
+                    </div>
+                    <button type="button" class="ask-chat-close" onclick="closeAskChat()" aria-label="Close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="ask-chat-messages" id="askChatMessages">
+                    <div class="ask-chat-bubble ask-chat-bubble-bot">
+                        <i class="fas fa-robot ask-chat-bubble-icon"></i>
+                        <div class="ask-chat-bubble-text">Hi! Ask me anything about this property — I'll answer using its listed details.</div>
+                    </div>
+                </div>
+
+                <div class="ask-chat-form">
+                    <textarea id="propertyQaInput" class="ask-chat-input"
+                              placeholder="Type your question..."
+                              rows="1"></textarea>
+                    <button type="button" class="ask-chat-send" id="propertyQaSubmitBtn"
+                            t-att-data-property-id="property.id"
+                            onclick="submitPropertyQuestion(event)">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SCRIPTS -->
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+            <script>
+                // Photo counter
+                document.addEventListener('DOMContentLoaded', function() {
+                    var carousel = document.getElementById('mainCarousel');
+                    if (carousel) {
+                        carousel.addEventListener('slid.bs.carousel', function(e) {
+                            document.querySelector('.current-photo').textContent = e.to + 1;
+                        });
+                    }
+
+                    // Thumbnail clicks
+                    document.querySelectorAll('.thumbnail-item').forEach(function(item, index) {
+                        item.addEventListener('click', function() {
+                            document.querySelectorAll('.thumbnail-item').forEach(t => t.classList.remove('active'));
+                            this.classList.add('active');
+                            var bsCarousel = new bootstrap.Carousel(document.getElementById('mainCarousel'));
+                            bsCarousel.to(index);
+                        });
+                    });
+
+                    // Sticky bar
+                    var stickyBar = document.querySelector('.sticky-action-bar');
+                    var heroSection = document.querySelector('.photo-gallery-section');
+
+                    window.addEventListener('scroll', function() {
+                        if (heroSection) {
+                            var heroBottom = heroSection.offsetTop + heroSection.offsetHeight;
+                            if (window.pageYOffset > heroBottom) {
+                                stickyBar.classList.add('visible');
+                            } else {
+                                stickyBar.classList.remove('visible');
+                            }
+                        }
+                    });
+                });
+
+                // Share menu toggle
+                function toggleShareMenu(event) {
+                    event.stopPropagation();
+                    var menu = document.getElementById('shareMenu');
+                    menu.classList.toggle('active');
+                }
+
+                document.addEventListener('click', function() {
+                    var menu = document.getElementById('shareMenu');
+                    if (menu &amp;&amp; menu.classList.contains('active')) {
+                        menu.classList.remove('active');
+                    }
+                });
+
+                // Ask-a-Question chat panel open/close
+                function openAskChat() {
+                    var panel = document.getElementById('askChatPanel');
+                    var backdrop = document.getElementById('askChatBackdrop');
+                    if (!panel) return;
+                    panel.classList.add('active');
+                    if (backdrop) backdrop.classList.add('active');
+                    setTimeout(function() {
+                        var input = document.getElementById('propertyQaInput');
+                        if (input) input.focus();
+                    }, 250);
+                }
+
+                function closeAskChat() {
+                    var panel = document.getElementById('askChatPanel');
+                    var backdrop = document.getElementById('askChatBackdrop');
+                    if (!panel) return;
+                    panel.classList.remove('active');
+                    if (backdrop) backdrop.classList.remove('active');
+                }
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        var panel = document.getElementById('askChatPanel');
+                        if (panel &amp;&amp; panel.classList.contains('active')) {
+                            closeAskChat();
+                        }
+                    }
+                });
+
+                // Ask-a-Question (Property Q&amp;A) — rendered as a chat thread
+                function addChatBubble(role, text, isLoading) {
+                    var messages = document.getElementById('askChatMessages');
+                    var bubble = document.createElement('div');
+                    bubble.className = 'ask-chat-bubble ask-chat-bubble-' + role + (isLoading ? ' ask-chat-bubble-loading' : '');
+
+                    if (role === 'bot') {
+                        var icon = document.createElement('i');
+                        icon.className = 'fas fa-robot ask-chat-bubble-icon';
+                        bubble.appendChild(icon);
+                    }
+
+                    var textEl = document.createElement('div');
+                    textEl.className = 'ask-chat-bubble-text';
+                    textEl.textContent = text;
+                    bubble.appendChild(textEl);
+
+                    messages.appendChild(bubble);
+                    messages.scrollTop = messages.scrollHeight;
+                    return bubble;
+                }
+
+                function submitPropertyQuestion(event) {
+                    event.stopPropagation();
+                    var btn = document.getElementById('propertyQaSubmitBtn');
+                    var input = document.getElementById('propertyQaInput');
+                    var propertyId = btn.getAttribute('data-property-id');
+                    var question = (input.value || '').trim();
+
+                    if (!question) {
+                        return;
+                    }
+
+                    addChatBubble('user', question, false);
+                    input.value = '';
+                    btn.disabled = true;
+
+                    var loadingBubble = addChatBubble('bot', 'Thinking...', true);
+
+                    var formData = new FormData();
+                    formData.append('question', question);
+
+                    fetch('/api/property/' + propertyId + '/ask', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
+                        btn.disabled = false;
+                        loadingBubble.classList.remove('ask-chat-bubble-loading');
+                        var textEl = loadingBubble.querySelector('.ask-chat-bubble-text');
+                        if (data.success) {
+                            textEl.textContent = data.answer;
+                        } else {
+                            loadingBubble.classList.add('ask-chat-bubble-error');
+                            textEl.textContent = data.error || 'Sorry, something went wrong.';
+                        }
+                        var messages = document.getElementById('askChatMessages');
+                        messages.scrollTop = messages.scrollHeight;
+                    })
+                    .catch(function() {
+                        btn.disabled = false;
+                        loadingBubble.classList.remove('ask-chat-bubble-loading');
+                        loadingBubble.classList.add('ask-chat-bubble-error');
+                        loadingBubble.querySelector('.ask-chat-bubble-text').textContent = 'Sorry, something went wrong. Please try again.';
+                    });
+                }
+
+                // Enter key sends the question (Shift+Enter for a new line)
+                document.addEventListener('keydown', function(e) {
+                    if (e.target &amp;&amp; e.target.id === 'propertyQaInput' &amp;&amp; e.key === 'Enter' &amp;&amp; !e.shiftKey) {
+                        e.preventDefault();
+                        submitPropertyQuestion(e);
+                    }
+                });
+            </script>
+
+        </t>
+    </template>
+</odoo>

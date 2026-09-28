@@ -1,0 +1,771 @@
+<odoo>
+    <template id="property_listing_template" name="Luxury Property Listing Page (Black + Gold)">
+        <t t-call="website.layout">
+        <main class="main-container">
+
+            <!-- 🏡 Hero Section -->
+            <section class="hero-section">
+                <div class="hero-overlay"/>
+                <div class="hero-content">
+                    <h1>Find Your Dream Property</h1>
+                    <p>Luxury homes, villas, and premium plots — curated just for you.</p>
+                    <a href="#properties" class="explore-btn">Explore Now</a>
+                </div>
+            </section>
+
+            <!-- 🎯 "Interested In" Context Banner -->
+            <!-- Shown when the customer arrived here from the Customer
+                 Dashboard "Add New Property" chooser after picking
+                 Buying / Renting / Investment instead of Selling. -->
+            <t t-if="interested_in and interested_in != 'sell'">
+                <section class="interest-context-banner">
+                    <div class="interest-context-inner">
+                        <span class="interest-context-icon">
+                            <i t-attf-class="fa {{'fa-shopping-cart' if interested_in == 'buy' else ('fa-key' if interested_in == 'rent' else 'fa-line-chart')}}"/>
+                        </span>
+                        <span class="interest-context-text">
+                            Showing properties for
+                            <strong t-esc="{'buy': 'Buying', 'rent': 'Renting', 'invest': 'Investment'}.get(interested_in, 'You')"/>
+                            <t t-if="exclude_own"> — your own listed properties are excluded.</t>
+                        </span>
+                        <a href="/properties" class="interest-context-clear">
+                            <i class="fa fa-times me-1"/> Clear
+                        </a>
+                    </div>
+                </section>
+            </t>
+
+            <!-- 🔍 Search Section -->
+            <!-- ⭐ FIX: the search card normally has a negative top-margin so
+                 it "floats up" over the hero section. When the banner above
+                 is present, that same negative margin pulled the search
+                 card up over the banner text and hid it. Now the pull-up
+                 only happens when the banner is NOT there; the banner
+                 itself gets the pull-up treatment instead, so there's
+                 never any overlap either way. -->
+            <section t-attf-class="search-section #{'search-section-after-banner' if interested_in and interested_in != 'sell' else ''}">
+                <div class="search-card">
+                    <form method="get" action="/properties" class="search-form">
+
+                        <!-- Preserve the "Interested In" context across searches -->
+                        <input type="hidden" name="interested_in" t-att-value="interested_in"/>
+                        <input type="hidden" name="exclude_own" t-att-value="exclude_own"/>
+
+                        <div class="input-group">
+                            <label>Search</label>
+                            <input type="text" name="search" placeholder="Name, Location, ZIP" t-att-value="search"/>
+                        </div>
+
+                        <div class="input-group">
+                            <label>City</label>
+                            <input type="text" name="city" placeholder="Enter city" t-att-value="city"/>
+                        </div>
+
+                        <div class="input-group">
+                            <label>ZIP</label>
+                            <input type="text" name="zip_code" placeholder="Enter ZIP" t-att-value="zip_code"/>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Rating</label>
+                            <select name="rating">
+                                <option value="" t-att-selected="'selected' if not rating else None">Any Rating</option>
+                                <option value="5" t-att-selected="'selected' if rating=='5' else None">5 Stars</option>
+                                <option value="4" t-att-selected="'selected' if rating=='4' else None">4 Stars &amp; Up</option>
+                                <option value="3" t-att-selected="'selected' if rating=='3' else None">3 Stars &amp; Up</option>
+                                <option value="2" t-att-selected="'selected' if rating=='2' else None">2 Stars &amp; Up</option>
+                                <option value="1" t-att-selected="'selected' if rating=='1' else None">1 Star &amp; Up</option>
+                            </select>
+                        </div>
+
+                        <div class="search-btn-wrap">
+                            <button type="submit" class="search-btn">
+                                <i class="fa fa-search me-1"></i>
+                                Search
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="back-wrap">
+                        <a href="/" class="back-btn">
+                            <i class="fa fa-arrow-left"/>
+                            Back to Home Page
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 🏘 Property Listing Section -->
+            <section id="properties" class="property-section">
+                <div class="property-container">
+
+                    <t t-if="properties">
+                        <div class="property-grid">
+                            <t t-foreach="properties" t-as="prop">
+                                <article class="property-card fade-in">
+
+                                    <!-- ⭐ Property Image with STATUS RIBBON -->
+                                    <div class="property-image-wrapper">
+                                        <div class="property-image">
+                                            <img t-if="prop['image_url']" t-att-src="prop['image_url']" alt="Property Image"/>
+                                            <img t-else="" src="/web/static/img/placeholder.png" alt="No Image"/>
+                                        </div>
+
+                                        <!-- ⭐ STATUS RIBBON -->
+                                        <div class="status-ribbon-wrapper">
+                                            <t t-if="prop.get('status') == 'available'">
+                                                <span class="status-ribbon ribbon-available">
+                                                    <i class="fa fa-check-circle"></i> AVAILABLE
+                                                </span>
+                                            </t>
+
+                                            <t t-elif="prop.get('status') == 'sold'">
+                                                <span class="status-ribbon ribbon-sold">
+                                                    <i class="fa fa-tag"></i> SOLD
+                                                </span>
+                                            </t>
+
+                                            <t t-elif="prop.get('status') == 'rented'">
+                                                <span class="status-ribbon ribbon-rented">
+                                                    <i class="fa fa-key"></i> RENTED
+                                                </span>
+                                            </t>
+                                        </div>
+
+                                        <!-- Luxury Image Overlay -->
+                                        <div class="image-glow"/>
+                                    </div>
+
+                                    <!-- Property Info -->
+                                    <div class="property-info">
+                                        <div class="property-top">
+                                            <h3 class="property-name" t-esc="prop['name']"/>
+                                            <p class="category">
+                                                <i class="fa fa-tags"></i>
+                                                <t t-esc="prop['category']"/>
+                                            </p>
+                                            <div class="property-rating" t-raw="prop['rating_html']"/>
+                                        </div>
+
+                                        <div class="property-price">
+                                            <span class="currency">₹</span>
+                                            <span class="amount">
+                                                <t t-esc="prop['price']"/>
+                                            </span>
+                                        </div>
+
+                                        <div class="meta">
+                                            <div class="meta-row">
+                                                <span class="meta-label">Plot Area</span>
+                                                <span class="meta-value">
+                                                    <t t-esc="prop['plot_area']"/> sq.ft
+                                                </span>
+                                            </div>
+
+                                            <div class="meta-row">
+                                                <span class="meta-label">Price / Sq.Ft</span>
+                                                <span class="meta-value">
+                                                    ₹ <t t-esc="prop['price_per_sqft']"/>
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <p class="location">
+                                            <i class="fa fa-map-marker-alt"></i>
+                                            <t t-esc="prop['city']"/> - <t t-esc="prop['zip_code']"/>
+                                        </p>
+
+                                        <a t-att-href="'/property/' + str(prop['id'])" class="view-btn">
+                                            View Details
+                                            <i class="fa fa-arrow-right ms-1"></i>
+                                        </a>
+                                    </div>
+
+                                </article>
+                            </t>
+                        </div>
+                    </t>
+
+                    <t t-if="not properties or not len(properties)">
+                        <div class="empty-state">
+                            <div class="empty-icon">
+                                <i class="fa fa-home"></i>
+                            </div>
+                            <p class="no-results">No properties found matching your criteria.</p>
+                            <p class="no-results-sub">Try adjusting your search filters and search again.</p>
+                        </div>
+                    </t>
+
+                </div>
+            </section>
+
+        </main>
+
+        <!-- 💎 Luxury Black + Gold CSS -->
+        <style>
+            /* ==============================
+               💎 Luxury Black + Gold Theme
+            ============================== */
+            :root {
+                --bg: #070A0F;                 /* Deep Black */
+                --surface: #0D111A;            /* Card base */
+                --surface-2: #111827;          /* Slightly lighter */
+                --text: #F8FAFC;               /* White */
+                --muted: rgba(248, 250, 252, 0.65);
+
+                /* Gold (Single Button Color) */
+                --gold: #D4AF37;
+                --gold-dark: #B88B1E;
+                --gold-soft: rgba(212, 175, 55, 0.12);
+
+                --border: rgba(212, 175, 55, 0.18);
+
+                --shadow-sm: 0 10px 25px rgba(0,0,0,0.55);
+                --shadow-md: 0 20px 50px rgba(0,0,0,0.70);
+
+                --radius-lg: 20px;
+                --radius-md: 16px;
+                --radius-sm: 12px;
+            }
+
+            .main-container {
+                background: var(--bg);
+                font-family: "Poppins", "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+                color: var(--text);
+                padding: 0;
+            }
+
+            /* ==============================
+               🌆 HERO SECTION
+            ============================== */
+            .hero-section {
+                position: relative;
+                padding: 4.5rem 1rem 5.2rem;
+                text-align: center;
+                overflow: hidden;
+
+                background:
+                    radial-gradient(circle at 20% 15%, rgba(212,175,55,0.20), transparent 60%),
+                    radial-gradient(circle at 85% 35%, rgba(212,175,55,0.10), transparent 55%),
+                    linear-gradient(135deg, #05070B, #0B1220);
+            }
+
+            .hero-overlay {
+                position: absolute;
+                inset: 0;
+                background:
+                    url("https://cdn.pixabay.com/photo/2016/11/18/14/42/architecture-1836070_1280.jpg")
+                    center/cover no-repeat;
+                opacity: 0.10;
+                filter: saturate(0.9) contrast(1.1);
+                transform: scale(1.06);
+            }
+
+            .hero-content {
+                position: relative;
+                z-index: 2;
+                max-width: 950px;
+                margin: 0 auto;
+            }
+
+            .hero-content h1 {
+                font-size: clamp(2rem, 3.2vw, 3.1rem);
+                font-weight: 900;
+                line-height: 1.15;
+                margin-bottom: 0.85rem;
+                letter-spacing: 0.2px;
+            }
+
+            .hero-content p {
+                font-size: clamp(1rem, 1.2vw, 1.15rem);
+                line-height: 1.75;
+                color: rgba(248, 250, 252, 0.82);
+                margin-bottom: 1.85rem;
+            }
+
+            /* Gold button (single color) */
+            .explore-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                background: var(--gold);
+                color: #0B0F17;
+                padding: 0.82rem 1.8rem;
+                border-radius: 999px;
+                font-weight: 850;
+                text-decoration: none;
+                box-shadow: 0 18px 38px rgba(212,175,55,0.18);
+                transition: transform 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+            }
+
+            .explore-btn:hover {
+                background: var(--gold-dark);
+                transform: translateY(-2px);
+                box-shadow: 0 24px 45px rgba(212,175,55,0.22);
+                color: #0B0F17;
+            }
+
+            /* ==============================
+               🎯 INTEREST CONTEXT BANNER
+            ============================== */
+            .interest-context-banner {
+                max-width: 1100px;
+                /* ⭐ FIX: this now does the "float up over the hero" pull
+                   that the search card normally does, since the banner
+                   sits first when it's shown. This keeps the same visual
+                   effect without the search card overlapping it. */
+                margin: -2.4rem auto 0;
+                padding: 0 1rem;
+                position: relative;
+                z-index: 6;
+            }
+
+            .interest-context-inner {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                background: rgba(212,175,55,0.10);
+                border: 1px solid rgba(212,175,55,0.30);
+                border-radius: var(--radius-lg);
+                padding: 0.85rem 1.2rem;
+                color: #F8FAFC;
+                flex-wrap: wrap;
+            }
+
+            .interest-context-icon {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 34px;
+                height: 34px;
+                border-radius: 50%;
+                background: rgba(212,175,55,0.20);
+                color: var(--gold);
+                flex-shrink: 0;
+            }
+
+            .interest-context-text {
+                flex: 1;
+                font-size: 0.95rem;
+            }
+
+            .interest-context-clear {
+                color: rgba(248,250,252,0.70);
+                text-decoration: none;
+                font-size: 0.85rem;
+                font-weight: 600;
+                white-space: nowrap;
+            }
+
+            .interest-context-clear:hover {
+                color: var(--gold);
+            }
+
+            /* ==============================
+               🔍 SEARCH SECTION
+            ============================== */
+            .search-section {
+                margin-top: -2.4rem;
+                padding: 0 1rem;
+                position: relative;
+                z-index: 5;
+            }
+
+            /* ⭐ FIX: when the interest banner is shown above, the search
+               card should sit normally below it (not pulled up over it). */
+            .search-section-after-banner {
+                margin-top: 1.25rem;
+            }
+
+            .search-card {
+                max-width: 1100px;
+                margin: 0 auto;
+                background: rgba(13, 17, 26, 0.92);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(212,175,55,0.20);
+                border-radius: var(--radius-lg);
+                box-shadow: var(--shadow-sm);
+                padding: 1.25rem 1.25rem 1rem;
+            }
+
+            .search-form {
+                display: grid;
+                grid-template-columns: 1.3fr 1fr 1fr auto;
+                gap: 0.9rem;
+                align-items: end;
+            }
+
+            .input-group label {
+                display: block;
+                font-size: 0.78rem;
+                font-weight: 700;
+                color: rgba(248,250,252,0.70);
+                margin-bottom: 0.35rem;
+                letter-spacing: 0.2px;
+            }
+
+            .search-form input {
+                width: 100%;
+                padding: 0.78rem 0.95rem;
+                border-radius: 14px;
+                border: 1px solid rgba(255,255,255,0.10);
+                background: rgba(255,255,255,0.04);
+                color: var(--text);
+                font-size: 0.95rem;
+                outline: none;
+                transition: border 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+            }
+
+            .search-form input::placeholder {
+                color: rgba(248,250,252,0.45);
+            }
+
+            .search-form input:focus {
+                border-color: rgba(212,175,55,0.55);
+                background: rgba(255,255,255,0.06);
+                box-shadow: 0 0 0 4px rgba(212,175,55,0.10);
+            }
+
+            /* Gold Search button */
+            .search-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.45rem;
+                background: var(--gold);
+                color: #0B0F17;
+                border: none;
+                border-radius: 14px;
+                padding: 0.85rem 1.25rem;
+                font-weight: 900;
+                cursor: pointer;
+                transition: transform 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+                box-shadow: 0 18px 35px rgba(212,175,55,0.16);
+            }
+
+            .search-btn:hover {
+                background: var(--gold-dark);
+                transform: translateY(-2px);
+                box-shadow: 0 24px 44px rgba(212,175,55,0.22);
+            }
+
+            .back-wrap {
+                margin-top: 0.85rem;
+                display: flex;
+                justify-content: flex-start;
+            }
+
+            .back-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.5rem;
+                text-decoration: none;
+                font-weight: 700;
+                font-size: 0.95rem;
+                color: rgba(248,250,252,0.80);
+                padding: 0.55rem 0.95rem;
+                border-radius: 14px;
+                border: 1px solid rgba(255,255,255,0.10);
+                background: rgba(255,255,255,0.04);
+                transition: transform 0.25s ease, background 0.25s ease;
+            }
+
+            .back-btn:hover {
+                background: rgba(212,175,55,0.08);
+                transform: translateY(-1px);
+                color: rgba(248,250,252,0.92);
+            }
+
+            /* ==============================
+               🏘 PROPERTY SECTION
+            ============================== */
+            .property-section {
+                padding: 2rem 1rem 3.4rem;
+            }
+
+            .property-container {
+                max-width: 1200px;
+                margin: 0 auto;
+            }
+
+            .property-grid {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 1.25rem;
+                margin-top: 1rem;
+            }
+
+            .property-card {
+                background: linear-gradient(180deg, rgba(17,24,39,0.92), rgba(13,17,26,0.92));
+                border-radius: var(--radius-lg);
+                border: 1px solid rgba(255,255,255,0.08);
+                box-shadow: var(--shadow-sm);
+                overflow: hidden;
+                transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .property-card:hover {
+                transform: translateY(-8px);
+                box-shadow: var(--shadow-md);
+                border-color: rgba(212,175,55,0.25);
+            }
+
+            /* Image wrapper */
+            .property-image-wrapper {
+                position: relative;
+                overflow: hidden;
+            }
+
+            .property-image {
+                height: 180px;
+                overflow: hidden;
+                background: #0B0F17;
+            }
+
+            .property-image img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                transition: transform 0.45s ease, filter 0.35s ease;
+            }
+
+            .property-card:hover .property-image img {
+                transform: scale(1.08);
+                filter: contrast(1.05) brightness(1.05);
+            }
+
+            /* Luxury subtle glow on image */
+            .image-glow {
+                position: absolute;
+                inset: 0;
+                background: linear-gradient(
+                    180deg,
+                    rgba(0,0,0,0.10) 0%,
+                    rgba(0,0,0,0.25) 55%,
+                    rgba(0,0,0,0.55) 100%
+                );
+                pointer-events: none;
+            }
+
+            /* Status ribbon */
+            .status-ribbon-wrapper {
+                position: absolute;
+                top: 12px;
+                right: 12px;
+                z-index: 10;
+            }
+
+            .status-ribbon {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.35rem;
+                padding: 0.45rem 0.75rem;
+                font-size: 11px;
+                font-weight: 900;
+                letter-spacing: 0.9px;
+                color: #0B0F17;
+                border-radius: 999px;
+                background: var(--gold);
+                box-shadow: 0 12px 25px rgba(0,0,0,0.35);
+                text-transform: uppercase;
+            }
+
+            /* Keep statuses but still luxury */
+            .ribbon-available { background: #D4AF37; color: #0B0F17; }
+            .ribbon-sold { background: #DC2626; color: #fff; }
+            .ribbon-rented { background: #0284C7; color: #fff; }
+
+            /* Property Info */
+            .property-info {
+                padding: 1rem 1rem 1.1rem;
+                display: flex;
+                flex-direction: column;
+                flex: 1;
+            }
+
+            .property-name {
+                font-size: 1.05rem;
+                font-weight: 850;
+                line-height: 1.25;
+                margin: 0 0 0.35rem;
+                color: rgba(248,250,252,0.95);
+            }
+
+            .category {
+                font-size: 0.86rem;
+                color: rgba(212,175,55,0.92);
+                margin: 0;
+                display: flex;
+                gap: 0.45rem;
+                align-items: center;
+                font-weight: 700;
+            }
+
+            .property-rating {
+                margin: 0.3rem 0 0;
+                font-size: 0.82rem;
+            }
+            .property-rating .fa-star { color: #f5a623; }
+            .property-rating .fa-star-o { color: rgba(248,250,252,0.35); }
+
+            .property-price {
+                display: flex;
+                align-items: baseline;
+                gap: 0.35rem;
+                margin: 0.35rem 0 0.75rem;
+            }
+
+            .currency {
+                font-size: 0.95rem;
+                color: rgba(212,175,55,0.85);
+                font-weight: 800;
+            }
+
+            .amount {
+                font-size: 1.25rem;
+                font-weight: 950;
+                color: rgba(248,250,252,0.95);
+                letter-spacing: 0.2px;
+            }
+
+            /* Meta block */
+            .meta {
+                display: grid;
+                gap: 0.45rem;
+                padding: 0.75rem 0.8rem;
+                border-radius: 16px;
+                background: rgba(255,255,255,0.04);
+                border: 1px solid rgba(255,255,255,0.08);
+                margin-bottom: 0.85rem;
+            }
+
+            .meta-row {
+                display: flex;
+                justify-content: space-between;
+                gap: 0.75rem;
+                font-size: 0.86rem;
+                line-height: 1.35;
+            }
+
+            .meta-label {
+                color: rgba(248,250,252,0.55);
+                font-weight: 650;
+            }
+
+            .meta-value {
+                color: rgba(248,250,252,0.88);
+                font-weight: 800;
+                text-align: right;
+            }
+
+            .location {
+                font-size: 0.9rem;
+                color: rgba(248,250,252,0.65);
+                display: flex;
+                align-items: center;
+                gap: 0.45rem;
+                margin: 0 0 1rem;
+            }
+
+            /* Gold CTA */
+            .view-btn {
+                margin-top: auto;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                background: var(--gold);
+                color: #0B0F17;
+                padding: 0.82rem 1rem;
+                border-radius: 16px;
+                text-decoration: none;
+                font-weight: 950;
+                font-size: 0.92rem;
+                transition: transform 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+                box-shadow: 0 18px 35px rgba(212,175,55,0.14);
+            }
+
+            .view-btn:hover {
+                background: var(--gold-dark);
+                transform: translateY(-2px);
+                box-shadow: 0 24px 45px rgba(212,175,55,0.20);
+                color: #0B0F17;
+            }
+
+            /* ==============================
+               Empty State
+            ============================== */
+            .empty-state {
+                background: rgba(13, 17, 26, 0.92);
+                border: 1px solid rgba(255,255,255,0.08);
+                border-radius: var(--radius-lg);
+                padding: 3rem 1.25rem;
+                text-align: center;
+                box-shadow: var(--shadow-sm);
+                margin-top: 1.2rem;
+            }
+
+            .empty-icon {
+                width: 62px;
+                height: 62px;
+                margin: 0 auto 0.85rem;
+                border-radius: 18px;
+                display: grid;
+                place-items: center;
+                background: rgba(212,175,55,0.12);
+                color: rgba(212,175,55,0.95);
+                font-size: 1.6rem;
+            }
+
+            .no-results {
+                margin: 0;
+                font-size: 1.15rem;
+                font-weight: 950;
+                color: rgba(248,250,252,0.92);
+            }
+
+            .no-results-sub {
+                margin: 0.45rem 0 0;
+                font-size: 0.95rem;
+                color: rgba(248,250,252,0.62);
+            }
+
+            /* ==============================
+               ✨ Animation
+            ============================== */
+            .fade-in {
+                opacity: 0;
+                transform: translateY(18px);
+                animation: fadeInUp 0.7s ease forwards;
+            }
+
+            @keyframes fadeInUp {
+                to { opacity: 1; transform: translateY(0); }
+            }
+
+            /* ==============================
+               📱 Responsive
+            ============================== */
+            @media (max-width: 1200px) {
+                .property-grid { grid-template-columns: repeat(3, 1fr); }
+            }
+
+            @media (max-width: 992px) {
+                .search-form { grid-template-columns: 1fr 1fr; }
+                .search-btn-wrap { grid-column: 1 / -1; }
+                .search-btn { width: 100%; }
+                .property-grid { grid-template-columns: repeat(2, 1fr); }
+            }
+
+            @media (max-width: 600px) {
+                .hero-section { padding: 3.4rem 1rem 4.2rem; }
+                .search-form { grid-template-columns: 1fr; }
+                .property-grid { grid-template-columns: 1fr; }
+                .property-image { height: 220px; }
+            }
+        </style>
+        </t>
+    </template>
+</odoo>

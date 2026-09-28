@@ -1,0 +1,2 @@
+from . import agent_registration_reject_wizard
+from . import customer_registration_reject_wizard

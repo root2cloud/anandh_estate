@@ -1,0 +1,234 @@
+.property_dashboard {
+    padding: 20px;
+    background: #f5f7fa;
+    min-height: 100vh;
+}
+
+.dashboard-header {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+}
+
+.dashboard-title {
+    color: #2c3e50;
+    font-weight: 600;
+    margin: 0;
+}
+
+/* KPI Cards */
+.dashboard-card {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    height: 120px;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.dashboard-card .card-icon {
+    font-size: 48px;
+    margin-right: 20px;
+    opacity: 0.9;
+}
+
+.dashboard-card .card-content h3 {
+    font-size: 32px;
+    font-weight: 700;
+    margin: 0;
+    color: inherit;
+}
+
+.dashboard-card .card-content p {
+    margin: 5px 0 0 0;
+    font-size: 14px;
+    color: inherit;
+    opacity: 0.9;
+}
+
+/* Card Color Variants */
+.card-blue {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.card-green {
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    color: white;
+}
+
+.card-orange {
+    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+    color: white;
+}
+
+.card-purple {
+    background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+    color: white;
+}
+
+.card-gradient-blue {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+}
+
+.card-gradient-green {
+    background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%);
+    color: white;
+}
+
+.card-gradient-purple {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+}
+
+.card-warning {
+    background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%);
+    color: white;
+}
+
+.card-success {
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    color: white;
+}
+
+.card-danger {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+}
+
+/* Chart Cards */
+.chart-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+
+.chart-title {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #ecf0f1;
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+}
+
+/* List Cards */
+.list-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+
+.list-title {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #ecf0f1;
+}
+
+/* Agent List */
+.agent-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.agent-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #ecf0f1;
+    transition: background 0.2s;
+}
+
+.agent-item:hover {
+    background: #f8f9fa;
+}
+
+.agent-item:last-child {
+    border-bottom: none;
+}
+
+.agent-info strong {
+    color: #2c3e50;
+    font-size: 15px;
+}
+
+.agent-sales {
+    text-align: right;
+}
+
+/* Property List */
+.property-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.property-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #ecf0f1;
+    transition: background 0.2s;
+}
+
+.property-item:hover {
+    background: #f8f9fa;
+}
+
+.property-item:last-child {
+    border-bottom: none;
+}
+
+.property-info strong {
+    color: #2c3e50;
+    font-size: 15px;
+}
+
+.property-price {
+    text-align: right;
+}
+
+.property-price .price {
+    display: block;
+    font-weight: 600;
+    color: #27ae60;
+    margin-bottom: 5px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .dashboard-card {
+        height: auto;
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .dashboard-card .card-icon {
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+    
+    .chart-container {
+        height: 250px;
+    }
+}

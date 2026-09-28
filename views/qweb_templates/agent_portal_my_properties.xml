@@ -1,0 +1,373 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="agent_portal_my_properties" name="My Properties">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+
+            <div class="container mt-4 mb-5">
+
+                <div class="mb-3">
+                    <a href="/my/agent/dashboard" class="btn btn-outline-secondary">
+                        <i class="fa fa-arrow-left"/>
+                        Back to My Dashboard
+                    </a>
+                </div>
+
+                <!-- Success Message -->
+                <div t-if="success" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fa fa-check-circle"/>
+                    Property submitted successfully! It will be published after admin approval.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                </div>
+
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="mb-0">
+                        <i class="fa fa-home"/>
+                        My Properties
+                        <span class="badge bg-primary ms-2">
+                            <t t-esc="len(properties)"/>
+                        </span>
+                    </h2>
+                    <a href="/my/agent/property/add" class="btn btn-success">
+                        <i class="fa fa-plus-circle"/>
+                        Add New Property
+                    </a>
+                </div>
+
+                <!-- Empty State -->
+                <div t-if="not properties" class="card shadow-sm border-0">
+                    <div class="card-body text-center py-5">
+                        <i class="fa fa-home fa-5x text-muted mb-3"/>
+                        <h4 class="text-muted">No Properties Yet</h4>
+                        <p class="text-muted mb-4">You haven't submitted any properties yet.</p>
+                        <a href="/my/agent/property/add" class="btn btn-primary btn-lg">
+                            <i class="fa fa-plus"/>
+                            Submit Your First Property
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Properties Grid -->
+                <div t-if="properties" class="row">
+                    <t t-foreach="properties" t-as="prop">
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card shadow-sm border-0 h-100 property-card">
+                                <!-- Property Image with Overlays -->
+                                <div class="position-relative" style="overflow: hidden;">
+                                    <!-- Main Image -->
+                                    <img t-if="prop.image"
+                                         t-att-src="image_data_uri(prop.image)"
+                                         class="card-img-top"
+                                         style="height: 220px; object-fit: cover; transition: transform 0.3s ease;"
+                                         onmouseover="this.style.transform='scale(1.05)'"
+                                         onmouseout="this.style.transform='scale(1)'"/>
+                                    <img t-else=""
+                                         src="/web/static/img/placeholder.png"
+                                         class="card-img-top"
+                                         style="height: 220px; object-fit: cover; background: #f0f0f0;"/>
+
+                                    <!-- ⭐ STATUS RIBBON - TOP RIGHT CORNER -->
+                                    <div class="position-absolute top-0 end-0">
+                                        <!-- Available Status -->
+                                        <span t-if="prop.status == 'available'"
+                                              class="badge text-white px-3 py-2 rounded-0 rounded-bottom-start"
+                                              style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                                     font-size: 11px;
+                                                     font-weight: 700;
+                                                     letter-spacing: 0.8px;
+                                                     box-shadow: 0 3px 10px rgba(0,0,0,0.3);">
+                                            <i class="fa fa-check-circle"/>
+                                            AVAILABLE
+                                        </span>
+
+                                        <!-- Sold Status -->
+                                        <span t-elif="prop.status == 'sold'"
+                                              class="badge text-white px-3 py-2 rounded-0 rounded-bottom-start"
+                                              style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                                                     font-size: 11px;
+                                                     font-weight: 700;
+                                                     letter-spacing: 0.8px;
+                                                     box-shadow: 0 3px 10px rgba(0,0,0,0.3);">
+                                            <i class="fa fa-tag"/>
+                                            SOLD
+                                        </span>
+
+                                        <!-- Rented Status -->
+                                        <span t-elif="prop.status == 'rented'"
+                                              class="badge text-white px-3 py-2 rounded-0 rounded-bottom-start"
+                                              style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+                                                     font-size: 11px;
+                                                     font-weight: 700;
+                                                     letter-spacing: 0.8px;
+                                                     box-shadow: 0 3px 10px rgba(0,0,0,0.3);">
+                                            <i class="fa fa-key"/>
+                                            RENTED
+                                        </span>
+                                    </div>
+
+                                    <!-- ⭐ PUBLISHED/PENDING BADGE - TOP LEFT CORNER (SEPARATE DIV) -->
+                                    <div class="position-absolute top-0 start-0 m-2">
+                                        <span t-if="prop.is_published"
+                                              class="badge bg-success px-2 py-1"
+                                              style="font-size: 11px; font-weight: 600; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
+                                            <i class="fa fa-check"/>
+                                            Published
+                                        </span>
+                                        <span t-else=""
+                                              class="badge bg-warning text-dark px-2 py-1"
+                                              style="font-size: 11px; font-weight: 600; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">
+                                            <i class="fa fa-clock-o"/>
+                                            Pending
+                                        </span>
+                                    </div>
+
+                                    <!-- ⭐ VIEWS BADGE - BOTTOM LEFT CORNER -->
+                                    <div class="position-absolute bottom-0 start-0 m-2">
+                                        <span class="badge bg-dark bg-opacity-75 px-2 py-1"
+                                              style="font-size: 11px; backdrop-filter: blur(5px);">
+                                            <i class="fa fa-eye"/>
+                                            <t t-esc="prop.views"/>
+                                            views
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Card Body -->
+                                <div class="card-body d-flex flex-column">
+                                    <!-- Property Title -->
+                                    <h5 class="card-title mb-2" style="font-weight: 600; color: #2c3e50;">
+                                        <t t-esc="prop.name"/>
+                                    </h5>
+
+                                    <!-- Location -->
+                                    <p class="text-muted mb-2 small">
+                                        <i class="fa fa-map-marker text-danger"/>
+                                        <t t-esc="prop.city"/>
+                                        <t t-if="prop.state_id">•
+                                            <t t-esc="prop.state_id.name"/>
+                                        </t>
+                                    </p>
+
+                                    <!-- ⭐ STATUS QUICK CHANGE DROPDOWN -->
+                                    <div class="mb-3">
+                                        <label class="form-label small text-muted mb-1">Status:</label>
+                                        <select class="form-select form-select-sm status-quick-change"
+                                                t-att-data-property-id="prop.id"
+                                                t-att-data-current-status="prop.status"
+                                                t-att-data-csrf-token="request.csrf_token()">
+                                            <option value="available"
+                                                    t-att-selected="'selected' if prop.status == 'available' else None">
+                                                ✓ Available
+                                            </option>
+                                            <option value="sold"
+                                                    t-att-selected="'selected' if prop.status == 'sold' else None">
+                                                ✗ Sold
+                                            </option>
+                                            <option value="rented"
+                                                    t-att-selected="'selected' if prop.status == 'rented' else None">
+                                                🔑 Rented
+                                            </option>
+                                        </select>
+                                        <small class="text-muted d-block mt-1">
+                                            <i class="fa fa-info-circle"/>
+                                            Change to update
+                                        </small>
+                                    </div>
+
+                                    <h4 class="text-primary mb-3">
+                                        ₹
+                                        <t t-esc="'{:,.0f}'.format(prop.price)"/>
+                                    </h4>
+
+                                    <div class="d-flex justify-content-between text-muted small mb-3">
+                                        <span t-if="prop.plot_area">
+                                            <i class="fa fa-expand"/>
+                                            <t t-esc="int(prop.plot_area)"/>
+                                            sq ft
+                                        </span>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-info">
+                                            <i class="fa fa-eye"/>
+                                            <t t-esc="prop.views"/>
+                                            views
+                                        </span>
+                                        <a t-attf-href="/my/agent/property/#{prop.id}"
+                                           class="btn btn-sm btn-outline-primary">
+                                            View Details
+                                            <i class="fa fa-arrow-right"/>
+                                        </a>
+                                    </div>
+
+                                    <!-- Price -->
+                                    <h4 class="text-primary mb-3 fw-bold">
+                                        ₹
+                                        <t t-esc="'{:,.0f}'.format(prop.price)"/>
+                                    </h4>
+
+                                    <!-- Property Stats -->
+                                    <div class="d-flex justify-content-start gap-3 text-muted small mb-3">
+                                        <span t-if="prop.plot_area">
+                                            <i class="fa fa-expand"/>
+                                            <t t-esc="int(prop.plot_area)"/>
+                                            sq ft
+                                        </span>
+                                        <span t-if="prop.category_id">
+                                            <i class="fa fa-tag"/>
+                                            <t t-esc="prop.category_id.name"/>
+                                        </span>
+                                    </div>
+
+                                    <!-- Actions -->
+                                    <div class="mt-auto">
+                                        <a t-attf-href="/my/agent/property/#{prop.id}"
+                                           class="btn btn-outline-primary btn-sm w-100">
+                                            <i class="fa fa-eye"/>
+                                            View Full Details
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+
+                <!-- Pagination (if needed) -->
+                <div t-if="properties and len(properties) > 12" class="mt-4 d-flex justify-content-center">
+                    <nav>
+                        <ul class="pagination">
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1">Previous</a>
+                            </li>
+                            <li class="page-item active">
+                                <a class="page-link" href="#">1</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Custom CSS for hover effects -->
+            <style>
+                .property-card {
+                transition: all 0.3s ease;
+                }
+                .property-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+                }
+                .property-card img {
+                transition: transform 0.3s ease;
+                }
+            </style>
+        </t>
+
+        <!-- ⭐⭐⭐ JAVASCRIPT FOR QUICK STATUS CHANGE ⭐⭐⭐ -->
+<script type="text/javascript">
+(function() {
+    'use strict';
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get all status dropdown selects
+        const statusSelects = document.querySelectorAll('.status-quick-change');
+
+        if (statusSelects.length === 0) {
+            console.log('No status dropdowns found');
+            return;
+        }
+
+        console.log('Found ' + statusSelects.length + ' status dropdowns');
+
+        // Add change event to each dropdown
+        statusSelects.forEach(function(select) {
+            select.addEventListener('change', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const propertyId = this.getAttribute('data-property-id');
+                const newStatus = this.value;
+                const currentStatus = this.getAttribute('data-current-status');
+                const csrfToken = this.getAttribute('data-csrf-token');
+
+                // Check if status actually changed
+                if (newStatus === currentStatus) {
+                    console.log('Status not changed');
+                    return;
+                }
+
+                // Confirm before updating
+                const statusLabels = {
+                    'available': 'Available',
+                    'sold': 'Sold',
+                    'rented': 'Rented'
+                };
+
+                if (!confirm('Update property status to "' + statusLabels[newStatus] + '"?')) {
+                    // Reset to current status
+                    this.value = currentStatus;
+                    return;
+                }
+
+                // Disable select during update
+                this.disabled = true;
+
+                // Update status
+                updatePropertyStatus(propertyId, newStatus, csrfToken, this);
+            });
+        });
+
+        function updatePropertyStatus(propertyId, newStatus, csrfToken, selectElement) {
+            console.log('Updating property', propertyId, 'to', newStatus);
+
+            // Create FormData (NOT JSON!)
+            const formData = new FormData();
+            formData.append('property_id', propertyId);
+            formData.append('new_status', newStatus);
+            formData.append('csrf_token', csrfToken);
+
+            // Send POST request
+            fetch('/my/agent/property/update_status', {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin'
+            })
+            .then(function(response) {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
+            .then(function(data) {
+                console.log('Response data:', data);
+
+                if (data.success) {
+                    alert('✓ ' + data.message);
+                    // Update data attribute
+                    selectElement.setAttribute('data-current-status', newStatus);
+                    selectElement.disabled = false;
+                    // Reload page to show new ribbon
+                    window.location.reload();
+                } else {
+                    alert('✗ ' + (data.message || 'Failed to update status'));
+                    // Reset to old value
+                    selectElement.value = selectElement.getAttribute('data-current-status');
+                    selectElement.disabled = false;
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                alert('Error: Could not update status. Please try again.');
+                // Reset to old value
+                selectElement.value = selectElement.getAttribute('data-current-status');
+                selectElement.disabled = false;
+            });
+        }
+    });
+})();
+</script>
+
+    </template>
+</odoo>

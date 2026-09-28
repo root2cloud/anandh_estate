@@ -1,0 +1,1244 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- =========================================================
+         AGENT REGISTRATION FORM (Luxury Premium UI)
+         - No functionality removed
+         - Same field names, routes, loops, csrf token
+    ========================================================== -->
+    <template id="agent_registration_form_template" name="Agent Registration Form - Premium Luxury">
+        <t t-call="website.layout">
+
+            <!-- Premium Fonts -->
+            <t t-set="additional_head">
+                <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;family=Playfair+Display:wght@600;700;800;900&amp;display=swap" rel="stylesheet"/>
+            </t>
+
+            <div id="wrap" class="re-agent-wrap">
+
+                <!-- =========================================================
+                     HERO
+                ========================================================== -->
+                <section class="re-agent-hero">
+                    <div class="re-agent-hero-bg"></div>
+
+                    <div class="container position-relative">
+                        <div class="row justify-content-center">
+                            <div class="col-lg-11 col-xl-9 text-center">
+
+                                <div class="re-agent-hero-badge mb-4">
+                                    <span class="re-agent-dot"></span>
+                                    <span>Elite Agent Network • Premium Verification</span>
+                                </div>
+
+                                <h1 class="re-agent-hero-title mb-3">
+                                    Join Our Elite Agent Network
+                                </h1>
+
+                                <p class="re-agent-hero-subtitle mb-5">
+                                    Start your journey with India’s trusted real estate platform.
+                                    Build credibility, get premium leads, and grow faster.
+                                </p>
+
+                                <div class="re-agent-hero-stats">
+                                    <div class="re-agent-stat">
+                                        <i class="fa fa-shield"></i>
+                                        <span>Verified Profile</span>
+                                    </div>
+                                    <div class="re-agent-stat">
+                                        <i class="fa fa-star"></i>
+                                        <span>Premium Listings</span>
+                                    </div>
+                                    <div class="re-agent-stat">
+                                        <i class="fa fa-users"></i>
+                                        <span>High Intent Buyers</span>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="re-agent-divider"></div>
+                </section>
+
+
+                <!-- =========================================================
+                     FORM SECTION
+                ========================================================== -->
+                <section class="re-agent-form-section">
+                    <div class="container">
+                        <div class="row justify-content-center">
+                            <div class="col-lg-11 col-xl-10">
+
+                                <div class="re-agent-card">
+
+                                    <!-- Header -->
+                                    <div class="re-agent-card-head">
+                                        <div>
+                                            <h2 class="re-agent-card-title">Agent Registration</h2>
+                                            <p class="re-agent-card-subtitle">
+                                                Fill your details carefully. Our team will review your application within 2–3 business days.
+                                            </p>
+                                        </div>
+
+                                        <div class="re-agent-chips">
+                                            <span class="re-agent-chip">
+                                                <i class="fa fa-lock me-2"></i> Secure
+                                            </span>
+                                            <span class="re-agent-chip">
+                                                <i class="fa fa-check-circle me-2"></i> Verified
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Body -->
+                                    <div class="re-agent-card-body">
+
+                                        <form action="/agent/register/submit"
+                                              method="POST"
+                                              enctype="multipart/form-data"
+                                              class="re-agent-form"
+                                              autocomplete="off">
+
+                                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+
+                                            <!-- =========================================================
+                                                 SECTION 1: PERSONAL INFO
+                                            ========================================================== -->
+                                            <div class="re-agent-section">
+                                                <div class="re-agent-section-head">
+                                                    <div class="re-agent-step">01</div>
+                                                    <div>
+                                                        <h3 class="re-agent-section-title">
+                                                            <i class="fa fa-user me-2"></i>Personal Information
+                                                        </h3>
+                                                        <p class="re-agent-section-desc">Basic details to create your agent profile</p>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row g-4">
+                                                    <div class="col-md-6">
+                                                        <div class="re-agent-group">
+                                                            <label class="re-agent-label">Full Name <span class="re-agent-required">*</span></label>
+                                                            <input type="text" name="agent_name" class="re-agent-input"
+                                                                   required="required" placeholder="Enter your full name"/>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="re-agent-group">
+                                                            <label class="re-agent-label">Email Address <span class="re-agent-required">*</span></label>
+                                                            <input type="email" name="email" class="re-agent-input"
+                                                                   required="required" placeholder="your.email@example.com"/>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="re-agent-group">
+                                                            <label class="re-agent-label">Phone Number <span class="re-agent-required">*</span></label>
+                                                            <input type="tel" name="phone" class="re-agent-input"
+                                                                   required="required" placeholder="+91 98765 43210"/>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="re-agent-group">
+                                                            <label class="re-agent-label">WhatsApp Number</label>
+                                                            <input type="tel" name="whatsapp" class="re-agent-input"
+                                                                   placeholder="+91 98765 43210"/>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+
+                                            <!-- =========================================================
+                                                 SECTION 2: PROFESSIONAL DETAILS
+                                            ========================================================== -->
+                                            <div class="re-agent-section">
+                                                <div class="re-agent-section-head">
+                                                    <div class="re-agent-step">02</div>
+                                                    <div>
+                                                        <h3 class="re-agent-section-title">
+                                                            <i class="fa fa-briefcase me-2"></i>Professional Details
+                                                        </h3>
+                                                        <p class="re-agent-section-desc">Your experience &amp; role preference</p>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row g-4">
+                                                    <div class="col-md-6">
+                                                        <div class="re-agent-group">
+                                                            <label class="re-agent-label">Desired Designation <span class="re-agent-required">*</span></label>
+                                                            <select name="designation" class="re-agent-input re-agent-select" required="required">
+                                                                <option value="">Select Designation</option>
+                                                                <option value="agent">Agent</option>
+                                                                <option value="senior_agent">Senior Agent</option>
+                                                                <option value="principal_agent">Principal Agent</option>
+                                                                <option value="broker">Broker</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="re-agent-group">
+                                                            <label class="re-agent-label">Expertise Level <span class="re-agent-required">*</span></label>
+                                                            <select name="expertise_level" class="re-agent-input re-agent-select" required="required">
+                                                                <option value="">Select Level</option>
+                                                                <option value="standard">Standard Agent</option>
+                                                                <option value="luxury">Luxury Expert</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="re-agent-group">
+                                                            <label class="re-agent-label">Real Estate License Number</label>
+                                                            <input type="text" name="license_number" class="re-agent-input"
+                                                                   placeholder="License number (if applicable)"/>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="re-agent-group">
+                                                            <label class="re-agent-label">Years of Experience <span class="re-agent-required">*</span></label>
+                                                            <input type="number" name="experience_years" class="re-agent-input"
+                                                                   required="required" min="0" max="50" placeholder="0"/>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+
+                                            <!-- =========================================================
+                                                 SECTION 3: LOCATION
+                                            ========================================================== -->
+                                            <div class="re-agent-section">
+                                                <div class="re-agent-section-head">
+                                                    <div class="re-agent-step">03</div>
+                                                    <div>
+                                                        <h3 class="re-agent-section-title">
+                                                            <i class="fa fa-map-marker me-2"></i>Location Details
+                                                        </h3>
+                                                        <p class="re-agent-section-desc">Where do you operate?</p>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row g-4">
+                                                    <div class="col-md-4">
+                                                        <div class="re-agent-group">
+                                                            <label class="re-agent-label">City <span class="re-agent-required">*</span></label>
+                                                            <input type="text" name="city" class="re-agent-input"
+                                                                   required="required" placeholder="City"/>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-4">
+                                                        <div class="re-agent-group">
+                                                            <label class="re-agent-label">State <span class="re-agent-required">*</span></label>
+                                                            <select name="state_id" class="re-agent-input re-agent-select" required="required">
+                                                                <option value="">Select State</option>
+                                                                <t t-foreach="states" t-as="state">
+                                                                    <option t-att-value="state.id" t-esc="state.name"/>
+                                                                </t>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-4">
+                                                        <div class="re-agent-group">
+                                                            <label class="re-agent-label">ZIP Code</label>
+                                                            <input type="text" name="zip_code" class="re-agent-input"
+                                                                   placeholder="500001"/>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+
+                                            <!-- =========================================================
+                                                 SECTION 4: SPECIALIZATIONS
+                                            ========================================================== -->
+                                            <div class="re-agent-section">
+                                                <div class="re-agent-section-head">
+                                                    <div class="re-agent-step">04</div>
+                                                    <div>
+                                                        <h3 class="re-agent-section-title">
+                                                            <i class="fa fa-star me-2"></i>Property Specializations
+                                                        </h3>
+                                                        <p class="re-agent-section-desc">Select your focus areas (multiple allowed)</p>
+                                                    </div>
+                                                </div>
+
+                                                <div class="re-agent-spec-grid">
+                                                    <t t-foreach="categories" t-as="category">
+                                                        <label class="re-agent-checkcard">
+                                                            <input type="checkbox" name="specialization_ids" t-att-value="category.id"/>
+                                                            <span class="re-agent-checkcard-ui">
+                                                                <span class="re-agent-check-icon"><i class="fa fa-check"></i></span>
+                                                                <span class="re-agent-check-text"><t t-esc="category.name"/></span>
+                                                            </span>
+                                                        </label>
+                                                    </t>
+                                                </div>
+                                            </div>
+
+
+                                            <!-- =========================================================
+                                                 SECTION 5: BIO
+                                            ========================================================== -->
+                                            <div class="re-agent-section">
+                                                <div class="re-agent-section-head">
+                                                    <div class="re-agent-step">05</div>
+                                                    <div>
+                                                        <h3 class="re-agent-section-title">
+                                                            <i class="fa fa-file-text me-2"></i>About You
+                                                        </h3>
+                                                        <p class="re-agent-section-desc">Introduce yourself professionally</p>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row g-4">
+                                                    <div class="col-12">
+                                                        <div class="re-agent-group">
+                                                            <label class="re-agent-label">Short Bio (100-200 words) <span class="re-agent-required">*</span></label>
+                                                            <textarea name="short_bio" class="re-agent-input re-agent-textarea"
+                                                                      rows="4" required="required"
+                                                                      placeholder="Write a brief introduction about yourself and your real estate experience..."></textarea>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-12">
+                                                        <div class="re-agent-group">
+                                                            <label class="re-agent-label">Qualifications &amp; Certifications</label>
+                                                            <textarea name="qualifications" class="re-agent-input re-agent-textarea"
+                                                                      rows="3"
+                                                                      placeholder="List your degrees, certifications, and professional achievements..."></textarea>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="re-agent-group">
+                                                            <label class="re-agent-label">Languages Spoken</label>
+                                                            <input type="text" name="languages_spoken" class="re-agent-input"
+                                                                   value="English, Hindi"
+                                                                   placeholder="English, Hindi, Telugu, etc."/>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+
+                                            <!-- =========================================================
+                                                 SECTION 6: DOCUMENTS
+                                            ========================================================== -->
+                                            <div class="re-agent-section">
+                                                <div class="re-agent-section-head">
+                                                    <div class="re-agent-step">06</div>
+                                                    <div>
+                                                        <h3 class="re-agent-section-title">
+                                                            <i class="fa fa-upload me-2"></i>Upload Documents
+                                                        </h3>
+                                                        <p class="re-agent-section-desc">Upload clear documents for faster approval</p>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row g-4">
+
+                                                    <div class="col-md-6">
+                                                        <div class="re-agent-filecard">
+                                                            <label class="re-agent-label">Profile Photo <span class="re-agent-required">*</span></label>
+                                                            <input type="file" name="profile_image" class="re-agent-file"
+                                                                   required="required" accept="image/*"/>
+                                                            <small class="re-agent-hint">Professional photo (max 5MB)</small>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="re-agent-filecard">
+                                                            <label class="re-agent-label">ID Proof (Aadhaar/PAN) <span class="re-agent-required">*</span></label>
+                                                            <input type="file" name="id_proof" class="re-agent-file"
+                                                                   required="required" accept="image/*,application/pdf"/>
+                                                            <small class="re-agent-hint">Aadhaar or PAN card</small>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="re-agent-filecard">
+                                                            <label class="re-agent-label">License Document</label>
+                                                            <input type="file" name="license_document" class="re-agent-file"
+                                                                   accept="image/*,application/pdf"/>
+                                                            <small class="re-agent-hint">Real estate license (if available)</small>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="re-agent-filecard">
+                                                            <label class="re-agent-label">Resume/CV</label>
+                                                            <input type="file" name="resume" class="re-agent-file"
+                                                                   accept="application/pdf,.doc,.docx"/>
+                                                            <small class="re-agent-hint">Your professional resume</small>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-12">
+                                                        <div class="re-agent-filecard">
+                                                            <label class="re-agent-label">Portfolio Images (Optional)</label>
+                                                            <input type="file" name="portfolio_images" class="re-agent-file"
+                                                                   multiple="multiple" accept="image/*"/>
+                                                            <small class="re-agent-hint">Upload images of properties you’ve sold (multiple allowed)</small>
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+
+
+                                            <!-- =========================================================
+                                                 SECTION 7: SOCIAL MEDIA
+                                            ========================================================== -->
+                                            <div class="re-agent-section">
+                                                <div class="re-agent-section-head">
+                                                    <div class="re-agent-step">07</div>
+                                                    <div>
+                                                        <h3 class="re-agent-section-title">
+                                                            <i class="fa fa-share-alt me-2"></i>Social Media (Optional)
+                                                        </h3>
+                                                        <p class="re-agent-section-desc">Share professional links (optional)</p>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row g-4">
+                                                    <div class="col-md-6">
+                                                        <div class="re-agent-group">
+                                                            <label class="re-agent-label">LinkedIn Profile</label>
+                                                            <input type="url" name="linkedin_url" class="re-agent-input"
+                                                                   placeholder="https://linkedin.com/in/yourprofile"/>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="re-agent-group">
+                                                            <label class="re-agent-label">Facebook Profile</label>
+                                                            <input type="url" name="facebook_url" class="re-agent-input"
+                                                                   placeholder="https://facebook.com/yourprofile"/>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+
+                                            <!-- =========================================================
+                                                 TERMS + SUBMIT
+                                            ========================================================== -->
+                                            <div class="re-agent-section re-agent-last">
+                                                <div class="re-agent-terms">
+                                                    <label class="re-agent-terms-row">
+                                                        <input type="checkbox" required="required"/>
+                                                        <span>
+                                                            I agree to the
+                                                            <a href="/page/terms" target="_blank">Terms &amp; Conditions</a>
+                                                            and
+                                                            <a href="/page/privacy" target="_blank">Privacy Policy</a>
+                                                        </span>
+                                                    </label>
+                                                </div>
+
+                                                <div class="text-center mt-4">
+                                                    <button type="submit" class="re-agent-submit-btn">
+                                                        <i class="fa fa-paper-plane"></i>
+                                                        Submit Registration
+                                                    </button>
+
+                                                    <p class="re-agent-note mt-3">
+                                                        <i class="fa fa-shield"></i>
+                                                        Your information is secure. Review time: 2–3 business days.
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        </form>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+
+
+            <!-- =========================================================
+                 ⭐ FIX: PREVENT DUPLICATE SUBMISSIONS
+                 If "Submit Registration" is clicked more than once while
+                 the form (with file uploads) is still processing, it was
+                 creating multiple agent.registration records. This blocks
+                 any submit after the first and disables the button so it
+                 physically cannot be clicked again.
+            ========================================================== -->
+            <script type="text/javascript">
+                document.addEventListener('DOMContentLoaded', function () {
+                    var form = document.querySelector('.re-agent-form');
+                    var submitBtn = form ? form.querySelector('.re-agent-submit-btn') : null;
+                    var formSubmitted = false;
+
+                    if (form) {
+                        form.addEventListener('submit', function (e) {
+                            if (formSubmitted) {
+                                e.preventDefault();
+                                return false;
+                            }
+                            formSubmitted = true;
+                            if (submitBtn) {
+                                submitBtn.disabled = true;
+                                submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Submitting...';
+                            }
+                        });
+                    }
+                });
+            </script>
+
+
+            <!-- =========================================================
+                 PREMIUM STYLES
+            ========================================================== -->
+            <style type="text/css">
+
+                :root{
+                    --lux-bg: #f6f1e7;
+                    --lux-bg-2: #fdfbf7;
+
+                    --lux-navy: #0b1b33;
+                    --lux-navy-2: #102645;
+
+                    --lux-gold: #c7a24a;
+                    --lux-gold-dark: #a9842d;
+
+                    --lux-text: rgba(11,27,51,0.95);
+                    --lux-muted: rgba(11,27,51,0.62);
+
+                    --lux-border: rgba(11,27,51,0.12);
+
+                    --lux-shadow-sm: 0 12px 28px rgba(16, 24, 40, 0.10);
+                    --lux-shadow-md: 0 28px 70px rgba(16, 24, 40, 0.14);
+                    --lux-shadow-lg: 0 45px 90px rgba(16, 24, 40, 0.16);
+
+                    --lux-r-xl: 32px;
+                    --lux-r-lg: 24px;
+                    --lux-r-md: 16px;
+
+                    --lux-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                    --lux-font-display: 'Playfair Display', serif;
+                }
+
+                .re-agent-wrap{
+                    font-family: var(--lux-font);
+                    background:
+                        radial-gradient(circle at 20% 12%, rgba(199,162,74,0.18), transparent 55%),
+                        radial-gradient(circle at 85% 25%, rgba(11,27,51,0.12), transparent 55%),
+                        linear-gradient(135deg, var(--lux-bg), var(--lux-bg-2));
+                    min-height: 100vh;
+                }
+
+                /* HERO */
+                .re-agent-hero{
+                    position: relative;
+                    padding: 78px 0 66px;
+                    overflow:hidden;
+                    color:#fff;
+                    background:
+                        radial-gradient(circle at 30% 25%, rgba(199,162,74,0.18), transparent 60%),
+                        linear-gradient(135deg, rgba(11,27,51,0.97), rgba(16,38,69,0.95));
+                    border-bottom: 1px solid rgba(255,255,255,0.10);
+                }
+
+                .re-agent-hero-bg{
+                    position:absolute;
+                    inset:0;
+                    background:
+                        radial-gradient(circle at 10% 10%, rgba(199,162,74,0.22), transparent 60%),
+                        radial-gradient(circle at 90% 25%, rgba(255,255,255,0.06), transparent 60%);
+                    opacity:0.95;
+                    pointer-events:none;
+                }
+
+                .re-agent-hero-title{
+                    font-family: var(--lux-font-display);
+                    font-weight: 900;
+                    font-size: clamp(2.1rem, 4vw, 3.3rem);
+                    letter-spacing: 0.4px;
+                    margin:0;
+                }
+
+                .re-agent-hero-subtitle{
+                    max-width: 860px;
+                    margin: 0 auto;
+                    font-size: 1.08rem;
+                    line-height: 1.7;
+                    font-weight: 500;
+                    color: rgba(255,255,255,0.78);
+                }
+
+                .re-agent-hero-badge{
+                    display:inline-flex;
+                    align-items:center;
+                    gap:10px;
+                    padding: 10px 18px;
+                    border-radius: 999px;
+                    font-size: 12px;
+                    font-weight: 900;
+                    letter-spacing: 1.2px;
+                    text-transform: uppercase;
+                    background: rgba(255,255,255,0.10);
+                    border: 1px solid rgba(199,162,74,0.40);
+                    backdrop-filter: blur(10px);
+                }
+
+                .re-agent-dot{
+                    width: 9px;
+                    height: 9px;
+                    border-radius: 50%;
+                    background: var(--lux-gold);
+                    box-shadow: 0 0 0 6px rgba(199,162,74,0.14);
+                }
+
+                .re-agent-hero-stats{
+                    display:flex;
+                    justify-content:center;
+                    gap: 14px;
+                    flex-wrap: wrap;
+                }
+
+                .re-agent-stat{
+                    display:inline-flex;
+                    align-items:center;
+                    gap: 10px;
+                    padding: 12px 16px;
+                    border-radius: 999px;
+                    font-weight: 800;
+                    font-size: 14px;
+                    background: rgba(255,255,255,0.08);
+                    border: 1px solid rgba(255,255,255,0.14);
+                    backdrop-filter: blur(12px);
+                }
+
+                .re-agent-stat i{
+                    color: var(--lux-gold);
+                }
+
+                .re-agent-divider{
+                    position:absolute;
+                    left:0;
+                    right:0;
+                    bottom:-1px;
+                    height: 42px;
+                    background: linear-gradient(to bottom, rgba(0,0,0,0), rgba(246,241,231,1));
+                }
+
+                /* FORM SECTION */
+                .re-agent-form-section{
+                    margin-top: -42px;
+                    padding: 0 0 72px;
+                    position: relative;
+                    z-index: 10;
+                }
+
+                /* CARD */
+                .re-agent-card{
+                    background: rgba(255,255,255,0.94);
+                    border-radius: var(--lux-r-xl);
+                    border: 1px solid rgba(199,162,74,0.22);
+                    box-shadow: var(--lux-shadow-lg);
+                    overflow: hidden;
+                    backdrop-filter: blur(12px) saturate(140%);
+                }
+
+                .re-agent-card-head{
+                    padding: 26px 28px;
+                    display:flex;
+                    align-items:flex-start;
+                    justify-content: space-between;
+                    gap: 18px;
+                    background: linear-gradient(90deg, rgba(199,162,74,0.12), rgba(255,255,255,0));
+                    border-bottom: 1px solid rgba(11,27,51,0.10);
+                }
+
+                .re-agent-card-title{
+                    margin:0 0 6px;
+                    font-weight: 950;
+                    font-size: 22px;
+                    color: var(--lux-navy);
+                }
+
+                .re-agent-card-subtitle{
+                    margin:0;
+                    font-weight: 600;
+                    color: var(--lux-muted);
+                    line-height: 1.6;
+                }
+
+                .re-agent-chips{
+                    display:flex;
+                    gap: 10px;
+                    flex-wrap: wrap;
+                    justify-content:flex-end;
+                }
+
+                .re-agent-chip{
+                    padding: 10px 14px;
+                    border-radius: 999px;
+                    font-weight: 850;
+                    font-size: 13px;
+                    background: rgba(11,27,51,0.05);
+                    border: 1px solid rgba(11,27,51,0.10);
+                    color: rgba(11,27,51,0.86);
+                    white-space: nowrap;
+                }
+
+                .re-agent-card-body{
+                    padding: 30px 28px 34px;
+                }
+
+                /* SECTIONS */
+                .re-agent-section{
+                    padding: 22px 18px;
+                    border-radius: var(--lux-r-lg);
+                    background: rgba(255,255,255,0.78);
+                    border: 1px solid rgba(11,27,51,0.08);
+                    margin-bottom: 18px;
+                }
+
+                .re-agent-last{
+                    margin-bottom: 0;
+                }
+
+                .re-agent-section-head{
+                    display:flex;
+                    gap: 14px;
+                    align-items:center;
+                    margin-bottom: 16px;
+                    padding-bottom: 14px;
+                    border-bottom: 1px solid rgba(11,27,51,0.08);
+                }
+
+                .re-agent-step{
+                    width: 52px;
+                    height: 52px;
+                    border-radius: 18px;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    font-weight: 950;
+                    font-size: 16px;
+                    letter-spacing: 0.6px;
+                    background: rgba(199,162,74,0.18);
+                    border: 1px solid rgba(199,162,74,0.32);
+                    color: var(--lux-navy);
+                    flex-shrink:0;
+                }
+
+                .re-agent-section-title{
+                    margin:0 0 2px;
+                    font-weight: 950;
+                    font-size: 18px;
+                    color: var(--lux-navy);
+                }
+
+                .re-agent-section-desc{
+                    margin:0;
+                    font-weight: 600;
+                    color: var(--lux-muted);
+                }
+
+                /* INPUTS */
+                .re-agent-group{
+                    position: relative;
+                }
+
+                .re-agent-label{
+                    display:block;
+                    font-weight: 850;
+                    font-size: 13px;
+                    color: rgba(11,27,51,0.80);
+                    margin-bottom: 8px;
+                }
+
+                .re-agent-required{
+                    color: #dc2626;
+                    font-weight: 950;
+                    margin-left: 4px;
+                }
+
+                .re-agent-input{
+                    width:100%;
+                    padding: 12px 14px;
+                    border-radius: 14px;
+                    border: 1px solid rgba(11,27,51,0.18);
+                    background: rgba(255,255,255,0.92);
+                    font-size: 14px;
+                    font-weight: 700;
+                    color: rgba(11,27,51,0.92);
+                    outline:none;
+                    transition: all 0.25s ease;
+                }
+
+                .re-agent-input:hover{
+                    border-color: rgba(11,27,51,0.35);
+                }
+
+                .re-agent-input:focus{
+                    border-color: rgba(199,162,74,0.85);
+                    background: rgba(255,255,255,1);
+                    box-shadow: 0 0 0 4px rgba(199,162,74,0.18);
+                    transform: translateY(-1px);
+                }
+
+                .re-agent-select{
+                    cursor:pointer;
+                }
+
+                .re-agent-textarea{
+                    resize: vertical;
+                    min-height: 110px;
+                }
+
+                .re-agent-hint{
+                    display:block;
+                    margin-top: 8px;
+                    font-weight: 600;
+                    font-size: 12.5px;
+                    color: rgba(11,27,51,0.55);
+                }
+
+                /* SPECIALIZATION GRID */
+                .re-agent-spec-grid{
+                    display:grid;
+                    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+                    gap: 14px;
+                }
+
+                .re-agent-checkcard{
+                    position: relative;
+                    cursor:pointer;
+                    user-select:none;
+                }
+
+                .re-agent-checkcard input{
+                    position:absolute;
+                    opacity:0;
+                    pointer-events:none;
+                }
+
+                .re-agent-checkcard-ui{
+                    display:flex;
+                    align-items:center;
+                    gap: 12px;
+                    padding: 14px 16px;
+                    border-radius: 18px;
+
+                    background: rgba(255,255,255,0.95);
+                    border: 1px solid rgba(11,27,51,0.12);
+                    box-shadow: var(--lux-shadow-sm);
+
+                    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+                }
+
+                .re-agent-checkcard:hover .re-agent-checkcard-ui{
+                    transform: translateY(-3px);
+                    border-color: rgba(199,162,74,0.35);
+                    box-shadow: var(--lux-shadow-md);
+                }
+
+                .re-agent-check-icon{
+                    width: 42px;
+                    height: 42px;
+                    border-radius: 14px;
+
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+
+                    background: rgba(11,27,51,0.06);
+                    border: 1px solid rgba(11,27,51,0.10);
+
+                    color: rgba(11,27,51,0.55);
+                    transition: all 0.25s ease;
+                }
+
+                .re-agent-check-text{
+                    font-weight: 850;
+                    color: rgba(11,27,51,0.86);
+                }
+
+                /* checked state */
+                .re-agent-checkcard input:checked + .re-agent-checkcard-ui{
+                    border-color: rgba(199,162,74,0.60);
+                    box-shadow: 0 22px 55px rgba(199,162,74,0.18);
+                    background: rgba(199,162,74,0.10);
+                }
+
+                .re-agent-checkcard input:checked + .re-agent-checkcard-ui .re-agent-check-icon{
+                    background: rgba(199,162,74,0.20);
+                    border-color: rgba(199,162,74,0.40);
+                    color: rgba(11,27,51,0.90);
+                }
+
+                /* FILE INPUTS */
+                .re-agent-filecard{
+                    padding: 18px 16px;
+                    border-radius: 18px;
+                    background: rgba(255,255,255,0.92);
+                    border: 1px solid rgba(11,27,51,0.10);
+                }
+
+                .re-agent-file{
+                    width:100%;
+                    padding: 10px 10px;
+                    border-radius: 14px;
+                    border: 1px solid rgba(11,27,51,0.14);
+                    background: rgba(255,255,255,0.92);
+                    font-weight: 650;
+                    outline:none;
+                }
+
+                /* TERMS */
+                .re-agent-terms{
+                    padding: 14px 16px;
+                    border-radius: 18px;
+                    background: rgba(11,27,51,0.04);
+                    border: 1px solid rgba(11,27,51,0.10);
+                }
+
+                .re-agent-terms-row{
+                    display:flex;
+                    gap: 12px;
+                    align-items:flex-start;
+                    font-weight: 700;
+                    color: rgba(11,27,51,0.75);
+                }
+
+                .re-agent-terms-row input{
+                    margin-top: 4px;
+                    accent-color: var(--lux-gold-dark);
+                }
+
+                .re-agent-terms-row a{
+                    color: rgba(11,27,51,0.90);
+                    font-weight: 900;
+                    text-decoration: underline;
+                }
+
+                /* SUBMIT */
+                .re-agent-submit-btn{
+                    display:inline-flex;
+                    align-items:center;
+                    justify-content:center;
+                    gap: 10px;
+
+                    padding: 16px 36px;
+                    border-radius: 18px;
+                    border: none;
+
+                    font-weight: 950;
+                    font-size: 15px;
+                    letter-spacing: 0.2px;
+
+                    background: linear-gradient(90deg, var(--lux-gold), var(--lux-gold-dark));
+                    color: var(--lux-navy);
+
+                    cursor:pointer;
+                    transition: transform 0.25s ease, box-shadow 0.25s ease;
+                    box-shadow: 0 18px 55px rgba(199,162,74,0.25);
+                }
+
+                .re-agent-submit-btn:hover{
+                    transform: translateY(-3px) scale(1.02);
+                    box-shadow: 0 26px 75px rgba(199,162,74,0.32);
+                }
+
+                .re-agent-note{
+                    font-weight: 650;
+                    color: rgba(11,27,51,0.55);
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    gap: 8px;
+                }
+
+                .re-agent-note i{
+                    color: var(--lux-gold-dark);
+                }
+
+                /* RESPONSIVE */
+                @media (max-width: 992px){
+                    .re-agent-card-head{
+                        flex-direction: column;
+                        align-items:flex-start;
+                    }
+                    .re-agent-chips{
+                        justify-content:flex-start;
+                    }
+                }
+
+                @media (max-width: 768px){
+                    .re-agent-hero{
+                        padding: 60px 0 58px;
+                    }
+                    .re-agent-card-body{
+                        padding: 22px 18px 26px;
+                    }
+                    .re-agent-card-head{
+                        padding: 22px 18px;
+                    }
+                    .re-agent-section{
+                        padding: 18px 14px;
+                    }
+                    .re-agent-submit-btn{
+                        width:100%;
+                    }
+                }
+
+            </style>
+
+        </t>
+    </template>
+
+
+    <!-- =========================================================
+         SUCCESS TEMPLATE (Premium)
+    ========================================================== -->
+    <template id="agent_registration_success_template" name="Registration Success - Premium">
+        <t t-call="website.layout">
+            <div class="re-agent-success-wrap">
+                <div class="container">
+                    <div class="row justify-content-center">
+                        <div class="col-lg-6 col-md-8">
+
+                            <div class="re-agent-success-card">
+                                <div class="re-agent-success-icon">
+                                    <i class="fa fa-check"></i>
+                                </div>
+
+                                <h1 class="re-agent-success-title">Registration Submitted Successfully!</h1>
+
+                                <p class="re-agent-success-msg">
+                                    Thank you, <strong t-esc="registration.agent_name"/>!
+                                </p>
+
+                                <p class="re-agent-success-msg">
+                                    Your agent registration (<strong t-esc="registration.name"/>) has been submitted successfully.
+                                </p>
+
+                                <p class="re-agent-success-msg">
+                                    Our team will review your application and get back to you within 2-3 business days.
+                                </p>
+
+                                <p class="re-agent-success-muted">
+                                    You will receive an email at <strong t-esc="registration.email"/> with further updates.
+                                </p>
+
+                                <a href="/" class="re-agent-success-btn">
+                                    <i class="fa fa-home"></i>
+                                    Back to Home
+                                </a>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <style type="text/css">
+                .re-agent-success-wrap{
+                    min-height:100vh;
+                    display:flex;
+                    align-items:center;
+                    padding: 70px 14px;
+                    background:
+                        radial-gradient(circle at 20% 12%, rgba(199,162,74,0.22), transparent 55%),
+                        radial-gradient(circle at 85% 25%, rgba(11,27,51,0.14), transparent 55%),
+                        linear-gradient(135deg, #0b1b33, #102645);
+                }
+
+                .re-agent-success-card{
+                    background: rgba(255,255,255,0.95);
+                    border-radius: 34px;
+                    padding: 52px 30px;
+                    text-align:center;
+                    border: 1px solid rgba(199,162,74,0.22);
+                    box-shadow: 0 40px 120px rgba(0,0,0,0.25);
+                }
+
+                .re-agent-success-icon{
+                    width: 92px;
+                    height: 92px;
+                    border-radius: 50%;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    margin: 0 auto 20px;
+                    background: rgba(199,162,74,0.18);
+                    border: 1px solid rgba(199,162,74,0.35);
+                    color: #0b1b33;
+                    font-size: 34px;
+                }
+
+                .re-agent-success-title{
+                    font-family: 'Playfair Display', serif;
+                    font-weight: 900;
+                    font-size: 2.1rem;
+                    color: rgba(11,27,51,0.95);
+                    margin-bottom: 16px;
+                }
+
+                .re-agent-success-msg{
+                    margin: 0 0 10px;
+                    font-weight: 650;
+                    color: rgba(11,27,51,0.70);
+                    line-height: 1.7;
+                }
+
+                .re-agent-success-muted{
+                    margin-top: 18px;
+                    color: rgba(11,27,51,0.55);
+                    font-weight: 650;
+                }
+
+                .re-agent-success-btn{
+                    display:inline-flex;
+                    align-items:center;
+                    justify-content:center;
+                    gap: 10px;
+                    margin-top: 26px;
+
+                    padding: 14px 22px;
+                    border-radius: 18px;
+                    font-weight: 950;
+                    text-decoration:none;
+
+                    background: linear-gradient(90deg, #c7a24a, #a9842d);
+                    color: #0b1b33;
+
+                    transition: transform 0.25s ease;
+                }
+
+                .re-agent-success-btn:hover{
+                    transform: translateY(-3px);
+                    color: #0b1b33;
+                }
+            </style>
+
+        </t>
+    </template>
+
+
+    <!-- =========================================================
+         ERROR TEMPLATE (Premium)
+    ========================================================== -->
+    <template id="agent_registration_error_template" name="Registration Error - Premium">
+        <t t-call="website.layout">
+            <div class="re-agent-error-wrap">
+                <div class="container">
+                    <div class="row justify-content-center">
+                        <div class="col-lg-6 col-md-8">
+
+                            <div class="re-agent-error-card">
+                                <div class="re-agent-error-icon">
+                                    <i class="fa fa-exclamation-triangle"></i>
+                                </div>
+
+                                <h1 class="re-agent-error-title">Registration Failed</h1>
+
+                                <p class="re-agent-error-msg text-danger" t-esc="error"/>
+
+                                <a href="/agent/register" class="re-agent-error-btn">
+                                    <i class="fa fa-refresh"></i>
+                                    Try Again
+                                </a>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <style type="text/css">
+                .re-agent-error-wrap{
+                    min-height:100vh;
+                    display:flex;
+                    align-items:center;
+                    padding: 70px 14px;
+                    background:
+                        radial-gradient(circle at 20% 12%, rgba(199,162,74,0.22), transparent 55%),
+                        radial-gradient(circle at 85% 25%, rgba(220,38,38,0.16), transparent 55%),
+                        linear-gradient(135deg, #0b1b33, #102645);
+                }
+
+                .re-agent-error-card{
+                    background: rgba(255,255,255,0.95);
+                    border-radius: 34px;
+                    padding: 52px 30px;
+                    text-align:center;
+                    border: 1px solid rgba(199,162,74,0.22);
+                    box-shadow: 0 40px 120px rgba(0,0,0,0.25);
+                }
+
+                .re-agent-error-icon{
+                    width: 92px;
+                    height: 92px;
+                    border-radius: 50%;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    margin: 0 auto 20px;
+
+                    background: rgba(220,38,38,0.10);
+                    border: 1px solid rgba(220,38,38,0.25);
+                    color: #b91c1c;
+                    font-size: 34px;
+                }
+
+                .re-agent-error-title{
+                    font-family: 'Playfair Display', serif;
+                    font-weight: 900;
+                    font-size: 2.1rem;
+                    color: rgba(11,27,51,0.95);
+                    margin-bottom: 16px;
+                }
+
+                .re-agent-error-msg{
+                    margin: 0 0 18px;
+                    font-weight: 750;
+                    line-height: 1.7;
+                }
+
+                .re-agent-error-btn{
+                    display:inline-flex;
+                    align-items:center;
+                    justify-content:center;
+                    gap: 10px;
+                    margin-top: 10px;
+
+                    padding: 14px 22px;
+                    border-radius: 18px;
+                    font-weight: 950;
+                    text-decoration:none;
+
+                    background: linear-gradient(90deg, #c7a24a, #a9842d);
+                    color: #0b1b33;
+
+                    transition: transform 0.25s ease;
+                }
+
+                .re-agent-error-btn:hover{
+                    transform: translateY(-3px);
+                    color: #0b1b33;
+                }
+            </style>
+
+        </t>
+    </template>
+
+</odoo>

@@ -1,0 +1,1043 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="property_map_template" name="Property Map Page">
+        <t t-call="website.layout">
+
+            <t t-set="head">
+                <link rel="stylesheet" href="/real_estate_management/static/src/css/property_map.css"/>
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+
+                <style>
+                    @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&amp;family=DM+Sans:wght@400;500;600;700;800&amp;family=Poppins:wght@400;500;600&amp;display=swap');
+
+                    /* ⭐ LIGHT MODE: white background across the whole page root
+                       so there are no dark gaps between sections. */
+                    #home-page-root {
+                        font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+                        background-color: #ffffff;
+                        color: #111827;
+                    }
+
+                    /* ⭐ Single continuous paint region for every teal band
+                       (pshowcase + legacy-band + home-categories + home-properties
+                       + investment-overview + callback-band). Putting the color
+                       on ONE wrapper instead of on each section individually
+                       means there is only ever one background element — no
+                       shared edge between two separately-painted elements, so
+                       no seam/hairline can appear between them, regardless of
+                       browser sub-pixel rounding. */
+                    .teal-wrap { background: #e5e7eb; }
+                    /* ⭐ Strip out any border/shadow/margin the Odoo website
+                       theme's default section styling might be injecting —
+                       that's what was actually rendering as a line at the
+                       shared edge between two sections, not an anti-aliasing
+                       quirk. Every section in this stack now inherits its
+                       colour straight from .teal-wrap and carries nothing
+                       else that could visually separate it from its neighbour. */
+                    .teal-wrap > section {
+                        background: transparent !important;
+                        border: none !important;
+                        border-top: none !important;
+                        border-bottom: none !important;
+                        box-shadow: none !important;
+                        outline: none !important;
+                        margin: 0 !important;
+                    }
+
+                    /* ============ EXCLUSIVE PROPERTY SHOWCASE (dashboard-style hero) ============ */
+                    #pshowcase {
+                        padding: 28px;
+                    }
+                    .ps-shell { display: flex; }
+                    .ps-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+
+                    /* light rounded search / filter bar */
+                    .ps-topbar {
+                        display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+                        background: #fdfcf9; border-radius: 18px; padding: 12px 18px;
+                    }
+                    .ps-search-box {
+                        flex: 1 1 220px; display: flex; align-items: center; gap: 10px;
+                        background: #fff; border: 1px solid #e9e7e1; border-radius: 12px; padding: 10px 14px;
+                    }
+                    .ps-search-box i { color: #9ca3af; font-size: 12px; }
+                    .ps-search-box input {
+                        border: none; outline: none; background: transparent; font-size: 13px; color: #111827;
+                        width: 100%;
+                    }
+                    .ps-search-box input::placeholder { color: #9ca3af; }
+                    .ps-topbar select, .ps-extra-select {
+                        border: 1px solid #e9e7e1; border-radius: 10px; padding: 10px 14px; font-weight: 600;
+                        font-size: 12.5px; color: #374151; background: #fff; cursor: pointer;
+                    }
+                    /* ===== Bigger dropdown lists (All Types / Cities / Price / Rating) ===== */
+                    .ps-topbar select,
+                    .ps-extra-select,
+                    #citySelect {
+                        font-size: 15px;
+                        min-width: 150px;
+                    }
+                    .ps-topbar select option,
+                    .ps-extra-select option,
+                    #citySelect option {
+                        font-size: 17px;
+                        font-weight: 600;
+                        line-height: 1.5;
+                        padding: 12px 18px;
+                        min-height: 44px;
+                        background: #ffffff;
+                        color: #1f2937;
+                    }
+                    .ps-topbar select option:checked,
+                    .ps-extra-select option:checked,
+                    #citySelect option:checked {
+                        background: #fde8e8;
+                        color: #b91c1c;
+                    }
+                    .ps-cta-group { display: flex; align-items: center; gap: 8px; }
+                    .ps-cta-group a {
+                        text-decoration: none; padding: 10px 16px; border-radius: 10px; font-weight: 700;
+                        font-size: 12px; white-space: nowrap; transition: all 0.2s ease;
+                    }
+                    .ps-cta-group .ps-btn-primary { background: linear-gradient(135deg, #dc2626, #b91c1c); color: #fff; }
+                    .ps-cta-group .ps-btn-primary:hover { transform: translateY(-2px); color: #fff; }
+                    .ps-cta-group .ps-btn-ghost { border: 1.5px solid #e9e7e1; color: #374151; }
+                    .ps-cta-group .ps-btn-ghost:hover { border-color: #9ca3af; color: #111827; }
+
+                    /* small round theme-toggle icon, next to the CTA buttons */
+                    .ps-theme-toggle {
+                        width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid #e9e7e1;
+                        display: flex; align-items: center; justify-content: center; color: #374151;
+                        cursor: pointer; flex: 0 0 auto; transition: all 0.2s ease;
+                    }
+                    .ps-theme-toggle:hover { border-color: #9ca3af; color: #111827; }
+                    .ps-theme-toggle input { display: none; }
+
+                    /* big rounded map card with floating stat pills */
+                    .ps-map-card { position: relative; border-radius: 24px; overflow: hidden; background: #eef1ef; min-height: 500px; }
+                    .ps-map-card #propertyMap { height: 100%; min-height: 500px; border-radius: 0; border: none; margin: 0; }
+                    .ps-pill-stats {
+                        position: absolute; top: 46%; left: 50%; transform: translate(-50%, -50%);
+                        display: flex; gap: 10px; z-index: 500; pointer-events: none;
+                    }
+                    .ps-pill {
+                        background: #111318; color: #fff; border-radius: 14px; padding: 14px 22px;
+                        text-align: center; min-width: 100px; box-shadow: 0 14px 30px rgba(0,0,0,0.3);
+                    }
+                    .ps-pill .ps-pill-num { font-size: 21px; font-weight: 800; display: block; line-height: 1.2; }
+                    .ps-pill .ps-pill-label { font-size: 9px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.4px; }
+                    #category-legend.ps-legend {
+                        position: absolute; bottom: 14px; left: 14px; z-index: 500; margin: 0; gap: 10px;
+                        background: rgba(255,255,255,0.92); border-radius: 10px; padding: 6px 10px; display: flex; flex-wrap: wrap;
+                    }
+
+                    /* ⭐ Top-left floating panel: small cards for 5-star rated
+                       properties, stacked on top of the map. */
+                    .ps-five-star-panel {
+                        position: absolute; top: 66px; left: 14px; z-index: 500;
+                        display: flex; flex-direction: column; gap: 10px;
+                        max-height: calc(100% - 140px); overflow-y: auto;
+                        width: 230px;
+                    }
+                    .ps-five-star-panel.ps-hidden { display: none; }
+                    .ps-fs-label {
+                        display: inline-flex; align-items: center; gap: 6px;
+                        background: rgba(17,19,24,0.85); color: #fff; font-size: 12px; font-weight: 800;
+                        letter-spacing: 0.4px; text-transform: uppercase; border-radius: 999px;
+                        padding: 7px 14px; width: fit-content;
+                    }
+                    .ps-fs-label i { color: #f5a623; font-size: 12px; }
+                    .ps-fs-card {
+                        display: flex; gap: 12px; text-decoration: none; color: inherit;
+                        background: rgba(255,255,255,0.97); border-radius: 14px; padding: 10px;
+                        box-shadow: 0 8px 22px rgba(0,0,0,0.2); border: 1px solid rgba(0,0,0,0.05);
+                        transition: transform 0.15s ease, box-shadow 0.15s ease;
+                    }
+                    .ps-fs-card:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(0,0,0,0.28); }
+                    .ps-fs-img { position: relative; width: 68px; height: 68px; flex: 0 0 auto; border-radius: 10px; overflow: hidden; background: #f3f4f6; }
+                    .ps-fs-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+                    .ps-fs-body { min-width: 0; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+                    .ps-fs-name { font-size: 14px; font-weight: 700; color: #1f2937; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                    .ps-fs-price { font-size: 14px; font-weight: 800; color: #c7773a; margin-top: 2px; }
+                    .ps-fs-stars { font-size: 11px; margin-top: 3px; }
+                    .ps-fs-stars .fa-star { color: #f5a623; }
+                    .ps-fs-stars .fa-star-o { color: #d1d5db; }
+                    .ps-fs-view { font-size: 12px; font-weight: 700; color: #2563eb; margin-top: 4px; }
+
+                    /* price-bubble markers on the map */
+                    .ps-price-marker {
+                        color: #fff; font-weight: 800; font-size: 12px; padding: 5px 10px; border-radius: 9999px;
+                        box-shadow: 0 3px 10px rgba(0,0,0,0.25); border: 2px solid #fff; white-space: nowrap;
+                    }
+
+                    /* bottom info cards: Location / Image / Community */
+                    .ps-bottom-row { display: grid; grid-template-columns: 1.15fr 1fr 0.85fr; gap: 16px; }
+                    .ps-info-card { background: #fdfcf9; border-radius: 20px; padding: 20px; }
+
+                    .ps-loc-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+                    .ps-loc-head-text { min-width: 0; flex: 1; }
+                    .ps-loc-title { font-weight: 800; font-size: 15.5px; color: #111827; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                    .ps-loc-addr { font-size: 12px; color: #9ca3af; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                    .ps-loc-heart { color: #f59e0b; font-size: 15px; }
+                    .ps-loc-minis { display: flex; gap: 10px; margin-top: 18px; }
+                    .ps-loc-mini { flex: 1; background: #fff; border-radius: 14px; padding: 12px; text-align: center; }
+                    .ps-loc-mini i { color: #9ca3af; margin-bottom: 6px; display: block; font-size: 13px; }
+                    .ps-loc-mini .ps-mini-label { font-size: 9.5px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.3px; }
+                    .ps-loc-mini .ps-mini-val { font-size: 15px; font-weight: 800; color: #111827; margin-top: 2px; }
+
+                    /* ⭐ Combined Cities/Agents/Listings pie - enlarged and centered
+                       in the middle of the card, with a divider line below the pie
+                       and the legend below that line. Card height is unchanged;
+                       this just uses the existing blank space more fully. */
+                    .ps-loc-card { display: flex; flex-direction: column; }
+                    .ps-overview-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+                    .ps-overview-pie { width: 170px; height: 170px; border-radius: 50%; flex: 0 0 auto; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06); }
+                    .ps-overview-line { width: 100%; border-top: 1px solid #f0efe9; }
+                    .ps-overview-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; width: 100%; }
+                    .ps-overview-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; color: #6b7280; font-weight: 600; white-space: nowrap; }
+                    .ps-overview-chip i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+                    .ps-overview-chip b { color: #111827; font-weight: 800; margin-left: 2px; }
+
+                    /* pie chart: breakdown of listings by property type */
+                    .ps-cat-pie-row {
+                        display: flex; align-items: center; gap: 16px; margin-top: 18px; padding-top: 16px;
+                        border-top: 1px solid #f0efe9;
+                    }
+                    .ps-cat-pie-title { font-size: 11px; font-weight: 800; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.4px; margin: 0 0 10px; }
+                    .ps-cat-pie {
+                        width: 76px; height: 76px; border-radius: 50%; flex: 0 0 auto;
+                        box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06);
+                    }
+                    .ps-cat-legend { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
+                    .ps-cat-legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+                    .ps-cat-dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+                    .ps-cat-name { color: #374151; font-weight: 600; text-transform: capitalize; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+                    .ps-cat-count { color: #9ca3af; margin-left: auto; font-weight: 700; }
+
+                    .ps-image-card { padding: 0; overflow: hidden; height: 460px; }
+                    .ps-image-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+                    .ps-image-card .ps-image-empty {
+                        width: 100%; height: 100%; min-height: 236px; display: flex; align-items: center; justify-content: center;
+                        color: #c9c5bb; font-size: 32px; background: #f3f2ee;
+                    }
+
+                    .ps-tenants-card { display: flex; flex-direction: column; }
+                    .ps-tenants-title { font-weight: 800; font-size: 15px; color: #111827; margin: 0; }
+                    .ps-tenants-sub { font-size: 11.5px; color: #9ca3af; margin: 6px 0 8px; line-height: 1.5; }
+                    .ps-avatar-stack { display: flex; align-self: flex-end; margin-bottom: 6px; }
+                    .ps-avatar-stack span {
+                        width: 30px; height: 30px; border-radius: 50%; background: #e5e7eb; border: 2px solid #fdfcf9;
+                        margin-left: -10px; display: flex; align-items: center; justify-content: center;
+                        font-size: 10.5px; color: #374151; font-weight: 700;
+                    }
+                    .ps-donut-wrap { flex: 1; display: flex; align-items: center; justify-content: center; }
+                    .ps-donut {
+                        width: 170px; height: 170px; border-radius: 50%; margin: 0;
+                        background: conic-gradient(#f59e0b calc(var(--ps-pct, 70) * 1%), #f0efe9 0);
+                        display: flex; align-items: center; justify-content: center;
+                    }
+                    .ps-donut-inner {
+                        width: 134px; height: 134px; border-radius: 50%; background: #fdfcf9;
+                        display: flex; flex-direction: column; align-items: center; justify-content: center;
+                    }
+                    .ps-donut-num { font-weight: 800; font-size: 26px; color: #111827; }
+                    .ps-donut-label { font-size: 11px; color: #9ca3af; letter-spacing: 0.3px; }
+
+
+                    /* horizontal "browse properties" strip - kept for map/card sync + full listing */
+                    .ps-browse-panel { padding: 18px 20px; }
+                    .ps-list-head { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+                    .ps-count { font-weight: 800; font-size: 14px; color: #111827; }
+                    .ps-hint { font-size: 11px; color: #9ca3af; }
+                    .ps-cards {
+                        display: flex; gap: 14px; overflow-x: auto; padding-bottom: 6px;
+                    }
+                    .ps-card {
+                        flex: 0 0 230px; display: flex; gap: 10px; border: 1px solid #eee9df; border-radius: 14px; padding: 10px;
+                        cursor: pointer; text-decoration: none; color: inherit; background: #fff;
+                        transition: box-shadow 0.2s ease, border-color 0.2s ease;
+                    }
+                    .ps-card:hover, .ps-card.ps-card-active { box-shadow: 0 10px 24px rgba(0,0,0,0.10); border-color: #c7d2fe; }
+                    .ps-card-img { position: relative; width: 86px; height: 70px; flex: 0 0 auto; border-radius: 10px; overflow: hidden; background: #f3f4f6; }
+                    .ps-card-img img { width: 100%; height: 100%; object-fit: cover; }
+                    .ps-card-badge {
+                        position: absolute; top: 6px; left: 6px; font-size: 8px; font-weight: 800; letter-spacing: 0.3px;
+                        text-transform: uppercase; color: #fff; padding: 3px 6px; border-radius: 5px;
+                    }
+                    .ps-card-premium {
+                        position: absolute; bottom: 5px; left: 6px; font-size: 8px; font-weight: 800; color: #92400e;
+                        background: #fef3c7; padding: 2px 6px; border-radius: 5px;
+                    }
+                    .ps-card-body { flex: 1; min-width: 0; }
+                    .ps-card-price { font-weight: 800; font-size: 13.5px; color: #111827; }
+                    .ps-card-name { font-size: 12px; font-weight: 700; color: #1f2937; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                    .ps-card-loc { font-family: 'Poppins', 'DM Sans', sans-serif; font-weight: 500; font-size: 11px; letter-spacing: 0.1px; color: #6b7280; display: flex; align-items: center; gap: 4px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                    .ps-card-loc i { color: #dc2626; font-size: 9px; }
+                    .ps-card-rating { font-size: 10.5px; margin-top: 3px; }
+                    .ps-card-rating .fa-star { color: #f5a623; }
+                    .ps-card-rating .fa-star-o { color: #d1d5db; }
+                    .ps-card-type { font-size: 10px; font-weight: 700; margin-top: 4px; }
+                    .ps-empty-list { padding: 20px; text-align: center; color: #9ca3af; font-size: 13px; }
+
+                    @media (max-width: 1200px) {
+                        .ps-bottom-row { grid-template-columns: 1fr 1fr; }
+                        .ps-tenants-card { grid-column: span 2; }
+                    }
+                    @media (max-width: 992px) {
+                        .ps-shell { flex-direction: column; }
+                        .ps-map-card, .ps-map-card #propertyMap { min-height: 380px; }
+                        .ps-pill { min-width: 76px; padding: 10px 12px; }
+                        .ps-pill .ps-pill-num { font-size: 16px; }
+                    }
+                    @media (max-width: 600px) {
+                        #pshowcase { padding: 16px; }
+                        .ps-topbar { flex-direction: column; align-items: stretch; }
+                        .ps-cta-group { justify-content: center; }
+                        .ps-bottom-row { grid-template-columns: 1fr; }
+                        .ps-tenants-card { grid-column: auto; }
+                        .ps-pill-stats { flex-wrap: wrap; justify-content: center; width: 90%; }
+                        .ps-five-star-panel { width: 180px; top: 58px; max-height: calc(100% - 110px); }
+                        .ps-fs-img { width: 52px; height: 52px; }
+                        .ps-fs-name, .ps-fs-price { font-size: 12px; }
+                    }
+
+                    /* ============ LEGACY / STATS BAND ============ */
+                    /* ⭐ Outer band now carries the same teal/blue gradient +
+                       edge padding as #pshowcase above, so the two bands line
+                       up edge-to-edge. The inner card is white, matching the
+                       property panel that sits on the teal band above it. */
+                    #legacy-band {
+                        padding: 28px;
+                        text-align: center;
+                    }
+                    .legacy-card {
+                        background: #ffffff;
+                        border-radius: 28px;
+                        padding: 64px 48px;
+                        width: 100%;
+                        box-shadow: 0 20px 45px rgba(0,0,0,0.12);
+                    }
+                    .legacy-card h2 {
+                        font-family: 'DM Serif Display', serif; font-weight: 400;
+                        font-size: clamp(28px, 3.6vw, 44px); color: #111827; margin: 0 0 20px; line-height: 1.2;
+                    }
+                    .legacy-card p.legacy-sub {
+                        max-width: 900px; margin: 0 auto 48px; color: #6b7280;
+                        font-size: 16px; line-height: 1.7;
+                    }
+                    .legacy-stats {
+                        display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;
+                        max-width: 1200px; margin: 0 auto;
+                    }
+                    /* ⭐ Stat tiles now use a soft teal tint (instead of white)
+                       so they still stand out now that the card itself is white. */
+                    .legacy-stat {
+                        display: flex; align-items: center; gap: 14px;
+                        background: #eef4f4; border: 1px solid #d7e5e5;
+                        border-radius: 14px; padding: 20px 22px; text-align: left;
+                        cursor: default; transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+                    }
+                    .legacy-stat:hover {
+                        box-shadow: 0 10px 24px rgba(127,168,172,0.30);
+                        border-color: #93b8ba;
+                        transform: translateY(-3px);
+                    }
+                    .legacy-stat .stat-icon {
+                        flex: 0 0 auto; width: 48px; height: 48px; border-radius: 10px;
+                        display: flex; align-items: center; justify-content: center;
+                        background: linear-gradient(135deg, #f3d9a4, #d9a857);
+                        color: #1b1204; font-size: 18px;
+                    }
+                    .legacy-stat .stat-body { min-width: 0; }
+                    .legacy-stat .stat-num {
+                        font-family: 'DM Serif Display', serif; font-size: 24px; color: #c7773a;
+                        line-height: 1.15; margin-bottom: 2px;
+                    }
+                    .legacy-stat .stat-label { font-size: 13px; color: #6b7280; }
+
+                    /* ============ FIND YOUR PERFECT HOME (categories) ============ */
+                    /* ⭐ Same teal band + white inner card as #legacy-band,
+                       so this section is a matching pair with it. */
+                    #home-categories {
+                        padding: 28px; text-align: center;
+                    }
+                    #home-categories h2 {
+                        font-family: 'DM Serif Display', serif; font-weight: 400;
+                        font-size: clamp(28px, 3.4vw, 42px); color: #111827; margin-bottom: 44px;
+                    }
+                    .category-grid {
+                        display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;
+                        max-width: 1300px; margin: 0 auto 40px;
+                    }
+                    .category-card { text-decoration: none; display: block; }
+                    .category-card .cat-img {
+                        height: 220px; border-radius: 20px; overflow: hidden; margin-bottom: 18px;
+                        background:
+                            radial-gradient(circle at 78% 18%, rgba(199,119,58,0.10), transparent 60%),
+                            linear-gradient(135deg, #ffffff 0%, #f3f4f6 55%, #ffffff 100%);
+                        display: flex; align-items: center; justify-content: center;
+                        position: relative;
+                        border: 1px solid #e5e7eb;
+                        box-shadow: 0 10px 26px rgba(0,0,0,0.06);
+                        transition: transform 0.3s ease, box-shadow 0.3s ease;
+                    }
+                    .category-card:hover .cat-img {
+                        transform: translateY(-5px);
+                        box-shadow: 0 18px 36px rgba(0,0,0,0.12);
+                    }
+                    .category-card .cat-img i {
+                        font-size: 28px; color: #ffffff;
+                        width: 76px; height: 76px; border-radius: 50%;
+                        display: flex; align-items: center; justify-content: center;
+                        background: linear-gradient(135deg, #e3c67e, #c7a24a);
+                        box-shadow: 0 8px 20px rgba(199,162,74,0.4);
+                        transition: transform 0.3s ease;
+                    }
+                    .category-card:hover .cat-img i { transform: scale(1.08); }
+                    .category-card .cat-name { font-family: 'DM Serif Display', serif; font-size: 19px; color: #111827; margin-bottom: 4px; }
+                    .category-card .cat-price { font-size: 14px; color: #6b7280; }
+                    #home-categories .cat-cta {
+                        display: inline-block; padding: 16px 40px; border: 1.5px solid #d1d5db;
+                        border-radius: 9999px; color: #111827; text-decoration: none; font-weight: 700;
+                        letter-spacing: 0.5px; transition: all 0.25s ease; background: #ffffff;
+                    }
+                    #home-categories .cat-cta:hover { background: #f3f4f6; border-color: #9ca3af; color: #111827; }
+
+                    /* ============ EXPLORE PROPERTIES GRID ============ */
+                    /* ⭐ Same teal band + white inner card as #legacy-band. */
+                    #home-properties {
+                        padding: 28px;
+                    }
+                    #home-properties .hp-header { text-align: center; max-width: 900px; margin: 0 auto 48px; }
+                    #home-properties h2 {
+                        font-family: 'DM Serif Display', serif; font-weight: 400;
+                        font-size: clamp(28px, 3.4vw, 42px); color: #111827; margin-bottom: 16px;
+                    }
+                    #home-properties .hp-header p { color: #6b7280; font-size: 15.5px; line-height: 1.7; }
+
+                    .hp-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; max-width: 1400px; margin: 0 auto; }
+
+                    /* ⭐ LIGHT MODE: white cards with a subtle border/shadow
+                       instead of the frosted-dark glass look. */
+                    .hp-card {
+                        background: #ffffff; border-radius: 18px; overflow: hidden;
+                        box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 1px solid #e5e7eb;
+                        display: flex; flex-direction: column; transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+                    }
+                    .hp-card:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(0,0,0,0.14); border-color: rgba(231,159,91,0.5); }
+                    .hp-card .hp-img { height: 190px; overflow: hidden; background: #f3f4f6; }
+                    .hp-card .hp-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
+                    .hp-card:hover .hp-img img { transform: scale(1.05); }
+                    .hp-card .hp-body { padding: 18px 20px 22px; display: flex; flex-direction: column; flex: 1; }
+                    .hp-card .hp-name { font-family: 'DM Serif Display', serif; font-size: 18px; color: #111827; margin-bottom: 6px; }
+                    .hp-card .hp-loc { font-size: 13px; color: #6b7280; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+                    .hp-card .hp-loc i { color: #c7773a; }
+                    .hp-card .hp-rating { font-size: 12.5px; margin-bottom: 10px; }
+                    .hp-card .hp-rating .fa-star { color: #f5a623; }
+                    .hp-card .hp-rating .fa-star-o { color: #d1d5db; }
+                    .hp-card .hp-price { font-size: 15px; font-weight: 800; color: #c7773a; margin-bottom: 16px; }
+                    .hp-card .hp-btn {
+                        margin-top: auto; display: inline-flex; align-items: center; gap: 8px;
+                        font-size: 13.5px; font-weight: 700; color: #c7773a; text-decoration: none;
+                        transition: color 0.2s ease;
+                    }
+                    .hp-card .hp-btn:hover { color: #a85f2c; }
+                    .hp-card .hp-btn i { font-size: 12px; }
+
+                    #home-properties .hp-more { text-align: center; margin-top: 48px; }
+                    #home-properties .hp-more a {
+                        display: inline-block; padding: 16px 40px; border-radius: 9999px;
+                        background: linear-gradient(135deg, #e79f5b, #c7773a); color: #1a1006;
+                        text-decoration: none; font-weight: 700; letter-spacing: 0.5px;
+                        box-shadow: 0 16px 32px rgba(199,119,58,0.25); transition: all 0.25s ease;
+                    }
+                    #home-properties .hp-more a:hover { transform: translateY(-3px); box-shadow: 0 20px 40px rgba(199,119,58,0.35); color: #1a1006; }
+                    .hp-empty { text-align: center; padding: 60px 20px; color: #6b7280; }
+
+                    /* ============ INVESTMENT OVERVIEW ============ */
+                    /* ⭐ Same teal band + white inner card as #legacy-band. */
+                    #investment-overview {
+                        color: #111827;
+                        padding: 28px;
+                    }
+                    #investment-overview h2, #investment-overview h3 { color: #111827; font-family: 'DM Serif Display', serif; }
+                    #investment-overview p.text-muted { color: #6b7280 !important; }
+                    .info-box {
+                        background: #f9fafb;
+                        border: 1px solid #e5e7eb;
+                        border-radius: 16px; padding: 24px; text-align: left;
+                        height: 100%; transition: transform 0.3s ease;
+                    }
+                    .info-box:hover { transform: translateY(-4px); border-color: #d1d5db; }
+                    .info-title { font-family: 'DM Serif Display', serif; font-size: 18px; color: #c7773a; }
+                    .info-text { font-size: 14px; color: #4b5563; line-height: 1.6; }
+                    .overview-empty { background: #f9fafb; border-radius: 16px; border: 1px dashed #d1d5db; }
+                    .empty-subtitle { color: #6b7280; }
+
+                    /* ============ CALL-BACK CTA BAND ============ */
+                    /* ⭐ Same teal band + white inner card as #legacy-band. */
+                    #callback-band {
+                        padding: 28px; text-align: center;
+                    }
+                    #callback-band h3 { font-family: 'DM Serif Display', serif; font-size: clamp(22px, 2.6vw, 30px); color: #111827; margin-bottom: 22px; }
+                    #callback-band a.cb-btn {
+                        display: inline-block; padding: 16px 44px; border-radius: 9999px;
+                        background: linear-gradient(135deg, #f3d9a4, #d9a857); color: #1b1204;
+                        text-decoration: none; font-weight: 800; letter-spacing: 0.5px;
+                        box-shadow: 0 16px 32px rgba(217,168,87,0.3); transition: all 0.25s ease;
+                    }
+                    #callback-band a.cb-btn:hover { transform: translateY(-3px); }
+
+                    /* ============ RESPONSIVE ============ */
+                    /* Guard against any theme/bootstrap margin classes creating
+                       a visible seam between the stacked teal bands. */
+                    #legacy-band, #home-categories, #home-properties, #investment-overview, #callback-band {
+                        margin: 0;
+                    }
+                    @media (max-width: 1200px) { .legacy-stats, .category-grid, .hp-grid { grid-template-columns: repeat(2, 1fr); } }
+                    @media (max-width: 600px) {
+                        .legacy-stats, .category-grid, .hp-grid { grid-template-columns: 1fr; }
+                        #legacy-band, #home-categories, #home-properties, #investment-overview, #callback-band { padding: 16px; }
+                        .legacy-card { padding: 40px 24px; border-radius: 20px; }
+                    }
+
+                    /* ============ DARK THEME OVERRIDES ============ */
+                    #home-page-root[data-theme="dark"] {
+                        background-color: #0b0b0d; color: #f5efe0;
+                    }
+
+                    /* ⭐ Dashboard-style hero (#pshowcase): every white/cream card
+                       now flips to a dark card with light text when the theme
+                       toggle is switched on. */
+                    #home-page-root[data-theme="dark"] .ps-topbar {
+                        background: #17171b;
+                    }
+                    #home-page-root[data-theme="dark"] .ps-search-box {
+                        background: #1f1f24; border-color: rgba(255,255,255,0.12);
+                    }
+                    #home-page-root[data-theme="dark"] .ps-search-box input { color: #f5efe0; }
+                    #home-page-root[data-theme="dark"] .ps-search-box input::placeholder { color: rgba(245,239,224,0.5); }
+                    #home-page-root[data-theme="dark"] .ps-search-box i { color: rgba(245,239,224,0.5); }
+                    #home-page-root[data-theme="dark"] .ps-topbar select,
+                    #home-page-root[data-theme="dark"] .ps-extra-select {
+                        background: #1f1f24; border-color: rgba(255,255,255,0.12); color: #f5efe0;
+                    }
+                    #home-page-root[data-theme="dark"] .ps-topbar select option,
+                    #home-page-root[data-theme="dark"] .ps-extra-select option,
+                    #home-page-root[data-theme="dark"] #citySelect option {
+                        background: #1f1f24; color: #f5efe0;
+                    }
+                    #home-page-root[data-theme="dark"] .ps-topbar select option:checked,
+                    #home-page-root[data-theme="dark"] .ps-extra-select option:checked,
+                    #home-page-root[data-theme="dark"] #citySelect option:checked {
+                        background: #3a2a1a; color: #f5a623;
+                    }
+                    #home-page-root[data-theme="dark"] .ps-cta-group .ps-btn-ghost {
+                        border-color: rgba(255,255,255,0.18); color: #f5efe0;
+                    }
+                    #home-page-root[data-theme="dark"] .ps-cta-group .ps-btn-ghost:hover {
+                        border-color: rgba(255,255,255,0.4); color: #ffffff;
+                    }
+                    #home-page-root[data-theme="dark"] .ps-theme-toggle {
+                        border-color: rgba(255,255,255,0.18); color: #f5efe0;
+                    }
+                    #home-page-root[data-theme="dark"] .ps-theme-toggle:hover {
+                        border-color: rgba(255,255,255,0.4); color: #ffffff;
+                    }
+                    #home-page-root[data-theme="dark"] .ps-map-card { background: #1f1f24; }
+                    #home-page-root[data-theme="dark"] #category-legend.ps-legend {
+                        background: rgba(20,20,23,0.92); color: #f5efe0;
+                    }
+                    #home-page-root[data-theme="dark"] .ps-fs-card {
+                        background: rgba(23,23,27,0.97); border-color: rgba(255,255,255,0.08);
+                    }
+                    #home-page-root[data-theme="dark"] .ps-fs-img { background: #33333a; }
+                    #home-page-root[data-theme="dark"] .ps-fs-name { color: #f5efe0; }
+                    #home-page-root[data-theme="dark"] .ps-fs-price { color: #f3d9a4; }
+                    #home-page-root[data-theme="dark"] .ps-fs-view { color: #93c5fd; }
+                    #home-page-root[data-theme="dark"] .ps-info-card { background: #17171b; }
+                    #home-page-root[data-theme="dark"] .ps-loc-title { color: #f5efe0; }
+                    #home-page-root[data-theme="dark"] .ps-loc-addr { color: rgba(245,239,224,0.55); }
+                    #home-page-root[data-theme="dark"] .ps-loc-mini { background: #1f1f24; }
+                    #home-page-root[data-theme="dark"] .ps-loc-mini .ps-mini-label { color: rgba(245,239,224,0.5); }
+                    #home-page-root[data-theme="dark"] .ps-loc-mini .ps-mini-val { color: #f5efe0; }
+                    #home-page-root[data-theme="dark"] .ps-overview-line { border-top-color: rgba(255,255,255,0.1); }
+                    #home-page-root[data-theme="dark"] .ps-overview-chip { color: rgba(245,239,224,0.65); }
+                    #home-page-root[data-theme="dark"] .ps-overview-chip b { color: #f5efe0; }
+                    #home-page-root[data-theme="dark"] .ps-cat-pie-row { border-top-color: rgba(255,255,255,0.1); }
+                    #home-page-root[data-theme="dark"] .ps-cat-pie-title { color: rgba(245,239,224,0.5); }
+                    #home-page-root[data-theme="dark"] .ps-cat-name { color: rgba(245,239,224,0.8); }
+                    #home-page-root[data-theme="dark"] .ps-cat-count { color: rgba(245,239,224,0.5); }
+                    #home-page-root[data-theme="dark"] .ps-image-card .ps-image-empty {
+                        background: #1f1f24; color: rgba(245,239,224,0.35);
+                    }
+                    #home-page-root[data-theme="dark"] .ps-tenants-title { color: #f5efe0; }
+                    #home-page-root[data-theme="dark"] .ps-tenants-sub { color: rgba(245,239,224,0.55); }
+                    #home-page-root[data-theme="dark"] .ps-avatar-stack span {
+                        background: #33333a; border-color: #17171b; color: #f5efe0;
+                    }
+                    #home-page-root[data-theme="dark"] .ps-donut {
+                        background: conic-gradient(#f59e0b calc(var(--ps-pct, 70) * 1%), #33333a 0);
+                    }
+                    #home-page-root[data-theme="dark"] .ps-donut-inner { background: #17171b; }
+                    #home-page-root[data-theme="dark"] .ps-donut-num { color: #f5efe0; }
+                    #home-page-root[data-theme="dark"] .ps-donut-label { color: rgba(245,239,224,0.5); }
+                    #home-page-root[data-theme="dark"] .ps-count { color: #f5efe0; }
+                    #home-page-root[data-theme="dark"] .ps-hint { color: rgba(245,239,224,0.5); }
+                    #home-page-root[data-theme="dark"] .ps-card {
+                        background: #1f1f24; border-color: rgba(255,255,255,0.1); color: #f5efe0;
+                    }
+                    #home-page-root[data-theme="dark"] .ps-card:hover,
+                    #home-page-root[data-theme="dark"] .ps-card.ps-card-active {
+                        box-shadow: 0 10px 24px rgba(0,0,0,0.4); border-color: rgba(199,119,58,0.6);
+                    }
+                    #home-page-root[data-theme="dark"] .ps-card-img { background: #33333a; }
+                    #home-page-root[data-theme="dark"] .ps-card-price { color: #f5efe0; }
+                    #home-page-root[data-theme="dark"] .ps-card-name { color: #f5efe0; }
+                    #home-page-root[data-theme="dark"] .ps-card-loc { color: rgba(245,239,224,0.55); }
+                    #home-page-root[data-theme="dark"] .ps-empty-list { color: rgba(245,239,224,0.5); }
+
+                    /* ⭐ THE FIX: .legacy-card is the actual visible white box —
+                       it's reused as the inner wrapper by #legacy-band,
+                       #home-categories, #home-properties, #investment-overview
+                       AND #callback-band. The section-level rules below never
+                       showed anything because .teal-wrap > section is forced
+                       transparent !important — this is the rule that matters. */
+                    #home-page-root[data-theme="dark"] .legacy-card {
+                        background: #17171b;
+                        box-shadow: 0 20px 45px rgba(0,0,0,0.45);
+                    }
+                    #home-page-root[data-theme="dark"] #legacy-band { background: #0f0f11; border-top-color: rgba(255,255,255,0.08); }
+                    #home-page-root[data-theme="dark"] #legacy-band h2 { color: #f5efe0; }
+                    #home-page-root[data-theme="dark"] #legacy-band p.legacy-sub { color: rgba(255,255,255,0.72); }
+                    #home-page-root[data-theme="dark"] .legacy-stat { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); }
+                    #home-page-root[data-theme="dark"] .legacy-stat .stat-num { color: #f3d9a4; }
+                    #home-page-root[data-theme="dark"] .legacy-stat .stat-label { color: rgba(255,255,255,0.75); }
+
+                    #home-page-root[data-theme="dark"] #home-categories { background: #0f0f11; }
+                    #home-page-root[data-theme="dark"] #home-categories h2 { color: #f5efe0; }
+                    #home-page-root[data-theme="dark"] .category-card .cat-img {
+                        background:
+                            radial-gradient(circle at 78% 18%, rgba(227,198,126,0.15), transparent 60%),
+                            linear-gradient(135deg, #121215 0%, #1c1c21 55%, #121215 100%);
+                        border-color: rgba(255,255,255,0.08); box-shadow: 0 10px 26px rgba(0,0,0,0.3);
+                    }
+                    #home-page-root[data-theme="dark"] .category-card:hover .cat-img { box-shadow: 0 18px 36px rgba(0,0,0,0.5); }
+                    #home-page-root[data-theme="dark"] .category-card .cat-name { color: #f5efe0; }
+                    #home-page-root[data-theme="dark"] .category-card .cat-price { color: rgba(245,239,224,0.65); }
+                    #home-page-root[data-theme="dark"] #home-categories .cat-cta {
+                        border-color: rgba(245,239,224,0.55); color: #ffffff; background: rgba(255,255,255,0.05);
+                    }
+                    #home-page-root[data-theme="dark"] #home-categories .cat-cta:hover {
+                        background: rgba(255,255,255,0.12); border-color: #ffffff; color: #ffffff;
+                    }
+
+                    #home-page-root[data-theme="dark"] #home-properties { background: #0f0f11; }
+                    #home-page-root[data-theme="dark"] #home-properties h2 { color: #f5efe0; }
+                    #home-page-root[data-theme="dark"] #home-properties .hp-header p { color: rgba(245,239,224,0.75); }
+                    #home-page-root[data-theme="dark"] .hp-card {
+                        background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.08);
+                        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                    }
+                    #home-page-root[data-theme="dark"] .hp-card:hover {
+                        box-shadow: 0 20px 40px rgba(0,0,0,0.5); border-color: rgba(231,159,91,0.3);
+                    }
+                    #home-page-root[data-theme="dark"] .hp-card .hp-img { background: #000; }
+                    #home-page-root[data-theme="dark"] .hp-card .hp-name { color: #f5efe0; }
+                    #home-page-root[data-theme="dark"] .hp-card .hp-loc { color: rgba(245,239,224,0.6); }
+                    #home-page-root[data-theme="dark"] .hp-card .hp-loc i { color: #e79f5b; }
+                    #home-page-root[data-theme="dark"] .hp-card .hp-price { color: #f3d9a4; }
+                    #home-page-root[data-theme="dark"] .hp-card .hp-btn { color: #e79f5b; }
+                    #home-page-root[data-theme="dark"] .hp-card .hp-btn:hover { color: #f3d9a4; }
+                    #home-page-root[data-theme="dark"] .hp-empty { color: rgba(245,239,224,0.65); }
+
+                    #home-page-root[data-theme="dark"] #investment-overview { background: #0f0f11; color: #f5efe0; }
+                    #home-page-root[data-theme="dark"] #investment-overview h2,
+                    #home-page-root[data-theme="dark"] #investment-overview h3 { color: #f5efe0; }
+                    #home-page-root[data-theme="dark"] #investment-overview p.text-muted { color: rgba(245,239,224,0.7) !important; }
+                    #home-page-root[data-theme="dark"] .highlight-city { color: #f3d9a4 !important; }
+                    #home-page-root[data-theme="dark"] .info-box { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.08); }
+                    #home-page-root[data-theme="dark"] .info-title { color: #f3d9a4; }
+                    #home-page-root[data-theme="dark"] .info-text { color: rgba(255,255,255,0.75); }
+                    #home-page-root[data-theme="dark"] .overview-empty { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.15); }
+                    #home-page-root[data-theme="dark"] .empty-subtitle { color: rgba(255,255,255,0.6); }
+
+                    #home-page-root[data-theme="dark"] #callback-band {
+                        background: linear-gradient(135deg, #16171a, #0f0f11); border-top-color: rgba(255,255,255,0.05);
+                    }
+                    #home-page-root[data-theme="dark"] #callback-band h3 { color: #f5efe0; }
+                </style>
+            </t>
+
+            <div id="wrap">
+                <!-- ⭐ LIGHT MODE: all contents run seamlessly over #home-page-root's white background -->
+                <main class="container-fluid" id="home-page-root">
+
+                    <!-- 🏙 EXCLUSIVE PROPERTY SHOWCASE (new home hero) -->
+                    <div class="teal-wrap">
+                    <section id="pshowcase">
+                        <div class="ps-shell">
+                            <div class="ps-main">
+                                <!-- light rounded search / filter bar -->
+                                <form method="get" action="/" id="cityFilterForm" class="ps-topbar">
+                                    <div class="ps-search-box">
+                                        <i class="fas fa-magnifying-glass"/>
+                                        <input type="text" id="psQuickSearch" placeholder="Search properties by name or locality..."/>
+                                    </div>
+                                    <select name="property_type" class="ps-extra-select" onchange="this.form.submit()">
+                                        <option value="">All Types</option>
+                                        <t t-foreach="categories" t-as="cat">
+                                            <option t-att-value="cat.id" t-att-selected="'selected' if str(cat.id)==str(selected_category) else None"><t t-esc="cat.name"/></option>
+                                        </t>
+                                    </select>
+                                    <select name="city" id="citySelect" onchange="this.form.submit()">
+                                        <option value="">All Cities</option>
+                                        <t t-foreach="city_list" t-as="city">
+                                            <option t-att-value="city" t-att-selected="'selected' if city==selected_city else None"><t t-esc="city"/></option>
+                                        </t>
+                                    </select>
+                                    <select name="price_range" class="ps-extra-select" onchange="this.form.submit()">
+                                        <option value="">Any Price</option>
+                                        <option value="under_50l" t-att-selected="'selected' if selected_price_band=='under_50l' else None">Under &#8377;50L</option>
+                                        <option value="50l_1cr" t-att-selected="'selected' if selected_price_band=='50l_1cr' else None">&#8377;50L - &#8377;1Cr</option>
+                                        <option value="1cr_2cr" t-att-selected="'selected' if selected_price_band=='1cr_2cr' else None">&#8377;1Cr - &#8377;2Cr</option>
+                                        <option value="above_2cr" t-att-selected="'selected' if selected_price_band=='above_2cr' else None">Above &#8377;2Cr</option>
+                                    </select>
+                                    <select name="rating" class="ps-extra-select" onchange="this.form.submit()">
+                                        <option value="" t-att-selected="'selected' if not selected_rating else None">Any Rating</option>
+                                        <option value="5" t-att-selected="'selected' if selected_rating=='5' else None">5 Stars</option>
+                                        <option value="4" t-att-selected="'selected' if selected_rating=='4' else None">4 Stars &amp; Up</option>
+                                        <option value="3" t-att-selected="'selected' if selected_rating=='3' else None">3 Stars &amp; Up</option>
+                                        <option value="2" t-att-selected="'selected' if selected_rating=='2' else None">2 Stars &amp; Up</option>
+                                        <option value="1" t-att-selected="'selected' if selected_rating=='1' else None">1 Star &amp; Up</option>
+                                    </select>
+                                    <div class="ps-cta-group">
+                                        <label class="ps-theme-toggle" title="Toggle theme">
+                                            <input type="checkbox" id="themeSwitch"/>
+                                            <i class="fas fa-circle-half-stroke"/>
+                                        </label>
+                                        <a href="/properties" class="ps-btn-ghost">Browse Full Listing</a>
+                                    </div>
+                                </form>
+
+                                <!-- 🔴 AI TRENDING / MARKET INSIGHTS TICKER injects itself here -->
+                                <div id="ai-ticker-anchor"/>
+
+                                <!-- big rounded map card with floating stat pills -->
+                                <div class="ps-map-card">
+                                    <div id="propertyMap"/>
+                                    <div id="property-data" t-att-data-properties="properties_json" style="display:none;"/>
+
+                                    <!-- ⭐ Top-left floating panel: small cards for 5-star
+                                         rated properties, populated by property_map.js. -->
+                                    <div id="fiveStarPanel" class="ps-five-star-panel ps-hidden">
+                                        <span class="ps-fs-label"><i class="fas fa-star"/>Top Rated</span>
+                                        <div id="fiveStarCardsList"/>
+                                    </div>
+
+                                    <div class="ps-pill-stats">
+                                        <div class="ps-pill">
+                                            <span class="ps-pill-num" t-esc="property_count or 0"/>
+                                            <span class="ps-pill-label">Properties</span>
+                                        </div>
+                                        <div class="ps-pill">
+                                            <span class="ps-pill-num" t-esc="filtered_cities_count or 0"/>
+                                            <span class="ps-pill-label">Cities</span>
+                                        </div>
+                                        <div class="ps-pill">
+                                            <span class="ps-pill-num" t-esc="total_agents_count or 0"/>
+                                            <span class="ps-pill-label">Agents</span>
+                                        </div>
+                                    </div>
+
+                                    <div id="category-legend" class="ps-legend" t-att-data-colors="category_colors"/>
+                                </div>
+
+                                <!-- bottom info cards: Location / Image / Community -->
+                                <div class="ps-bottom-row">
+                                    <div class="ps-info-card ps-loc-card">
+                                        <div class="ps-loc-head">
+                                            <div class="ps-loc-head-text">
+                                                <p class="ps-loc-title" id="psLocTitle">
+                                                    <t t-if="selected_city"><t t-esc="selected_city"/></t>
+                                                    <t t-else="">Properties Across India</t>
+                                                </p>
+                                                <p class="ps-loc-addr" id="psLocAddr">
+                                                    <t t-if="all_properties and (all_properties[0].street or all_properties[0].city)">
+                                                        <t t-esc="', '.join(filter(None, [all_properties[0].street, all_properties[0].city, all_properties[0].zip_code]))"/>
+                                                    </t>
+                                                    <t t-else="">Browse verified listings on the map above</t>
+                                                </p>
+                                            </div>
+                                            <i class="fas fa-heart ps-loc-heart"/>
+                                        </div>
+                                        <div class="ps-loc-minis">
+                                            <div class="ps-loc-mini">
+                                                <i class="fas fa-city"/>
+                                                <div class="ps-mini-label">Cities</div>
+                                                <div class="ps-mini-val" t-esc="filtered_cities_count or 0"/>
+                                            </div>
+                                            <div class="ps-loc-mini">
+                                                <i class="fas fa-user-tie"/>
+                                                <div class="ps-mini-label">Agents</div>
+                                                <div class="ps-mini-val" t-esc="total_agents_count or 0"/>
+                                            </div>
+                                            <div class="ps-loc-mini">
+                                                <i class="fas fa-house-chimney"/>
+                                                <div class="ps-mini-label">Listings</div>
+                                                <div class="ps-mini-val" t-esc="property_count or 0"/>
+                                            </div>
+                                        </div>
+
+                                        <!-- ⭐ Combined pie with 3 slices - Cities, Agents,
+                                             Listings - enlarged and vertically centered in
+                                             the middle of the card (Listings by Type removed). -->
+                                        <t t-set="ov_cities" t-value="filtered_cities_count or 0"/>
+                                        <t t-set="ov_agents" t-value="total_agents_count or 0"/>
+                                        <t t-set="ov_listings" t-value="property_count or 0"/>
+                                        <t t-set="ov_total" t-value="ov_cities + ov_agents + ov_listings"/>
+                                        <t t-set="ov_c_pct" t-value="round(ov_cities / ov_total * 100, 2) if ov_total else 0"/>
+                                        <t t-set="ov_ca_pct" t-value="ov_c_pct + (round(ov_agents / ov_total * 100, 2) if ov_total else 0)"/>
+                                        <div class="ps-overview-wrap">
+                                            <div class="ps-overview-pie"
+                                                 t-attf-style="background: conic-gradient(#3b82f6 0% #{ov_c_pct}%, #8b5cf6 #{ov_c_pct}% #{ov_ca_pct}%, #10b981 #{ov_ca_pct}% 100%);"/>
+                                            <div class="ps-overview-line"/>
+                                            <div class="ps-overview-legend">
+                                                <span class="ps-overview-chip"><i style="background:#3b82f6"/>Cities <b t-esc="ov_cities"/></span>
+                                                <span class="ps-overview-chip"><i style="background:#8b5cf6"/>Agents <b t-esc="ov_agents"/></span>
+                                                <span class="ps-overview-chip"><i style="background:#10b981"/>Listings <b t-esc="ov_listings"/></span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="ps-info-card ps-image-card" id="psImageCardBody">
+                                        <t t-if="all_properties and all_properties[0].image">
+                                            <img t-att-src="'data:image/png;base64,%s' % all_properties[0].image.decode('utf-8')" t-att-alt="all_properties[0].name"/>
+                                        </t>
+                                        <t t-elif="all_properties and all_properties[0].gallery_image_ids and all_properties[0].gallery_image_ids[0].datas">
+                                            <img t-att-src="'data:image/png;base64,%s' % all_properties[0].gallery_image_ids[0].datas.decode('utf-8')" t-att-alt="all_properties[0].name"/>
+                                        </t>
+                                        <t t-else="">
+                                            <div class="ps-image-empty"><i class="fas fa-image"/></div>
+                                        </t>
+                                    </div>
+
+                                    <div class="ps-info-card ps-tenants-card">
+                                        <div class="ps-avatar-stack">
+                                            <span><i class="fas fa-user"/></span>
+                                            <span><i class="fas fa-user"/></span>
+                                            <span><i class="fas fa-user"/></span>
+                                        </div>
+                                        <p class="ps-tenants-title">Customers</p>
+                                        <p class="ps-tenants-sub">Join our growing community of active members.</p>
+                                        <div class="ps-donut-wrap">
+                                            <div class="ps-donut">
+                                                <div class="ps-donut-inner">
+                                                    <span class="ps-donut-num" t-esc="total_customers_count or 0"/>
+                                                    <span class="ps-donut-label">MEMBERS</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- horizontal browse strip: kept in sync with the map, hover a card to highlight its pin -->
+                                <div class="ps-info-card ps-browse-panel" id="psBrowsePanel">
+                                    <div class="ps-list-head">
+                                        <div class="ps-count"><t t-esc="property_count or 0"/> properties found</div>
+                                        <div class="ps-hint">Hover a card for details</div>
+                                    </div>
+                                    <div class="ps-cards" id="psCardsList">
+                                        <div class="ps-empty-list">Loading properties…</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <script>
+                            (function () {
+                                var input = document.getElementById('psQuickSearch');
+                                if (!input) return;
+                                input.addEventListener('input', function () {
+                                    var q = input.value.trim().toLowerCase();
+                                    var cards = document.querySelectorAll('#psCardsList .ps-card');
+                                    cards.forEach(function (card) {
+                                        var text = card.textContent.toLowerCase();
+                                        card.style.display = (!q || text.indexOf(q) !== -1) ? '' : 'none';
+                                    });
+                                });
+                            })();
+                        </script>
+                    </section>
+
+                    <!-- 🏆 LEGACY / STATS BAND -->
+                    <section id="legacy-band">
+                      <div class="legacy-card">
+                        <h2>A Legacy of Excellence in Real Estate</h2>
+                        <p class="legacy-sub">
+                            We connect buyers, renters and investors with verified, high-quality
+                            properties across the country — backed by transparent pricing,
+                            trusted agents, and a platform built for confidence at every step.
+                        </p>
+                        <div class="legacy-stats">
+                            <div class="legacy-stat">
+                                <div class="stat-icon"><i class="fas fa-building"/></div>
+                                <div class="stat-body">
+                                    <div class="stat-num" t-esc="property_count or 0"/>
+                                    <div class="stat-label">Properties listed on the map</div>
+                                </div>
+                            </div>
+                            <div class="legacy-stat">
+                                <div class="stat-icon"><i class="fas fa-city"/></div>
+                                <div class="stat-body">
+                                    <div class="stat-num" t-esc="len(city_list) if city_list else 0"/>
+                                    <div class="stat-label">Cities covered</div>
+                                </div>
+                            </div>
+                            <div class="legacy-stat">
+                                <div class="stat-icon"><i class="fas fa-shield-alt"/></div>
+                                <div class="stat-body">
+                                    <div class="stat-num">100%</div>
+                                    <div class="stat-label">Verified listings</div>
+                                </div>
+                            </div>
+                            <div class="legacy-stat">
+                                <div class="stat-icon"><i class="fas fa-headset"/></div>
+                                <div class="stat-body">
+                                    <div class="stat-num">24/7</div>
+                                    <div class="stat-label">Agent &amp; support access</div>
+                                </div>
+                            </div>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- 🏘 FIND YOUR PERFECT HOME -->
+                    <section id="home-categories">
+                      <div class="legacy-card">
+                        <h2>Find Your Perfect Home</h2>
+                        <div class="category-grid">
+                            <a href="/properties" class="category-card">
+                                <div class="cat-img"><i class="fas fa-building"/></div>
+                                <div class="cat-name">Apartments</div>
+                                <div class="cat-price">Browse listings</div>
+                            </a>
+                            <a href="/properties" class="category-card">
+                                <div class="cat-img"><i class="fas fa-house-chimney"/></div>
+                                <div class="cat-name">Villas &amp; Townhouses</div>
+                                <div class="cat-price">Browse listings</div>
+                            </a>
+                            <a href="/properties" class="category-card">
+                                <div class="cat-img"><i class="fas fa-hotel"/></div>
+                                <div class="cat-name">Hotel Apartments</div>
+                                <div class="cat-price">Browse listings</div>
+                            </a>
+                            <a href="/properties" class="category-card">
+                                <div class="cat-img"><i class="fas fa-city"/></div>
+                                <div class="cat-name">Luxury Apartments</div>
+                                <div class="cat-price">Browse listings</div>
+                            </a>
+                        </div>
+                        <a href="/properties" class="cat-cta">View All Properties</a>
+                      </div>
+                    </section>
+
+                    <!-- 🌆 EXPLORE OUR PROPERTIES -->
+                    <section id="home-properties">
+                      <div class="legacy-card">
+                        <div class="hp-header">
+                            <h2>Explore Our Iconic Properties</h2>
+                            <p>
+                                <t t-if="selected_city">Handpicked listings in <strong><t t-esc="selected_city"/></strong> —</t>
+                                <t t-else="">Renowned for crafting exceptional homes across every price point —</t>
+                                every property blends thoughtful design with real value for buyers, renters and investors.
+                            </p>
+                        </div>
+
+                        <t t-if="all_properties">
+                            <div class="hp-grid">
+                                <t t-foreach="all_properties[:8]" t-as="p">
+                                    <div class="hp-card">
+                                        <div class="hp-img">
+                                            <img t-if="p.image" t-att-src="'data:image/png;base64,%s' % p.image.decode('utf-8')" t-att-alt="p.name"/>
+                                            <img t-elif="p.gallery_image_ids and p.gallery_image_ids[0].datas" t-att-src="'data:image/png;base64,%s' % p.gallery_image_ids[0].datas.decode('utf-8')" t-att-alt="p.name"/>
+                                        </div>
+                                        <div class="hp-body">
+                                            <div class="hp-name"><t t-esc="p.name"/></div>
+                                            <div class="hp-loc"><i class="fas fa-map-marker-alt"/><t t-esc="p.city"/></div>
+                                            <div class="hp-rating" t-raw="p.rating_stars_html"/>
+                                            <div class="hp-price">&#x20B9; <t t-esc="'{:,}'.format(int(p.price or 0))"/></div>
+                                            <a t-att-href="'/property/%d' % p.id" class="hp-btn">View Details <i class="fas fa-arrow-right"/></a>
+                                        </div>
+                                    </div>
+                                </t>
+                            </div>
+                        </t>
+                        <t t-else="">
+                            <div class="hp-empty"><p>No properties found<t t-if="selected_city"> in <t t-esc="selected_city"/></t>. Try a different city.</p></div>
+                        </t>
+
+                        <div class="hp-more"><a href="/properties">View All Properties</a></div>
+                      </div>
+                    </section>
+
+                    <!-- INVESTMENT OVERVIEW -->
+                    <section id="investment-overview">
+                      <div class="legacy-card">
+                        <div class="container text-center">
+                            <t t-if="selected_city">
+                                <div class="mb-5">
+                                    <h2>Why Should You Invest in <span class="highlight-city" style="color: #c7773a;"><t t-esc="selected_city"/></span>?</h2>
+                                    <p class="text-muted">Discover expert insights backed by growth, connectivity, and trust.</p>
+                                </div>
+                                <div class="row g-4">
+                                    <div class="col-md-6 col-lg-3">
+                                        <div class="info-box">
+                                            <h5 class="fw-bold info-title mb-2">Investment Reasons</h5>
+                                            <div class="info-text" t-raw="city_investment_info and city_investment_info.get('ai_investment_reasons') or ''"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-lg-3">
+                                        <div class="info-box">
+                                            <h5 class="fw-bold info-title mb-2">Growth Potential</h5>
+                                            <div class="info-text" t-raw="city_investment_info and city_investment_info.get('ai_growth_potential') or ''"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-lg-3">
+                                        <div class="info-box">
+                                            <h5 class="fw-bold info-title mb-2">Infrastructure</h5>
+                                            <div class="info-text" t-raw="city_investment_info and city_investment_info.get('ai_infrastructure') or ''"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 col-lg-3">
+                                        <div class="info-box">
+                                            <h5 class="fw-bold info-title mb-2">Market Trends</h5>
+                                            <div class="info-text" t-raw="city_investment_info and city_investment_info.get('ai_market_trends') or ''"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
+                            <t t-else="">
+                                <div class="p-5 overview-empty">
+                                    <h3 class="fw-semibold empty-title">Select a City to Discover Smart Investment Insights!</h3>
+                                    <p class="empty-subtitle">Choose a city from the dropdown above to see AI-generated real estate highlights.</p>
+                                </div>
+                            </t>
+                        </div>
+                      </div>
+                    </section>
+
+                    <!-- 📞 CALL BACK CTA -->
+                    <section id="callback-band">
+                      <div class="legacy-card">
+                        <h3>Have questions? Our team is one call away.</h3>
+                        <a href="/contactus" class="cb-btn">Get a Call Back</a>
+                      </div>
+                    </section>
+                    </div>
+
+                </main>
+            </div>
+        </t>
+    </template>
+</odoo>

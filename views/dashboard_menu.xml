@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Dashboard Action -->
+    <record id="action_property_dashboard" model="ir.actions.client">
+        <field name="name">Dashboard</field>
+        <field name="tag">property_dashboard_action</field>
+    </record>
+
+    <!-- Add Dashboard Menu FIRST (before Properties menu) -->
+<!--    <menuitem-->
+<!--        id="menu_property_dashboard"-->
+<!--        name="Dashboard"-->
+<!--        parent="menu_real_estate_root"-->
+<!--        action="action_property_dashboard"-->
+<!--        sequence="5"/>-->
+
+    <!-- Your existing Properties menu will come after with sequence="10" -->
+</odoo>

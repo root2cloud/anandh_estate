@@ -1,0 +1,30 @@
+<!--<odoo>-->
+<!--    <record id="mail_template_property_rejection" model="mail.template">-->
+<!--        <field name="name">Property Registration Rejection</field>-->
+<!--        <field name="model_id" ref="real_estate_management.model_property_registration"/>-->
+<!--        <field name="email_from">${(user.email or 'noreply@yourdomain.com')|safe}</field>-->
+<!--        <field name="email_to">${object.email}</field>-->
+<!--        <field name="subject">Your Property Registration Was Not Approved</field>-->
+<!--        <field name="body_html"><![CDATA[-->
+<!--      <p>Dear ${object.customer_name},</p>-->
+<!--      <p>Your property registration was not approved. For more details, please contact our team.</p>-->
+<!--  ]]></field>-->
+<!--    </record>-->
+
+<!--</odoo>-->
+
+
+<odoo>
+    <record id="mail_template_property_rejection" model="mail.template">
+        <field name="name">Property Rejection Mail</field>
+        <field name="model_id" ref="model_property_registration"/>
+        <field name="subject">Your Property Registration has been Rejected</field>
+        <field name="email_from">${(user.email_formatted or '')|safe}</field>
+        <field name="email_to">${object.customer_id.email|safe}</field>
+        <field name="body_html"><![CDATA[
+                    <p>Dear ${object.customer_id.name},</p>
+                    <p>We regret to inform you that your property registration <b>${object.name}</b> has been rejected.</p>
+                    <p>Thank you,<br/>Real Estate Team</p>
+                ]]></field>
+    </record>
+</odoo>

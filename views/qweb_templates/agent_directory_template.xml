@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="agent_directory_template" name="Real Estate Agent Directory">
+        <t t-call="website.layout">
+
+            <!-- Load Custom CSS -->
+            <t t-set="head">
+                <link rel="stylesheet" href="/real_estate_management/static/src/css/agent_directory.css"/>
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+                <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&amp;family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+            </t>
+
+            <div id="wrap" class="agent-directory-wrap">
+
+                <!-- Hero Section -->
+                <section class="agent-hero-section">
+                    <div class="hero-overlay"></div>
+                    <div class="container hero-content">
+                        <div class="hero-text">
+                            <h1 class="hero-title animate-fadeInUp">
+                                Find the Most Experienced Real Estate Agents
+                            </h1>
+                            <p class="hero-subtitle animate-fadeInUp delay-1">
+                                Connect with top-rated professionals who know your market inside and out
+                            </p>
+
+                            <!-- Search Bar -->
+                            <form method="GET" action="/agents" class="search-form animate-fadeInUp delay-2">
+                                <div class="search-input-wrapper">
+                                    <i class="fas fa-search search-icon"></i>
+                                    <input type="text"
+                                           name="search"
+                                           class="search-input"
+                                           placeholder="Search by name, city, or ZIP code"
+                                           t-att-value="search_query"/>
+                                    <button type="submit" class="search-btn">
+                                        <span>Search Agents</span>
+                                        <i class="fas fa-arrow-right"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Filters and Results Section -->
+                <section class="filters-section">
+                    <div class="container">
+
+                        <!-- Results Count -->
+                        <div class="results-header">
+                            <div class="results-count">
+                                <h2 class="count-text">
+                                    <strong t-esc="agent_count"/>
+                                    <span class="text-muted">of</span>
+                                    <t t-esc="total_agents"/>
+                                    <span class="text-muted">agents</span>
+                                    <t t-if="city_filter">
+                                        <span class="city-badge">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                            <t t-esc="city_filter"/>
+                                        </span>
+                                    </t>
+                                </h2>
+                            </div>
+
+                            <!-- Filter Controls -->
+                            <div class="filter-controls">
+                                <!-- City Filter -->
+                                <div class="filter-item">
+                                    <label class="filter-label">
+                                        <i class="fas fa-city"></i> City
+                                    </label>
+                                    <select name="city"
+                                            class="filter-select"
+                                            onchange="filterAgents(this.value, 'city')">
+                                        <option value="">All Cities</option>
+                                        <t t-foreach="cities" t-as="city">
+                                            <option t-att-value="city"
+                                                    t-att-selected="'selected' if city == city_filter else None">
+                                                <t t-esc="city"/>
+                                            </option>
+                                        </t>
+                                    </select>
+                                </div>
+
+                                <!-- Expertise Filter -->
+                                <div class="filter-item">
+                                    <label class="filter-label">
+                                        <i class="fas fa-star"></i> Expertise
+                                    </label>
+                                    <select name="expertise"
+                                            class="filter-select"
+                                            onchange="filterAgents(this.value, 'expertise')">
+                                        <option value="">All Agents</option>
+                                        <option value="standard"
+                                                t-att-selected="'selected' if expertise_filter == 'standard' else None">
+                                            Standard Agent
+                                        </option>
+                                        <option value="luxury"
+                                                t-att-selected="'selected' if expertise_filter == 'luxury' else None">
+                                            Luxury Expert
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <!-- Sort Filter -->
+                                <div class="filter-item">
+                                    <label class="filter-label">
+                                        <i class="fas fa-sort"></i> Sort By
+                                    </label>
+                                    <select name="sort"
+                                            class="filter-select"
+                                            onchange="filterAgents(this.value, 'sort')">
+                                        <option value="recommended"
+                                                t-att-selected="'selected' if sort_by == 'recommended' else None">
+                                            Recommended
+                                        </option>
+                                        <option value="sales_volume"
+                                                t-att-selected="'selected' if sort_by == 'sales_volume' else None">
+                                            Sales Volume
+                                        </option>
+                                        <option value="deals"
+                                                t-att-selected="'selected' if sort_by == 'deals' else None">
+                                            Total Deals
+                                        </option>
+                                        <option value="rating"
+                                                t-att-selected="'selected' if sort_by == 'rating' else None">
+                                            Highest Rated
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Agent Cards Grid -->
+                        <div class="agents-grid">
+                            <t t-foreach="agents" t-as="agent">
+                                <div class="agent-card">
+
+                                    <!-- Luxury Badge -->
+                                    <t t-if="agent['expertise_level'] == 'luxury'">
+                                        <div class="luxury-badge">
+                                            <i class="fas fa-crown"></i>
+                                            <span>LUXURY EXPERT</span>
+                                        </div>
+                                    </t>
+
+                                    <!-- Agent Image -->
+                                    <div class="agent-image-wrapper">
+                                        <t t-if="agent['image_url']">
+                                            <img t-att-src="agent['image_url']"
+                                                 class="agent-image"
+                                                 t-att-alt="agent['name']"/>
+                                        </t>
+                                        <t t-else="">
+                                            <div class="agent-image-placeholder">
+                                                <span t-esc="agent['name'][:1]"/>
+                                            </div>
+                                        </t>
+                                        <div class="image-overlay"></div>
+                                    </div>
+
+                                    <!-- Agent Info -->
+                                    <div class="agent-info">
+                                        <h3 class="agent-name">
+                                            <a t-attf-href="/agent/#{agent['id']}" class="agent-link">
+                                                <t t-esc="agent['name']"/>
+                                            </a>
+                                        </h3>
+
+                                        <p class="agent-designation">
+                                            <i class="fas fa-briefcase"></i>
+                                            <t t-esc="agent['designation']"/>
+                                        </p>
+
+                                        <p class="agent-location">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                            <t t-esc="agent['city']"/>, <t t-esc="agent['state']"/>
+                                        </p>
+
+                                        <p class="agent-email">
+                                            <i class="fas fa-envelope"></i>
+                                            <t t-esc="agent['email'][:25]"/>...
+                                        </p>
+
+                                        <!-- Performance Metrics -->
+                                        <div class="agent-metrics">
+                                            <div class="metric-item metric-sales">
+                                                <div class="metric-value" t-esc="agent['sales_volume_display']"/>
+                                                <div class="metric-label">Sales Volume</div>
+                                            </div>
+                                            <div class="metric-item metric-deals">
+                                                <div class="metric-value" t-esc="agent['total_deals']"/>
+                                                <div class="metric-label">Total Deals</div>
+                                            </div>
+                                            <div class="metric-item metric-rating">
+                                                <div class="metric-value">
+                                                    <t t-esc="'%.1f' % agent['avg_rating']"/>
+                                                    <i class="fas fa-star"></i>
+                                                </div>
+                                                <div class="metric-label">Avg Rating</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Short Bio -->
+                                        <p class="agent-bio" t-if="agent['short_bio']">
+                                            <t t-esc="agent['short_bio'][:100]"/>...
+                                        </p>
+
+                                        <!-- Action Buttons -->
+                                        <div class="agent-actions">
+                                            <a t-attf-href="/agent/#{agent['id']}" class="btn btn-view-profile">
+                                                <i class="fas fa-user"></i>
+                                                <span>View Profile</span>
+                                            </a>
+                                            <a t-attf-href="tel:#{agent['phone']}" class="btn btn-call">
+                                                <i class="fas fa-phone"></i>
+                                                <span>Call Now</span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
+                        </div>
+
+                        <!-- Empty State -->
+                        <t t-if="not agents">
+                            <div class="empty-state">
+                                <div class="empty-icon">
+                                    <i class="fas fa-search"></i>
+                                </div>
+                                <h3 class="empty-title">No agents found</h3>
+                                <p class="empty-text">Try adjusting your search criteria or filters</p>
+                                <a href="/agents" class="btn btn-primary">View All Agents</a>
+                            </div>
+                        </t>
+                    </div>
+                </section>
+
+                <!-- Why Choose Section -->
+                <section class="why-choose-section">
+                    <div class="container">
+                        <h2 class="section-title">Why Choose Our Agents</h2>
+                        <p class="section-subtitle">
+                            Trusted professionals delivering exceptional results
+                        </p>
+
+                        <div class="benefits-grid">
+                            <div class="benefit-card">
+                                <div class="benefit-icon">
+                                    <i class="fas fa-medal"></i>
+                                </div>
+                                <h3 class="benefit-title">Local Market Experts</h3>
+                                <p class="benefit-text">
+                                    Our agents rank in the top 1% of professionals working in your area with deep local knowledge
+                                </p>
+                            </div>
+
+                            <div class="benefit-card">
+                                <div class="benefit-icon">
+                                    <i class="fas fa-rupee-sign"></i>
+                                </div>
+                                <h3 class="benefit-title">Best Value Guaranteed</h3>
+                                <p class="benefit-text">
+                                    Competitive rates combined with a proven track record of successfully closing deals
+                                </p>
+                            </div>
+
+                            <div class="benefit-card">
+                                <div class="benefit-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <h3 class="benefit-title">Proven Track Record</h3>
+                                <p class="benefit-text">
+                                    Access to verified sales data, customer reviews, and transparent performance metrics
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </t>
+
+        <!-- Filter JavaScript -->
+        <script>
+            function filterAgents(value, type) {
+                const url = new URL(window.location);
+
+                if (value) {
+                    url.searchParams.set(type, value);
+                } else {
+                    url.searchParams.delete(type);
+                }
+
+                window.location.href = url.toString();
+            }
+
+            // Add animation on scroll
+            document.addEventListener('DOMContentLoaded', function() {
+                const observerOptions = {
+                    threshold: 0.1,
+                    rootMargin: '0px 0px -50px 0px'
+                };
+
+                const observer = new IntersectionObserver(function(entries) {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('animate-in');
+                        }
+                    });
+                }, observerOptions);
+
+                document.querySelectorAll('.agent-card, .benefit-card').forEach(el => {
+                    observer.observe(el);
+                });
+            });
+        </script>
+    </template>
+</odoo>

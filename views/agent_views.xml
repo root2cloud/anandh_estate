@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Agent Tree View -->
+    <record id="view_real_estate_agent_tree" model="ir.ui.view">
+        <field name="name">real.estate.agent.tree</field>
+        <field name="model">real.estate.agent</field>
+        <field name="arch" type="xml">
+            <list string="Agents">
+                <field name="image" widget="image" optional="show"/>
+                <field name="name"/>
+                <field name="designation"/>
+                <field name="city"/>
+                <field name="phone"/>
+                <field name="email"/>
+                <field name="total_deals"/>
+                <field name="total_sales_volume" widget="monetary"/>
+                <field name="avg_rating" widget="progressbar"/>
+                <field name="active_property_count"/>
+                <field name="is_active"/>
+                <field name="user_id" string="Portal User" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Agent Form View -->
+    <record id="view_real_estate_agent_form" model="ir.ui.view">
+        <field name="name">real.estate.agent.form</field>
+        <field name="model">real.estate.agent</field>
+        <field name="arch" type="xml">
+            <form string="Agent">
+                <header>
+                    <button name="action_view_properties" string="View Properties" type="object" class="btn-primary"/>
+
+                    <!-- ⭐ CREATE PORTAL USER BUTTON -->
+                    <button name="action_create_portal_user"
+                            type="object"
+                            string="Create Portal User"
+                            class="btn-success"
+                            invisible="user_id"
+                            help="Create portal login for this agent"/>
+                </header>
+
+                <sheet>
+                    <!-- ⭐ Status Badge -->
+                    <widget name="web_ribbon"
+                            title="Portal Active"
+                            bg_color="bg-success"
+                            invisible="not user_id"/>
+
+                    <!-- ⭐ AGENT IMAGE (Shifted left with margin-right to clear ribbon) ⭐ -->
+                    <field name="image"
+                           widget="image"
+                           class="oe_avatar"
+                           style="margin-right: 80px;"
+                           options="{'size': [150, 150]}"/>
+
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Agent Name"/>
+                        </h1>
+                    </div>
+
+                    <!-- ⭐ PORTAL STATUS ALERT -->
+                    <div class="alert alert-warning"
+                         role="alert"
+                         invisible="user_id">
+                        <strong>
+                            <i class="fa fa-warning"/>
+                            No Portal Access
+                        </strong>
+                        <p>This agent cannot login to the portal. Click "Create Portal User" button above to grant
+                            access.
+                        </p>
+                    </div>
+
+                    <div class="alert alert-success"
+                         role="alert"
+                         invisible="not user_id">
+                        <strong>
+                            <i class="fa fa-check"/>
+                            Portal Access Active
+                        </strong>
+                        <p>This agent can login with email:
+                            <field name="email" readonly="1" class="font-weight-bold"/>
+                        </p>
+                    </div>
+
+                    <group>
+                        <group string="Professional Details">
+                            <field name="designation"/>
+                            <field name="expertise_level"/>
+                            <field name="license_number"/>
+                            <field name="experience_years"/>
+                        </group>
+                        <group string="Contact Information">
+                            <field name="email" widget="email"/>
+                            <field name="phone" widget="phone"/>
+                            <field name="whatsapp"/>
+                            <field name="user_id" readonly="1"/>
+
+                            <!-- Button to view portal user -->
+                            <button name="%(base.action_res_users)d"
+                                    type="action"
+                                    string="View Portal User"
+                                    class="btn-link"
+                                    icon="fa-external-link"
+                                    invisible="not user_id"
+                                    context="{'search_default_id': user_id}"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <group string="Location">
+                            <field name="city"/>
+                            <field name="state_id"/>
+                            <field name="zip_code"/>
+                        </group>
+                        <group string="Performance">
+                            <field name="total_sales_volume" widget="monetary"/>
+                            <field name="total_deals"/>
+                            <field name="avg_rating"/>
+                            <field name="review_count"/>
+                            <field name="active_property_count"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <field name="specializations" widget="many2many_tags"/>
+                    </group>
+
+                    <notebook>
+                        <page string="Biography">
+                            <field name="short_bio" placeholder="Short bio (100-200 characters)"/>
+                            <field name="detailed_bio" widget="html"/>
+                        </page>
+                        <page string="Additional Info">
+                            <group>
+                                <field name="awards"/>
+                                <field name="languages_spoken"/>
+                                <field name="linkedin_url" widget="url"/>
+                                <field name="facebook_url" widget="url"/>
+                            </group>
+                        </page>
+                        <page string="Properties">
+                            <field name="property_ids" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="city"/>
+                                    <field name="price" widget="monetary"/>
+                                    <field name="is_published"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+
+                    <group>
+                        <field name="is_active"/>
+                        <field name="is_accepting_clients"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- ⭐⭐⭐ IMPROVED AGENT KANBAN VIEW ⭐⭐⭐ -->
+    <record id="view_real_estate_agent_kanban" model="ir.ui.view">
+        <field name="name">real.estate.agent.kanban</field>
+        <field name="model">real.estate.agent</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile" sample="1">
+                <field name="id"/>
+                <field name="name"/>
+                <field name="image"/>
+                <field name="designation"/>
+                <field name="expertise_level"/>
+                <field name="city"/>
+                <field name="state_id"/>
+                <field name="email"/>
+                <field name="phone"/>
+                <field name="total_sales_volume"/>
+                <field name="total_deals"/>
+                <field name="avg_rating"/>
+                <field name="active_property_count"/>
+                <field name="is_active"/>
+                <field name="user_id"/>
+
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_global_click" style="padding: 15px;">
+
+                            <!-- ⭐ HEADER SECTION WITH LARGE IMAGE -->
+                            <div class="text-center mb-3">
+                                <div style="position: relative; display: inline-block;">
+                                    <img t-att-src="'/web/image/real.estate.agent/' + record.id.raw_value + '/image'"
+                                         alt="Agent"
+                                         class="rounded-circle"
+                                         style="width: 120px; height: 120px; object-fit: cover; border: 3px solid #875A7B;"/>
+
+                                    <!-- Portal Badge -->
+                                    <span t-if="record.user_id.raw_value"
+                                          class="badge badge-success"
+                                          style="position: absolute; top: 5px; right: 5px; font-size: 11px; padding: 4px 8px;">
+                                        ✓ Portal
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- ⭐ NAME & DESIGNATION SECTION -->
+                            <div class="text-center mb-2">
+                                <h4 class="mb-0" style="font-weight: bold; color: #333;">
+                                    <field name="name"/>
+                                </h4>
+                                <p class="text-muted mb-1" style="font-size: 13px;">
+                                    <field name="designation"/>
+                                </p>
+                                <div>
+                                    <span class="badge badge-pill"
+                                          t-att-class="record.expertise_level.raw_value == 'luxury' ? 'badge-warning' :
+                                                      record.expertise_level.raw_value == 'senior' ? 'badge-primary' : 'badge-secondary'"
+                                          style="font-size: 11px; padding: 5px 12px;">
+                                        <field name="expertise_level"/>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- ⭐ DIVIDER -->
+                            <hr style="margin: 15px 0; border-top: 1px solid #e0e0e0;"/>
+
+                            <!-- ⭐ CONTACT INFORMATION -->
+                            <div class="mb-2">
+                                <div class="mb-2" style="font-size: 13px;">
+                                    <i class="fa fa-map-marker" style="width: 20px; color: #875A7B;" title="Location"/>
+                                    <strong>
+                                        <field name="city"/>
+                                    </strong>
+                                    ,
+                                    <field name="state_id"/>
+                                </div>
+
+                                <div class="mb-2" style="font-size: 13px;">
+                                    <i class="fa fa-phone" style="width: 20px; color: #875A7B;" title="Phone"/>
+                                    <field name="phone"/>
+                                </div>
+
+                                <div class="mb-2" style="font-size: 12px; word-break: break-all;">
+                                    <i class="fa fa-envelope" style="width: 20px; color: #875A7B;" title="Email"/>
+                                    <field name="email"/>
+                                </div>
+                            </div>
+
+                            <!-- ⭐ DIVIDER -->
+                            <hr style="margin: 15px 0; border-top: 1px solid #e0e0e0;"/>
+
+                            <!-- ⭐ PERFORMANCE METRICS -->
+                            <div class="row mb-3">
+                                <div class="col-6 text-center" style="border-right: 1px solid #e0e0e0;">
+                                    <h5 class="mb-0" style="color: #28a745; font-weight: bold;">
+                                        <field name="total_sales_volume" widget="monetary"/>
+                                    </h5>
+                                    <small class="text-muted" style="font-size: 11px;">Total Sales</small>
+                                </div>
+                                <div class="col-6 text-center">
+                                    <h5 class="mb-0" style="color: #875A7B; font-weight: bold;">
+                                        <field name="total_deals"/>
+                                    </h5>
+                                    <small class="text-muted" style="font-size: 11px;">Deals Closed</small>
+                                </div>
+                            </div>
+
+                            <!-- ⭐ RATING SECTION -->
+                            <div class="text-center mb-3">
+                                <span style="font-size: 16px;">
+                                    <i class="fa fa-star" style="color: #FFC107;" title="Rating"/>
+                                    <strong style="color: #333;">
+                                        <field name="avg_rating"/>
+                                        / 5.0
+                                    </strong>
+                                </span>
+                            </div>
+
+                            <!-- ⭐ DIVIDER -->
+                            <hr style="margin: 15px 0; border-top: 1px solid #e0e0e0;"/>
+
+                            <!-- ⭐ BOTTOM SECTION -->
+                            <div class="row">
+                                <div class="col-6">
+                                    <span class="badge badge-pill badge-info"
+                                          style="font-size: 12px; padding: 6px 12px;">
+                                        <i class="fa fa-home" title="Properties"/>
+                                        <field name="active_property_count"/>
+                                        Properties
+                                    </span>
+                                </div>
+                                <div class="col-6 text-right">
+                                    <button name="action_view_properties"
+                                            type="object"
+                                            string="View"
+                                            class="btn btn-sm btn-primary"
+                                            style="padding: 5px 15px; font-size: 12px;"/>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Agent Action -->
+    <record id="action_real_estate_agent" model="ir.actions.act_window">
+        <field name="name">Agents</field>
+        <field name="res_model">real.estate.agent</field>
+        <field name="view_mode">kanban,list,form</field>
+    </record>
+
+    <!-- Menu Item -->
+    <menuitem id="menu_real_estate_agent"
+              name="Agents"
+              parent="menu_real_estate_root"
+              action="action_real_estate_agent"
+              sequence="60"/>
+</odoo>

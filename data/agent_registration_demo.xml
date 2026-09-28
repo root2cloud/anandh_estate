@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Demo Agent Registration 1 -->
+        <record id="agent_registration_demo_1" model="agent.registration">
+            <field name="agent_name">Rajesh Kumar</field>
+            <field name="email">rajesh.kumar@example.com</field>
+            <field name="phone">+91 9876543210</field>
+            <field name="whatsapp">+91 9876543210</field>
+            <field name="designation">senior_agent</field>
+            <field name="expertise_level">luxury</field>
+            <field name="license_number">RE-LIC-2023-001</field>
+            <field name="experience_years">8</field>
+            <field name="city">Hyderabad</field>
+            <field name="state_id" eval="ref('base.state_in_ap')"/>
+            <field name="zip_code">500001</field>
+            <field name="short_bio">Experienced luxury real estate agent specializing in high-end properties in Hyderabad.</field>
+            <field name="languages_spoken">English, Hindi, Telugu</field>
+            <field name="status">submitted</field>
+        </record>
+
+        <!-- Demo Agent Registration 2 -->
+        <record id="agent_registration_demo_2" model="agent.registration">
+            <field name="agent_name">Priya Sharma</field>
+            <field name="email">priya.sharma@example.com</field>
+            <field name="phone">+91 9876543211</field>
+            <field name="designation">agent</field>
+            <field name="expertise_level">standard</field>
+            <field name="experience_years">3</field>
+            <field name="city">Bangalore</field>
+            <field name="state_id" eval="ref('base.state_in_ka')"/>
+            <field name="zip_code">560001</field>
+            <field name="short_bio">Passionate real estate professional helping families find their dream homes.</field>
+            <field name="languages_spoken">English, Hindi, Kannada</field>
+            <field name="status">under_review</field>
+        </record>
+
+        <!-- Demo Agent Registration 3 -->
+        <record id="agent_registration_demo_3" model="agent.registration">
+            <field name="agent_name">Mohammed Ali</field>
+            <field name="email">mohammed.ali@example.com</field>
+            <field name="phone">+91 9876543212</field>
+            <field name="designation">broker</field>
+            <field name="expertise_level">luxury</field>
+            <field name="license_number">RE-LIC-2022-045</field>
+            <field name="experience_years">12</field>
+            <field name="city">Mumbai</field>
+            <field name="state_id" eval="ref('base.state_in_mh')"/>
+            <field name="zip_code">400001</field>
+            <field name="short_bio">Top-performing broker with a proven track record in luxury real estate transactions.</field>
+            <field name="languages_spoken">English, Hindi, Marathi</field>
+            <field name="status">submitted</field>
+        </record>
+    </data>
+</odoo>

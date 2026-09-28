@@ -1,0 +1,475 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Tree (List) View -->
+    <record id="view_property_list" model="ir.ui.view">
+        <field name="name">property.property.list</field>
+        <field name="model">property.property</field>
+        <field name="arch" type="xml">
+            <list editable="top" open_form_view="True">
+                <field name="name"/>
+                <field name="city"/>
+                <field name="price" widget="monetary"/>
+                <field name="plot_area"/>
+                <field name="facing_direction"/>
+                <field name="title_status"/>
+                <field name="rating" widget="priority"/>
+                <field name="ai_content_status" widget="badge"
+                       decoration-success="ai_content_status == 'generated'"
+                       decoration-warning="ai_content_status == 'pending'"
+                       decoration-danger="ai_content_status == 'failed'"
+                       decoration-muted="ai_content_status == 'not_started'"/>
+                <field name="is_published"/>
+                <field name="is_featured"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_property_search" model="ir.ui.view">
+        <field name="name">property.property.search</field>
+        <field name="model">property.property</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="city"/>
+                <field name="zip_code"/>
+                <field name="category_id"/>
+                <field name="rating"/>
+                <separator/>
+                <filter string="5 Stars" name="rating_5" domain="[('rating', '=', '5')]"/>
+                <filter string="4 Stars &amp; Up" name="rating_4" domain="[('rating', 'in', ['4', '5'])]"/>
+                <filter string="3 Stars &amp; Up" name="rating_3" domain="[('rating', 'in', ['3', '4', '5'])]"/>
+                <filter string="Not Rated" name="rating_none" domain="[('rating', '=', '0')]"/>
+                <separator/>
+                <filter string="Published" name="published" domain="[('is_published', '=', True)]"/>
+                <filter string="Featured" name="featured" domain="[('is_featured', '=', True)]"/>
+                <separator/>
+                <filter string="AI Content Generated" name="ai_generated" domain="[('ai_content_status', '=', 'generated')]"/>
+                <filter string="AI Content Pending" name="ai_pending" domain="[('ai_content_status', '=', 'pending')]"/>
+                <filter string="AI Content Failed" name="ai_failed" domain="[('ai_content_status', '=', 'failed')]"/>
+                <filter string="AI Content Not Started" name="ai_not_started" domain="[('ai_content_status', '=', 'not_started')]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Rating" name="group_rating" context="{'group_by': 'rating'}"/>
+                    <filter string="City" name="group_city" context="{'group_by': 'city'}"/>
+                    <filter string="Category" name="group_category" context="{'group_by': 'category_id'}"/>
+                    <filter string="Status" name="group_status" context="{'group_by': 'status'}"/>
+                    <filter string="AI Content Status" name="group_ai_content_status" context="{'group_by': 'ai_content_status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Bulk action: select multiple properties in the list view, then
+         Action -> Regenerate AI Content (Bulk) to generate AI content for
+         all of them in one go. -->
+    <record id="action_server_regenerate_ai_bulk" model="ir.actions.server">
+        <field name="name">Regenerate AI Content (Bulk)</field>
+        <field name="model_id" ref="model_property_property"/>
+        <field name="binding_model_id" ref="model_property_property"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">action = records.action_regenerate_ai_content_bulk()</field>
+    </record>
+
+    <!-- Form View - IMPROVED LAYOUT -->
+    <record id="view_property_form" model="ir.ui.view">
+        <field name="name">property.property.form</field>
+        <field name="model">property.property</field>
+        <field name="arch" type="xml">
+            <form string="Property">
+                <header>
+                    <!-- Action buttons -->
+                    <button name="action_regenerate_ai_content"
+                            type="object"
+                            string="Regenerate AI Content"
+                            icon="fa-refresh"
+                            class="btn-primary"/>
+
+                    <field name="ai_content_status" widget="statusbar" readonly="1" nolabel="1"/>
+
+                    <!-- Status indicator -->
+                    <field name="is_published" widget="boolean_toggle"/>
+                    <field name="is_featured" widget="boolean_toggle"/>
+                </header>
+
+                <sheet>
+                    <!-- Shows the exact reason the last AI generation attempt
+                         failed, right in the backend - no server log access
+                         needed. Only visible when there's actually an error
+                         to show, and hidden once a generation succeeds
+                         (ai_last_error is cleared on success). -->
+                    <div class="alert alert-danger" role="alert"
+                         invisible="not ai_last_error">
+                        <strong>Last AI Generation Error:</strong>
+                        <field name="ai_last_error" readonly="1" nolabel="1"/>
+                    </div>
+
+                    <!-- ⭐ PROPERTY IMAGE (Avatar Style) -->
+                    <field name="image"
+                           widget="image"
+                           class="oe_avatar"
+                           options="{'size': [200, 200]}"/>
+
+                    <!-- ⭐ TITLE SECTION -->
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1>
+                            <field name="name"
+                                   placeholder="e.g., Green Valley Residency"
+                                   required="1"/>
+                        </h1>
+                        <h3>
+                            <field name="short_description"
+                                   placeholder="Brief description of the property"/>
+                        </h3>
+                    </div>
+
+                    <!-- ⭐ KEY METRICS CARDS (Top Section) -->
+                    <div class="o_property_stats">
+                        <group col="4">
+                            <group string="💰 Pricing">
+                                <field name="price" widget="monetary"/>
+                                <field name="currency_id" invisible="1"/>
+                                <field name="registration_charges" widget="monetary"/>
+                                <field name="registration_amount" readonly="1"/>
+                            </group>
+
+                            <group string="📏 Dimensions">
+                                <field name="plot_area"/>
+                                <field name="price_per_sqft" readonly="1"/>
+                                <field name="road_width"/>
+                            </group>
+
+                            <group string="📍 Location">
+                                <field name="city" required="1"/>
+                                <field name="state_id"/>
+                                <field name="zip_code"/>
+                            </group>
+
+                            <group string="📊 Status">
+                                <field name="status"/>
+                                <field name="title_status"/>
+                                <field name="facing_direction"/>
+                                <field name="views" readonly="1"/>
+                                <field name="rating" widget="priority"/>
+                            </group>
+                        </group>
+                    </div>
+
+                    <!-- ⭐ NOTEBOOK TABS -->
+                    <notebook>
+
+                        <!-- TAB 1: General Information -->
+                        <page string="General Information">
+                            <group>
+                                <group string="Property Details">
+                                    <field name="category_id" options="{'no_create': True}"/>
+                                    <field name="facing_direction"/>
+                                    <field name="road_width"/>
+                                    <field name="title_status"/>
+                                    <field name="status"/>
+                                    <field name="emi_available"/>
+                                </group>
+
+                                <group string="Documents">
+                                    <field name="adhar_image"
+                                           filename="adhar_filename"
+                                           widget="binary"/>
+                                    <field name="adhar_filename" invisible="1"/>
+                                    <field name="agreement_document"
+                                           filename="agreement_filename"
+                                           widget="binary"/>
+                                    <field name="agreement_filename" invisible="1"/>
+                                </group>
+                            </group>
+
+                            <group>
+                                <group string="Infrastructure Facilities">
+                                    <field name="water_connection"/>
+                                    <field name="electricity_connection"/>
+                                    <field name="drainage_facility"/>
+                                    <field name="gated_community"/>
+                                </group>
+
+                                <group string="Visibility Metrics">
+                                    <field name="views" readonly="1"/>
+                                    <field name="last_viewed" readonly="1"/>
+                                    <field name="is_published"/>
+                                    <field name="is_featured"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- TAB 2: Location & Map -->
+                        <page string="Location &amp; Map">
+                            <group>
+                                <group string="Address Details">
+                                    <field name="street" placeholder="Street address"/>
+                                    <field name="city" required="1"/>
+                                    <field name="zip_code"/>
+                                    <field name="state_id"/>
+                                    <field name="country_id"/>
+                                </group>
+
+                                <group string="Geolocation Coordinates">
+                                    <field name="latitude" readonly="1"/>
+                                    <field name="longitude" readonly="1"/>
+                                    <field name="date_localization" readonly="1"/>
+                                </group>
+                            </group>
+
+                            <group string="Nearby Landmarks">
+                                <field name="nearby_landmarks"
+                                       widget="text"
+                                       placeholder="e.g., 2 km from metro station, near shopping mall..."/>
+                            </group>
+                        </page>
+
+                        <!-- TAB 3: Contact & Media -->
+                        <page string="Contact &amp; Media">
+                            <group>
+                                <group string="Contact Person">
+                                    <field name="contact_name" placeholder="Contact person name"/>
+                                    <field name="contact_phone" widget="phone"/>
+                                    <field name="contact_email" widget="email"/>
+                                    <field name="property_website_url" widget="url"/>
+                                </group>
+
+                                <group string="Property Gallery">
+                                    <field name="gallery_image_ids"
+                                           widget="many2many_binary"
+                                           nolabel="1"/>
+                                    <field name="image_count" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- TAB 4: City Investment Analysis -->
+                        <page string="City Investment Analysis">
+                            <group>
+                                <group string="Investment Data">
+                                    <field name="city_investment_generated"/>
+                                    <field name="city_investment_date" readonly="1"/>
+                                    <field name="last_city_processed" readonly="1"/>
+                                </group>
+
+                                <group string="City Infrastructure">
+                                    <field name="city_infrastructure"
+                                           widget="text"
+                                           placeholder="Infrastructure highlights..."/>
+                                </group>
+                            </group>
+
+                            <group>
+                                <group string="Growth Potential">
+                                    <field name="city_growth_potential"
+                                           widget="text"
+                                           placeholder="Future development plans..."/>
+                                </group>
+
+                                <group string="Market Trends">
+                                    <field name="city_market_trends"
+                                           widget="text"
+                                           placeholder="Current market trends..."/>
+                                </group>
+                            </group>
+
+                            <group string="Investment Reasons">
+                                <field name="city_investment_reasons"
+                                       widget="text"
+                                       placeholder="Why invest in this city..."/>
+                            </group>
+                        </page>
+
+                        <!-- TAB 5: AI Insights -->
+                        <page string="AI Insights">
+                            <div class="alert alert-info" role="alert">
+                                <strong>🤖 AI-Generated Content</strong>
+                                <p>This content is automatically generated using OpenAI. Click "Regenerate AI Content"
+                                    button to refresh.
+                                </p>
+                            </div>
+
+                            <group>
+                                <group string="Generation Info">
+                                    <field name="ai_content_generated" readonly="1"/>
+                                    <field name="ai_generation_date" readonly="1"/>
+                                </group>
+                            </group>
+
+                            <group>
+                                <group string="Key Highlights">
+                                    <field name="ai_key_highlights"
+                                           widget="text"
+                                           readonly="1"
+                                           nolabel="1"/>
+                                </group>
+
+                                <group string="Investment Data">
+                                    <field name="ai_investment_data"
+                                           widget="text"
+                                           readonly="1"
+                                           nolabel="1"/>
+                                </group>
+                            </group>
+
+                            <group>
+                                <group string="Nearby Places">
+                                    <field name="ai_nearby_places"
+                                           widget="text"
+                                           readonly="1"
+                                           nolabel="1"/>
+                                </group>
+
+                                <group string="Unique Features">
+                                    <field name="ai_unique_features"
+                                           widget="text"
+                                           readonly="1"
+                                           nolabel="1"/>
+                                </group>
+                            </group>
+
+                            <group string="Lifestyle Benefits">
+                                <field name="ai_lifestyle_benefits"
+                                       widget="text"
+                                       readonly="1"
+                                       nolabel="1"/>
+                            </group>
+                        </page>
+
+                        <!-- TAB 6: SEO & Marketing -->
+                        <page string="SEO &amp; Marketing">
+                            <group>
+                                <group string="SEO Configuration">
+                                    <field name="seo_title"
+                                           placeholder="SEO-friendly title (max 60 chars)"/>
+                                    <field name="seo_description"
+                                           widget="text"
+                                           placeholder="Meta description (max 160 chars)"/>
+                                </group>
+
+                                <group string="Publication Status">
+                                    <field name="is_published"/>
+                                    <field name="is_featured"/>
+                                    <field name="views" readonly="1"/>
+                                    <field name="last_viewed" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+
+                    </notebook>
+                </sheet>
+
+                <!-- Chatter (Activities, Messages, Notes) -->
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+<!--    <record id="view_property_kanban" model="ir.ui.view">-->
+<!--        <field name="name">property.property.kanban</field>-->
+<!--        <field name="model">property.property</field>-->
+<!--        <field name="arch" type="xml">-->
+<!--            <kanban class="o_kanban_mobile" sample="1">-->
+<!--                <field name="id"/>-->
+<!--                <field name="name"/>-->
+<!--                <field name="image"/>-->
+<!--                <field name="price"/>-->
+<!--                <field name="city"/>-->
+<!--                <field name="plot_area"/>-->
+<!--                <field name="status"/>-->
+<!--                <field name="is_published"/>-->
+<!--                <field name="is_featured"/>-->
+<!--                <field name="views"/>-->
+<!--                <field name="category_id"/>-->
+
+<!--                <templates>-->
+<!--                    <t t-name="card">-->
+<!--                        <div class="oe_kanban_global_click o_kanban_record_has_image_fill">-->
+
+<!--                            &lt;!&ndash; ✅ PROPERTY IMAGE (OWL SAFE) &ndash;&gt;-->
+<!--                            <div class="o_kanban_image">-->
+<!--                                <img t-if="record.image.raw_value"-->
+<!--                                     t-att-src="'data:image/png;base64,%s' % record.image.raw_value"-->
+<!--                                     class="o_kanban_image_inner"-->
+<!--                                     alt="Property Image"/>-->
+<!--                                <div t-else="" class="o_kanban_image_inner o_kanban_image_placeholder">-->
+<!--                                    <i class="fa fa-home fa-2x text-muted"/>-->
+<!--                                </div>-->
+<!--                            </div>-->
+
+<!--                            &lt;!&ndash; DETAILS &ndash;&gt;-->
+<!--                            <div class="oe_kanban_details">-->
+
+<!--                                <strong class="o_kanban_record_title">-->
+<!--                                    <field name="name"/>-->
+<!--                                </strong>-->
+
+<!--                                <div class="text-muted mt-1">-->
+<!--                                    <i class="fa fa-map-marker-alt"/>-->
+<!--                                    <field name="city"/>-->
+<!--                                </div>-->
+
+<!--                                <div class="mt-2 d-flex justify-content-between">-->
+<!--                                    <span class="text-primary fw-bold">-->
+<!--                                        <field name="price" widget="monetary"/>-->
+<!--                                    </span>-->
+<!--                                    <span class="badge badge-info">-->
+<!--                                        <field name="plot_area"/>-->
+<!--                                        sq.ft-->
+<!--                                    </span>-->
+<!--                                </div>-->
+
+<!--                                <div class="mt-2">-->
+<!--                                    <span class="badge badge-secondary">-->
+<!--                                        <field name="category_id"/>-->
+<!--                                    </span>-->
+<!--                                </div>-->
+
+<!--                                <div class="mt-2 d-flex justify-content-between align-items-center">-->
+<!--                                    <span t-att-class="-->
+<!--                                    record.status.raw_value == 'available' and 'badge badge-success' or-->
+<!--                                    record.status.raw_value == 'sold' and 'badge badge-danger' or-->
+<!--                                    'badge badge-warning'">-->
+<!--                                        <field name="status"/>-->
+<!--                                    </span>-->
+
+<!--                                    <span class="text-muted">-->
+<!--                                        <i class="fa fa-eye"/>-->
+<!--                                        <field name="views"/>-->
+<!--                                    </span>-->
+<!--                                </div>-->
+
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                    </t>-->
+<!--                </templates>-->
+<!--            </kanban>-->
+<!--        </field>-->
+<!--    </record>-->
+
+
+    <!-- Action -->
+    <record id="real_estate_management.action_property_management" model="ir.actions.act_window">
+        <field name="name">Property Listings</field>
+        <field name="res_model">property.property</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_property_search"/>
+        <!-- ⭐ NEW: hides properties submitted by Agents that are still
+             pending admin approval in "Property Submissions". Every other
+             property (backend-created, or created via Customer approval)
+             has is_agent_submission_approved = True by default, so this
+             domain does not hide anything that was already visible. -->
+        <field name="domain">[('is_agent_submission_approved', '=', True)]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No properties found. Let's create one!
+            </p>
+            <p>
+                Add your first property listing to get started with real estate management.
+            </p>
+        </field>
+    </record>
+
+</odoo>

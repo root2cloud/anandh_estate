@@ -1,0 +1,506 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="agent_portal_property_detail" name="Property Detail">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+
+            <div class="container mt-4 mb-5">
+                <!-- Back Button -->
+                <div class="mb-3">
+                    <a href="/my/agent/properties" class="btn btn-outline-secondary">
+                        <i class="fa fa-arrow-left"/>
+                        Back to My Properties
+                    </a>
+                </div>
+
+                <div class="row">
+                    <!-- Property Images -->
+                    <div class="col-lg-8 mb-4">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-body p-0">
+                                <!-- Main Image with Badges -->
+                                <div class="position-relative">
+                                    <!-- Image -->
+                                    <img t-if="property.image"
+                                         t-att-src="image_data_uri(property.image)"
+                                         class="img-fluid w-100"
+                                         style="max-height: 500px; object-fit: cover;"/>
+                                    <img t-else=""
+                                         src="/web/static/img/placeholder.png"
+                                         class="img-fluid w-100"
+                                         style="height: 400px; object-fit: cover;"/>
+
+                                    <!-- ⭐ STATUS RIBBON - TOP RIGHT CORNER -->
+                                    <div class="position-absolute top-0 end-0">
+                                        <!-- Available Status -->
+                                        <span t-if="property.status == 'available'"
+                                              class="badge text-white px-4 py-3 rounded-0 rounded-bottom-start"
+                                              style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                                     font-size: 14px;
+                                                     font-weight: 700;
+                                                     letter-spacing: 1px;
+                                                     box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                                            <i class="fa fa-check-circle"/>
+                                            AVAILABLE
+                                        </span>
+
+                                        <!-- Sold Status -->
+                                        <span t-elif="property.status == 'sold'"
+                                              class="badge text-white px-4 py-3 rounded-0 rounded-bottom-start"
+                                              style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                                                     font-size: 14px;
+                                                     font-weight: 700;
+                                                     letter-spacing: 1px;
+                                                     box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                                            <i class="fa fa-tag"/>
+                                            SOLD OUT
+                                        </span>
+
+                                        <!-- Rented Status -->
+                                        <span t-elif="property.status == 'rented'"
+                                              class="badge text-white px-4 py-3 rounded-0 rounded-bottom-start"
+                                              style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+                                                     font-size: 14px;
+                                                     font-weight: 700;
+                                                     letter-spacing: 1px;
+                                                     box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                                            <i class="fa fa-key"/>
+                                            RENTED
+                                        </span>
+                                    </div>
+
+                                    <!-- ⭐ PUBLISHED/PENDING BADGE - TOP LEFT CORNER -->
+                                    <div class="position-absolute top-0 start-0 m-3">
+                                        <span t-if="property.is_published"
+                                              class="badge bg-success px-3 py-2"
+                                              style="font-size: 13px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                                            <i class="fa fa-check-circle"/>
+                                            Published
+                                        </span>
+                                        <span t-else=""
+                                              class="badge bg-warning text-dark px-3 py-2"
+                                              style="font-size: 13px; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                                            <i class="fa fa-clock-o"/>
+                                            Pending Approval
+                                        </span>
+                                    </div>
+
+                                    <!-- ⭐ VIEWS COUNT - BOTTOM LEFT CORNER -->
+                                    <div class="position-absolute bottom-0 start-0 m-3">
+                                        <span class="badge bg-dark bg-opacity-75 px-3 py-2"
+                                              style="font-size: 13px; backdrop-filter: blur(5px);">
+                                            <i class="fa fa-eye"/>
+                                            <strong>
+                                                <t t-esc="property.views"/>
+                                            </strong>
+                                            views
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Gallery Images -->
+                                <div t-if="property.gallery_image_ids" class="row g-2 p-3">
+                                    <t t-foreach="property.gallery_image_ids[:6]" t-as="gallery_img">
+                                        <div class="col-4">
+                                            <img t-att-src="'/web/image/' + str(gallery_img.id)"
+                                                 class="img-fluid rounded"
+                                                 style="height: 150px; width: 100%; object-fit: cover; cursor: pointer;"
+                                                 alt="Gallery Image"/>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Property Description -->
+                        <div class="card shadow-sm border-0 mt-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">
+                                    <i class="fa fa-align-left"/>
+                                    Description
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <p t-if="property.short_description" class="lead text-muted">
+                                    <t t-esc="property.short_description"/>
+                                </p>
+                                <div t-if="property.detailed_description"
+                                     t-field="property.detailed_description"
+                                     class="mt-3"/>
+                                <p t-if="not property.short_description and not property.detailed_description"
+                                   class="text-muted fst-italic">
+                                    <i class="fa fa-info-circle"/>
+                                    No description available.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Property Details Sidebar -->
+                    <div class="col-lg-4">
+
+                        <!-- ⭐⭐⭐ STATUS CHANGE CARD ⭐⭐⭐ -->
+                        <div class="card shadow-sm border-0 mb-3 border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0">
+                                    <i class="fa fa-edit"/>
+                                    Update Property Status
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <form id="statusChangeForm">
+                                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                    <input type="hidden" id="property_id" name="property_id" t-att-value="property.id"/>
+
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Current Status:</label>
+                                        <div class="mb-2">
+                                            <span t-if="property.status == 'available'" class="badge bg-success fs-6">
+                                                <i class="fa fa-check-circle"/>
+                                                Available
+                                            </span>
+                                            <span t-elif="property.status == 'sold'" class="badge bg-danger fs-6">
+                                                <i class="fa fa-tag"/>
+                                                Sold
+                                            </span>
+                                            <span t-elif="property.status == 'rented'" class="badge bg-info fs-6">
+                                                <i class="fa fa-key"/>
+                                                Rented
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="new_status" class="form-label fw-bold">Change To:</label>
+                                        <select id="new_status" name="new_status" class="form-select"
+                                                required="required">
+                                            <option value="">-- Select New Status --</option>
+                                            <option value="available"
+                                                    t-att-selected="'selected' if property.status == 'available' else None">
+                                                ✓ Available
+                                            </option>
+                                            <option value="sold"
+                                                    t-att-selected="'selected' if property.status == 'sold' else None">
+                                                ✗ Sold
+                                            </option>
+                                            <option value="rented"
+                                                    t-att-selected="'selected' if property.status == 'rented' else None">
+                                                🔑 Rented
+                                            </option>
+                                        </select>
+                                    </div>
+
+
+                                    <button type="button" class="btn btn-primary w-100" id="updateStatusBtn">
+                                        <i class="fa fa-save"/>
+                                        Update Status
+                                    </button>
+
+                                    <div id="statusMessage" class="mt-3" style="display: none;"></div>
+                                </form>
+                            </div>
+                            <!-- Price Card -->
+                            <div class="card shadow-sm border-0 mb-3 bg-light">
+                                <div class="card-body text-center py-4">
+                                    <h2 class="text-primary mb-0 fw-bold">
+                                        ₹
+                                        <t t-esc="'{:,.0f}'.format(property.price)"/>
+                                    </h2>
+                                    <p class="text-muted mb-0 mt-2">
+                                        <t t-if="property.plot_area">
+                                            <small>
+                                                <t t-esc="int(property.plot_area)"/>
+                                                sq ft
+                                                <span t-if="property.price_per_sqft" class="text-secondary">
+                                                    • ₹<t t-esc="'{:,.0f}'.format(property.price_per_sqft)"/>/sq ft
+                                                </span>
+                                            </small>
+                                        </t>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Property Info -->
+                            <div class="card shadow-sm border-0 mb-3">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0">
+                                        <i class="fa fa-info-circle"/>
+                                        Property Details
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm table-borderless mb-0">
+                                        <tbody>
+                                            <tr t-if="property.category_id">
+                                                <td class="text-muted" style="width: 40%;">
+                                                    <i class="fa fa-tag"/>
+                                                    Category:
+                                                </td>
+                                                <td class="fw-bold">
+                                                    <t t-esc="property.category_id.name"/>
+                                                </td>
+                                            </tr>
+                                            <tr t-if="property.plot_area">
+                                                <td class="text-muted">
+                                                    <i class="fa fa-arrows-alt"/>
+                                                    Plot Area:
+                                                </td>
+                                                <td class="fw-bold">
+                                                    <t t-esc="int(property.plot_area)"/>
+                                                    sq ft
+                                                </td>
+                                            </tr>
+                                            <tr t-if="property.facing_direction">
+                                                <td class="text-muted">
+                                                    <i class="fa fa-compass"/>
+                                                    Facing:
+                                                </td>
+                                                <td class="fw-bold text-capitalize">
+                                                    <t t-esc="property.facing_direction"/>
+                                                </td>
+                                            </tr>
+                                            <tr t-if="property.road_width">
+                                                <td class="text-muted">
+                                                    <i class="fa fa-road"/>
+                                                    Road Width:
+                                                </td>
+                                                <td class="fw-bold">
+                                                    <t t-esc="int(property.road_width)"/>
+                                                    ft
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-muted">
+                                                    <i class="fa fa-calendar"/>
+                                                    Posted:
+                                                </td>
+                                                <td class="fw-bold">
+                                                    <t t-esc="property.create_date.strftime('%b %d, %Y')"/>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Location -->
+                            <div class="card shadow-sm border-0 mb-3">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0">
+                                        <i class="fa fa-map-marker"/>
+                                        Location
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="mb-2">
+                                        <i class="fa fa-building text-muted"/>
+                                        <strong>
+                                            <t t-esc="property.city"/>
+                                        </strong>
+                                    </p>
+                                    <p class="text-muted mb-2" t-if="property.state_id">
+                                        <i class="fa fa-map-o"/>
+                                        <t t-esc="property.state_id.name"/>
+                                    </p>
+                                    <p class="text-muted mb-2" t-if="property.zip_code">
+                                        <i class="fa fa-envelope-o"/>
+                                        PIN:
+                                        <t t-esc="property.zip_code"/>
+                                    </p>
+                                    <p class="text-muted mb-0" t-if="property.street">
+                                        <i class="fa fa-road"/>
+                                        <t t-esc="property.street"/>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Contact Info -->
+                            <div class="card shadow-sm border-0 mb-3">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0">
+                                        <i class="fa fa-user"/>
+                                        Contact Information
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-light rounded-circle p-2 me-3"
+                                             style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fa fa-user fa-2x text-primary"/>
+                                        </div>
+                                        <div>
+                                            <strong class="d-block">
+                                                <t t-esc="property.contact_name"/>
+                                            </strong>
+                                            <small class="text-muted">Property Agent</small>
+                                        </div>
+                                    </div>
+                                    <p class="mb-2">
+                                        <i class="fa fa-phone text-success"/>
+                                        <a t-att-href="'tel:' + property.contact_phone" class="text-decoration-none">
+                                            <t t-esc="property.contact_phone"/>
+                                        </a>
+                                    </p>
+                                    <p class="mb-0">
+                                        <i class="fa fa-envelope text-danger"/>
+                                        <a t-att-href="'mailto:' + property.contact_email" class="text-decoration-none">
+                                            <t t-esc="property.contact_email"/>
+                                        </a>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Amenities (if available) -->
+                            <div class="card shadow-sm border-0"
+                                 t-if="property.water_connection or property.electricity_connection or property.drainage_facility">
+                                <div class="card-header bg-secondary text-white">
+                                    <h6 class="mb-0">
+                                        <i class="fa fa-star"/>
+                                        Amenities
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <span t-if="property.water_connection" class="badge bg-primary">
+                                            <i class="fa fa-tint"/>
+                                            Water
+                                        </span>
+                                        <span t-if="property.electricity_connection" class="badge bg-warning">
+                                            <i class="fa fa-bolt"/>
+                                            Electricity
+                                        </span>
+                                        <span t-if="property.drainage_facility" class="badge bg-info">
+                                            <i class="fa fa-shower"/>
+                                            Drainage
+                                        </span>
+                                        <span t-if="property.gated_community" class="badge bg-success">
+                                            <i class="fa fa-lock"/>
+                                            Gated Community
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="row mt-5">
+                        <div class="col-12 text-center">
+                            <a href="/my/agent/properties" class="btn btn-outline-primary btn-lg me-2">
+                                <i class="fa fa-arrow-left"/>
+                                Back to Properties
+                            </a>
+                            <a href="/my/agent/property/add" class="btn btn-success btn-lg">
+                                <i class="fa fa-plus"/>
+                                Add New Property
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- ⭐⭐⭐ FIXED JAVASCRIPT ⭐⭐⭐ -->
+<script type="text/javascript">
+(function() {
+    'use strict';
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const btn = document.getElementById('updateStatusBtn');
+        const msgDiv = document.getElementById('statusMessage');
+        const propertyIdInput = document.getElementById('property_id');
+        const statusSelect = document.getElementById('new_status');
+        const csrfInput = document.querySelector('input[name="csrf_token"]');
+
+        if (!btn || !msgDiv || !propertyIdInput || !statusSelect) {
+            console.error('Required elements not found');
+            return;
+        }
+
+        // Button click handler
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const propertyId = propertyIdInput.value;
+            const newStatus = statusSelect.value;
+            const csrfToken = csrfInput.value;
+
+            // Validation
+            if (!newStatus) {
+                showMessage('Please select a status', 'warning');
+                return;
+            }
+
+            if (!propertyId || !csrfToken) {
+                showMessage('Missing required data. Please refresh the page.', 'danger');
+                return;
+            }
+
+            // Disable button and show loading
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+
+            // Create form data
+            const formData = new FormData();
+            formData.append('property_id', propertyId);
+            formData.append('new_status', newStatus);
+            formData.append('csrf_token', csrfToken);
+
+            // Send POST request
+            fetch('/my/agent/property/update_status', {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin'
+            })
+            .then(function(response) {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(function(data) {
+                if (data.success) {
+                    showMessage(data.message, 'success');
+                    // Reload page after 1.5 seconds
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showMessage(data.message || 'Failed to update status', 'danger');
+                    resetButton();
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                showMessage('Connection error. Please check your internet and try again.', 'danger');
+                resetButton();
+            });
+        });
+
+        function showMessage(message, type) {
+            msgDiv.style.display = 'block';
+            msgDiv.className = 'alert alert-' + type + ' mb-0';
+
+            let icon = 'info-circle';
+            if (type === 'success') icon = 'check-circle';
+            if (type === 'danger') icon = 'exclamation-triangle';
+            if (type === 'warning') icon = 'exclamation-circle';
+
+            msgDiv.innerHTML = '<i class="fa fa-' + icon + '"></i> ' + message;
+        }
+
+        function resetButton() {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa fa-save"></i> Update Status';
+        }
+    });
+})();
+</script>
+
+
+        </t>
+    </template>
+
+</odoo>

@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Tree View -->
+    <record id="view_property_registration_tree" model="ir.ui.view">
+        <field name="name">property.registration.tree</field>
+        <field name="model">property.registration</field>
+        <field name="arch" type="xml">
+            <list string="Property Registrations">
+                <field name="customer_name"/>
+                <field name="property_name"/>
+                <field name="phone_number"/>
+                <field name="category"/>
+                <field name="city"/>
+                <field name="state"/>
+                <!-- ⭐ NEW: shows at a glance whether this came from the
+                     public "Sell your property" form or an Agent's
+                     portal, and which agent if so. -->
+                <field name="source" decoration-info="source == 'agent'"/>
+                <field name="agent_id" optional="show"/>
+                <field name="status" decoration-success="status == 'approved'"
+                       decoration-danger="status == 'rejected'"
+                       decoration-info="status == 'submitted'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ⭐ NEW: Search view with Source filter/group-by so admins can
+         quickly see "Agent Submissions" vs "Customer Submissions" in the
+         Property Submissions queue. Doesn't replace or remove anything -
+         the list/form views above are unchanged aside from the new
+         source/agent_id columns. -->
+    <record id="view_property_registration_search" model="ir.ui.view">
+        <field name="name">property.registration.search</field>
+        <field name="model">property.registration</field>
+        <field name="arch" type="xml">
+            <search string="Search Property Registrations">
+                <field name="property_name"/>
+                <field name="customer_name"/>
+                <field name="agent_id"/>
+                <field name="city"/>
+                <filter string="Agent Submissions" name="filter_source_agent" domain="[('source', '=', 'agent')]"/>
+                <filter string="Customer Submissions" name="filter_source_customer" domain="[('source', '=', 'customer')]"/>
+                <separator/>
+                <filter string="Submitted" name="filter_status_submitted" domain="[('status', '=', 'submitted')]"/>
+                <filter string="Approved" name="filter_status_approved" domain="[('status', '=', 'approved')]"/>
+                <filter string="Rejected" name="filter_status_rejected" domain="[('status', '=', 'rejected')]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Source" name="groupby_source" context="{'group_by': 'source'}"/>
+                    <filter string="Agent" name="groupby_agent" context="{'group_by': 'agent_id'}"/>
+                    <filter string="Status" name="groupby_status" context="{'group_by': 'status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Form View - WITH PORTAL RIBBON -->
+    <record id="view_property_registration_form" model="ir.ui.view">
+        <field name="name">property.registration.form</field>
+        <field name="model">property.registration</field>
+        <field name="arch" type="xml">
+            <form string="Property Registration">
+
+                <!-- ⭐ HEADER WITH ACTION BUTTONS (LOCKED TO ADMIN ONLY) -->
+                <header>
+                    <button name="action_approve"
+                            string="Approve"
+                            type="object"
+                            class="btn-success"
+                            invisible="status in ('approved', 'rejected')"
+                            groups="base.group_system"/>
+
+                    <!-- ⭐ NEW: lets the admin push later edits to the live property -->
+                    <button name="action_approve"
+                            string="Update Property"
+                            type="object"
+                            class="btn-primary"
+                            invisible="status != 'approved'"
+                            groups="base.group_system"
+                            confirm="This will overwrite the linked property listing with the current values on this form. Continue?"/>
+
+                    <button name="action_reject"
+                            string="Reject"
+                            type="object"
+                            class="btn-danger"
+                            invisible="status in ('approved', 'rejected')"
+                            groups="base.group_system"/>
+
+                    <!-- Status Badge -->
+                    <field name="status" widget="statusbar"
+                           statusbar_visible="submitted,approved,rejected"/>
+                </header>
+
+                <sheet>
+                    <!-- ⭐ THE PORTAL ACTIVE RIBBON -->
+                    <widget name="web_ribbon" title="Portal Active" bg_color="text-bg-success" invisible="not is_portal_active"/>
+                    <field name="is_portal_active" invisible="1"/>
+
+                    <!-- ⭐ NEW: shows who this came from at a glance -->
+                    <widget name="web_ribbon" title="Agent Submission" bg_color="text-bg-info" invisible="source != 'agent'"/>
+
+                    <!-- ⭐ NEW: quick link to the live property once approved -->
+                    <div class="oe_button_box" name="button_box" invisible="not property_id">
+                        <button name="%(real_estate_management.action_property_management)d"
+                                type="action"
+                                class="oe_stat_button"
+                                icon="fa-home"
+                                context="{'default_id': property_id}">
+                            <field name="property_id" widget="statinfo" string="Live Property"/>
+                        </button>
+                    </div>
+
+                    <!-- PROPERTY IMAGE (Avatar Style) -->
+                    <field name="image"
+                           widget="image"
+                           class="oe_avatar"
+                           options="{'size': [150, 150]}"/>
+
+                    <!-- TITLE SECTION -->
+                    <div class="oe_title">
+                        <label for="property_name" class="oe_edit_only"/>
+                        <h1>
+                            <field name="property_name"
+                                   placeholder="Property Name"
+                                   required="1"/>
+                        </h1>
+                        <h3>
+                            <field name="category" placeholder="Property Category"/>
+                        </h3>
+                    </div>
+
+                    <!-- ORGANIZED GROUPS -->
+                    <group>
+                        <!-- LEFT COLUMN: Customer & Property Details -->
+                        <group string="Customer Information">
+                            <field name="customer_name" placeholder="Full Name"/>
+                            <field name="phone_number" widget="phone"/>
+                            <field name="email" widget="email"/>
+                            <!-- ⭐ NEW: only shown for Agent submissions -->
+                            <field name="source" invisible="1"/>
+                            <field name="agent_id" invisible="source != 'agent'" readonly="1"/>
+                        </group>
+
+                        <!-- RIGHT COLUMN: Property Details -->
+                        <group string="Property Details">
+                            <field name="sq_yards"/>
+                            <field name="price" widget="monetary"/>
+                            <field name="place"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <!-- LEFT COLUMN: Location -->
+                        <group string="Location Details">
+                            <field name="location" placeholder="Exact location/address"/>
+                            <field name="city" required="1"/>
+                            <field name="state"/>
+                            <field name="country_id"/>
+                        </group>
+
+                        <!-- RIGHT COLUMN: Status Info -->
+                        <group string="Registration Status">
+                            <field name="status" readonly="1"
+                                   decoration-success="status == 'approved'"
+                                   decoration-danger="status == 'rejected'"/>
+                            <field name="create_date" string="Submitted On" readonly="1"/>
+                            <field name="write_date" string="Last Updated" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <!-- ADDITIONAL IMAGES SECTION -->
+                    <notebook>
+                        <page string="Additional Images">
+                            <div class="oe_title">
+                                <h3>Property Gallery</h3>
+                                <p class="text-muted">Upload multiple images of the property</p>
+                            </div>
+                            <field name="attachment_ids"
+                                   widget="many2many_binary"
+                                   options="{'preview_image': true}"
+                                   nolabel="1"/>
+
+                        </page>
+                        <page string="Documents">
+                            <group>
+                                <field name="aadhar_document" filename="aadhar_filename"/>
+                                <field name="agreement_document" filename="agreement_filename"/>
+                            </group>
+                        </page>
+                    </notebook>
+
+                </sheet>
+
+                <!-- Chatter for communication -->
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_property_registration" model="ir.actions.act_window">
+        <field name="name">Property Submissions</field>
+        <field name="res_model">property.registration</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_property_registration_search"/>
+        <field name="domain">[('status', 'not in', ['approved'])]</field>
+        <field name="context">{'default_status': 'submitted'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No pending registrations!
+            </p>
+            <p>
+                All property registration requests will appear here for approval —
+                whether submitted by a customer or added by an agent.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu -->
+    <menuitem id="menu_property_registration"
+              name="Property Submissions"
+              parent="menu_real_estate_root"
+              action="action_property_registration"
+              sequence="15"/>
+</odoo>

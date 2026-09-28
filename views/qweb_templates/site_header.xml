@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- =========================================================
+         GLOBAL SITE HEADER
+         Replaces the default website header with a single,
+         professional navy + gold navbar used across every page:
+         Logo (top-left) + "Real Estate Management" brand name,
+         followed by Properties / Customer Registration /
+         Agent Registration / Customer Dashboard / Agent Dashboard.
+    ========================================================== -->
+    <template id="real_estate_site_header" name="Real Estate Management Header" inherit_id="website.layout">
+
+        <!-- ⭐ FIX: core Odoo/website_sale frontend JS (loaded in
+             web.assets_frontend_minimal, before this module's own JS
+             runs) still looks for a handful of standard header elements
+             (top menu / cart badge) on every single page. Because the
+             xpath below replaces the whole <header> with a custom one,
+             those elements no longer exist and that core JS throws
+             "Cannot read properties of null (reading 'querySelector')".
+             Restoring hidden, inert placeholders with the same ids/
+             classes gives that code something to find so it stops
+             erroring, without changing anything visually. -->
+        <xpath expr="//head" position="inside">
+            <script type="text/javascript">
+                (function () {
+                    // Belt-and-braces: even with the placeholders below,
+                    // swallow this one specific, harmless error/rejection
+                    // instead of leaving it uncaught in the console.
+                    function isHarmless(msg) {
+                        return typeof msg === 'string' &amp;&amp; msg.indexOf('querySelector') !== -1;
+                    }
+                    window.addEventListener('error', function (ev) {
+                        if (ev &amp;&amp; isHarmless(ev.message)) {
+                            ev.preventDefault();
+                        }
+                    }, true);
+                    window.addEventListener('unhandledrejection', function (ev) {
+                        var msg = ev &amp;&amp; ev.reason &amp;&amp; ev.reason.message;
+                        if (isHarmless(msg)) {
+                            ev.preventDefault();
+                        }
+                    });
+                })();
+            </script>
+        </xpath>
+
+        <xpath expr="//header" position="replace">
+            <!-- Hidden compatibility placeholders for core/website_sale
+                 frontend widgets that expect these on every page. -->
+            <div id="top_menu" class="d-none" style="display:none !important;">
+                <a href="/shop/cart" class="o_wsale_my_cart_link" style="display:none;">
+                    <span class="my_cart_quantity o_wsale_my_cart_quantity d-none">0</span>
+                </a>
+            </div>
+            <header id="top" class="rem-header o_header_standard">
+                <nav class="navbar navbar-expand-xl rem-navbar">
+                    <div class="container-fluid rem-navbar-inner">
+
+                        <a class="navbar-brand rem-brand" href="/">
+                            <img src="/real_estate_management/static/src/img/logo.svg" alt="Real Estate Management"
+                                 class="rem-brand-logo"/>
+                            <span class="rem-brand-text">Real Estate Management</span>
+                        </a>
+
+                        <button class="navbar-toggler rem-navbar-toggler" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#remNavbarCollapse"
+                                aria-controls="remNavbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                            <i class="fa fa-bars"></i>
+                        </button>
+
+                        <div class="collapse navbar-collapse rem-navbar-collapse" id="remNavbarCollapse">
+                            <!-- ⭐ Determine once per page load whether the current
+                                 logged-in user is an Agent or a Customer, so the
+                                 "Customer Dashboard" / "Agent Dashboard" links can
+                                 be hidden from whichever role they don't belong to. -->
+                            <t t-set="rem_is_agent" t-value="(not request.env.user._is_public()) and bool(request.env['real.estate.agent'].sudo().search_count([('user_id', '=', request.env.user.id), ('is_active', '=', True)]))"/>
+                            <t t-set="rem_is_customer" t-value="(not request.env.user._is_public()) and bool(request.env.user.partner_id.sudo().is_real_estate_customer)"/>
+                            <ul class="navbar-nav rem-nav ms-lg-auto align-items-lg-center">
+                                <li class="nav-item">
+                                    <a class="nav-link rem-nav-link" href="/">Home</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link rem-nav-link" href="/properties">Properties</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link rem-nav-link" href="/customer/register">Customer Registration</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link rem-nav-link" href="/agent/register">Agent Registration</a>
+                                </li>
+                                <li class="nav-item" t-if="not rem_is_agent">
+                                    <a class="nav-link rem-nav-link" href="/my/customer/dashboard">Customer Dashboard
+                                    </a>
+                                </li>
+                                <li class="nav-item" t-if="not rem_is_customer">
+                                    <a class="nav-link rem-nav-link" href="/my/agent/dashboard">Agent Dashboard</a>
+                                </li>
+
+                                <t t-if="request.env.user._is_public()">
+                                    <li class="nav-item ms-lg-2">
+                                        <a class="rem-nav-signin" href="/web/login?redirect=/my/account-redirect">
+                                            <i class="fa fa-sign-in"></i>
+                                            Sign In
+                                        </a>
+                                    </li>
+                                </t>
+                                <t t-else="">
+                                    <li class="nav-item dropdown ms-lg-2 rem-account-dropdown">
+                                        <a class="rem-nav-signin dropdown-toggle" href="#" role="button"
+                                           data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="fa fa-user-circle"></i>
+                                            <t t-esc="request.env.user.name"/>
+                                        </a>
+                                        <ul class="dropdown-menu dropdown-menu-end rem-account-menu">
+                                            <li>
+                                                <a class="dropdown-item" href="/my/account-redirect">
+                                                    <i class="fa fa-tachometer"></i>
+                                                    My Dashboard
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <hr class="dropdown-divider"/>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="/web/session/logout?redirect=/">
+                                                    <i class="fa fa-sign-out"></i>
+                                                    Log Out
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                </t>
+                            </ul>
+                        </div>
+                    </div>
+                </nav>
+            </header>
+            <style>
+                /* ⭐ FIX: force a horizontal navbar layout with plain CSS,
+                   independent of Bootstrap's .navbar/.navbar-nav flex
+                   classes. If the site's compiled CSS bundle ever fails
+                   to load, the menu still lays out side by side instead
+                   of collapsing into a stacked list. */
+                .rem-navbar-inner{
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                flex-wrap: wrap !important;
+                }
+                .rem-navbar-collapse{
+                display: flex !important;
+                flex: 1 1 auto;
+                justify-content: flex-end;
+                }
+                ul.rem-nav{
+                display: flex !important;
+                flex-wrap: wrap !important;
+                align-items: center !important;
+                list-style: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                gap: 0px;
+                }
+                ul.rem-nav li.nav-item{
+                list-style: none !important;
+                display: inline-flex !important;
+                }
+                /* ⭐ FIX: hide Odoo's default "Skip to content" accessibility
+                   link at the very top of the page. */
+                .o_skip_link, .skip_to_content_link, a[href="#wrapwrap"], a[href="#o_main"] {
+                display: none !important;
+                }
+                .rem-header{ position: sticky; top: 0; z-index: 1030; box-shadow: 0 6px 24px rgba(0,0,0,0.18); }
+                .rem-navbar{
+                background: linear-gradient(90deg, #0b0b0d 0%, #161616 100%);
+                padding: 0.65rem 0;
+                border-bottom: 1px solid rgba(231,159,91,0.35);
+                }
+                .rem-navbar-inner{ max-width: 1360px; margin: 0 auto; padding-left: 24px; padding-right: 24px; }
+                .rem-brand{ display:flex; align-items:center; gap: 12px; text-decoration:none; }
+                .rem-brand-logo{ width: 42px; height: 42px; border-radius: 10px; }
+                .rem-brand-text{
+                font-family: Georgia, 'Times New Roman', serif;
+                font-weight: 800;
+                font-size: 1.28rem;
+                letter-spacing: 0.2px;
+                color: #f5efe0;
+                line-height: 1.1;
+                white-space: nowrap;
+                }
+                .rem-navbar-toggler{
+                border: 1px solid rgba(231,159,91,0.45);
+                color: #f5efe0;
+                background: transparent;
+                }
+                .rem-navbar-toggler .fa{ color: #f5efe0; }
+                .rem-nav-link{
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+                font-weight: 600;
+                font-size: 0.94rem;
+                color: rgba(245,239,224,0.86) !important;
+                padding: 0.5rem 0.6rem !important;
+                border-radius: 8px;
+                transition: all 0.2s ease;
+                }
+                .rem-nav-link:hover{
+                color: #0b0b0d !important;
+                background: #e79f5b;
+                }
+                .rem-nav-cta{
+                display:inline-flex; align-items:center; gap:8px;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+                font-weight: 700;
+                font-size: 0.92rem;
+                color: #0b0b0d;
+                background: linear-gradient(90deg, #e79f5b, #c7773a);
+                padding: 0.55rem 1.1rem;
+                border-radius: 10px;
+                text-decoration: none;
+                white-space: nowrap;
+                transition: transform 0.2s ease;
+                }
+                .rem-nav-cta:hover{ transform: translateY(-2px); color:#0b0b0d; }
+                .rem-nav-signin{
+                display:inline-flex; align-items:center; gap:7px;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+                font-weight: 700;
+                font-size: 0.92rem;
+                color: #f5efe0;
+                border: 1px solid rgba(231,159,91,0.55);
+                padding: 0.5rem 1rem;
+                border-radius: 10px;
+                text-decoration: none;
+                white-space: nowrap;
+                transition: all 0.2s ease;
+                }
+                .rem-nav-signin:hover{ background: rgba(231,159,91,0.16); color: #f5efe0; }
+                .rem-account-dropdown .dropdown-toggle::after{ display:none; }
+                .rem-account-menu{
+                background: #0b0b0d;
+                border: 1px solid rgba(231,159,91,0.3);
+                border-radius: 12px;
+                padding: 6px;
+                min-width: 190px;
+                }
+                .rem-account-menu .dropdown-item{
+                color: rgba(245,239,224,0.9);
+                font-weight: 600;
+                font-size: 0.9rem;
+                border-radius: 8px;
+                padding: 8px 12px;
+                display:flex; align-items:center; gap:8px;
+                }
+                .rem-account-menu .dropdown-item:hover{ background: rgba(231,159,91,0.18); color: #f5efe0; }
+                .rem-account-menu .dropdown-divider{ border-color: rgba(231,159,91,0.2); margin: 4px 0; }
+                @media (max-width: 1199.98px){
+                .rem-navbar-collapse{
+                background: #0b0b0d;
+                margin-top: 12px;
+                padding: 10px 6px 16px;
+                border-radius: 12px;
+                border: 1px solid rgba(231,159,91,0.25);
+                }
+                .rem-nav-cta{ display:inline-flex; margin-top: 8px; }
+                .rem-nav-signin{ display:inline-flex; margin-top: 8px; }
+                .rem-account-menu{ background: transparent; border: none; padding-left: 8px; }
+                }
+            </style>
+        </xpath>
+    </template>
+
+</odoo>

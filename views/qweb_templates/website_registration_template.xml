@@ -1,0 +1,1588 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- =========================================================
+         PREMIUM PROPERTY REGISTRATION FORM (Luxury Real Estate)
+         (UI Only - No Functionality Changes)
+    ========================================================== -->
+    <template id="property_registration_form" name="Property Registration Form - Luxury Premium">
+        <t t-call="website.layout">
+
+            <!-- Load Premium Fonts -->
+            <t t-set="additional_head">
+                <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;family=Playfair+Display:wght@600;700;800;900&amp;display=swap" rel="stylesheet"/>
+            </t>
+
+            <div class="re-lux-wrapper">
+
+                <!-- =========================================================
+                     HERO SECTION (Luxury)
+                ========================================================== -->
+                <section class="re-lux-hero">
+                    <div class="re-lux-hero-bg"></div>
+
+                    <div class="container position-relative">
+                        <div class="row justify-content-center">
+                            <div class="col-lg-11 col-xl-9 text-center">
+
+                                <div class="re-lux-hero-badge mb-4">
+                                    <span class="re-lux-dot"></span>
+                                    <span>Premium Registration • Verified Listings</span>
+                                </div>
+
+                                <h1 class="re-lux-hero-title mb-3">
+                                    Register Your Property
+                                </h1>
+
+                                <p class="re-lux-hero-subtitle mb-5">
+                                    A luxury-first listing experience. Submit your property details and get verified within 24 hours.
+                                </p>
+
+                                <div class="re-lux-hero-stats">
+                                    <div class="re-lux-stat">
+                                        <div class="re-lux-stat-icon"><i class="fa fa-shield"></i></div>
+                                        <div class="re-lux-stat-text">
+                                            <strong>Verified</strong>
+                                            <span>Manual review</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="re-lux-stat">
+                                        <div class="re-lux-stat-icon"><i class="fa fa-users"></i></div>
+                                        <div class="re-lux-stat-text">
+                                            <strong>10M+</strong>
+                                            <span>Active buyers</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="re-lux-stat">
+                                        <div class="re-lux-stat-icon"><i class="fa fa-bolt"></i></div>
+                                        <div class="re-lux-stat-text">
+                                            <strong>Instant</strong>
+                                            <span>Visibility boost</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Elegant divider -->
+                    <div class="re-lux-divider"></div>
+                </section>
+
+
+                <!-- =========================================================
+                     MAIN FORM CONTAINER
+                ========================================================== -->
+                <main class="re-lux-main">
+                    <div class="container">
+                        <div class="row justify-content-center">
+                            <div class="col-lg-11 col-xl-10">
+
+                                <!-- Form Card -->
+                                <div class="re-lux-card">
+
+                                    <!-- Progress -->
+                                    <div class="re-lux-progress">
+                                        <div class="re-lux-progress-fill" id="formProgress"></div>
+                                    </div>
+
+                                    <!-- Card Header -->
+                                    <div class="re-lux-card-head">
+                                        <div class="re-lux-card-head-left">
+                                            <h2 class="re-lux-card-title">Property Registration Form</h2>
+                                            <p class="re-lux-card-subtitle">
+                                                Please fill the details carefully. Upload clear images and valid documents.
+                                            </p>
+                                        </div>
+
+                                        <div class="re-lux-card-head-right">
+                                            <div class="re-lux-chip">
+                                                <i class="fa fa-lock me-2"></i> Secure
+                                            </div>
+                                            <div class="re-lux-chip">
+                                                <i class="fa fa-check-circle me-2"></i> Verified
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                    <!-- =========================================================
+                                         FORM
+                                    ========================================================== -->
+                                    <div class="re-lux-card-body">
+                                        <form action="/property/submit"
+                                              method="post"
+                                              enctype="multipart/form-data"
+                                              id="propertyForm"
+                                              autocomplete="off"
+                                              class="re-lux-form">
+
+
+                                            <!-- =========================================================
+                                                 SECTION 1: Owner Details (HIDDEN IF LOGGED IN)
+                                            ========================================================== -->
+                                            <t t-if="request.env.user._is_public()">
+                                                <div class="re-lux-section">
+                                                    <div class="re-lux-section-head">
+                                                        <div class="re-lux-step">01</div>
+                                                        <div>
+                                                            <h3 class="re-lux-section-title">Owner Information</h3>
+                                                            <p class="re-lux-section-desc">Start with your contact details</p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row g-4">
+                                                        <div class="col-md-4">
+                                                            <div class="re-lux-group">
+                                                                <label class="re-lux-label">
+                                                                    <i class="fa fa-user-circle re-lux-label-icon"></i>
+                                                                    Customer Name <span class="re-lux-required">*</span>
+                                                                </label>
+                                                                <input type="text"
+                                                                       name="customer_name"
+                                                                       class="re-lux-input"
+                                                                       placeholder="Full legal name"
+                                                                       required="required"/>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-4">
+                                                            <div class="re-lux-group">
+                                                                <label class="re-lux-label">
+                                                                    <i class="fa fa-phone re-lux-label-icon"></i>
+                                                                    Phone Number <span class="re-lux-required">*</span>
+                                                                </label>
+                                                                <input type="tel"
+                                                                       name="phone_number"
+                                                                       class="re-lux-input"
+                                                                       placeholder="+91 98765 43210"
+                                                                       required="required"/>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-4">
+                                                            <div class="re-lux-group">
+                                                                <label class="re-lux-label">
+                                                                    <i class="fa fa-envelope re-lux-label-icon"></i>
+                                                                    Email <span class="re-lux-required">*</span>
+                                                                </label>
+                                                                <input type="email"
+                                                                       name="email"
+                                                                       class="re-lux-input"
+                                                                       placeholder="you@example.com"
+                                                                       required="required"/>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </t>
+
+
+                                            <!-- =========================================================
+                                                 SECTION 2: Property Details
+                                            ========================================================== -->
+                                            <div class="re-lux-section">
+                                                <div class="re-lux-section-head">
+                                                    <div class="re-lux-step">02</div>
+                                                    <div>
+                                                        <h3 class="re-lux-section-title">Property Details</h3>
+                                                        <p class="re-lux-section-desc">Tell us about your property</p>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row g-4">
+                                                    <div class="col-md-6">
+                                                        <div class="re-lux-group">
+                                                            <label class="re-lux-label">
+                                                                <i class="fa fa-building re-lux-label-icon"></i>
+                                                                Property Name <span class="re-lux-required">*</span>
+                                                            </label>
+                                                            <input type="text"
+                                                                   name="property_name"
+                                                                   class="re-lux-input"
+                                                                   placeholder="e.g., Skyline Luxury Apartment"
+                                                                   required="required"/>
+                                                            <small class="re-lux-hint">Choose an attractive property name</small>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="re-lux-group">
+                                                            <label class="re-lux-label">
+                                                                <i class="fa fa-th-large re-lux-label-icon"></i>
+                                                                Property Category <span class="re-lux-required">*</span>
+                                                            </label>
+                                                            <select name="category" class="re-lux-input re-lux-select" required="required">
+                                                                <option value="">Choose category type</option>
+                                                                <option value="residential">Residential</option>
+                                                                <option value="commercial">Commercial</option>
+                                                                <option value="agricultural">Agricultural</option>
+                                                            </select>
+                                                            <small class="re-lux-hint">Primary usage classification</small>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="re-lux-group">
+                                                            <label class="re-lux-label">
+                                                                <i class="fa fa-ruler-combined re-lux-label-icon"></i>
+                                                                Built-up Area <span class="re-lux-required">*</span>
+                                                            </label>
+                                                            <div class="re-lux-unit-wrap">
+                                                                <input type="number"
+                                                                       name="sq_yards"
+                                                                       class="re-lux-input"
+                                                                       placeholder="250"
+                                                                       min="0"
+                                                                       required="required"/>
+                                                                <span class="re-lux-unit">sq. yards</span>
+                                                            </div>
+                                                            <small class="re-lux-hint">Total built-up or plot area</small>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="re-lux-group">
+                                                            <label class="re-lux-label">
+                                                                <i class="fa fa-rupee-sign re-lux-label-icon"></i>
+                                                                Expected Price <span class="re-lux-required">*</span>
+                                                            </label>
+                                                            <div class="re-lux-unit-wrap">
+                                                                <span class="re-lux-prefix">₹</span>
+                                                                <input type="number"
+                                                                       name="price"
+                                                                       class="re-lux-input re-lux-input-prefix"
+                                                                       placeholder="17500000"
+                                                                       min="0"
+                                                                       required="required"/>
+                                                            </div>
+                                                            <small class="re-lux-hint">Enter total expected price</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+
+                                            <!-- =========================================================
+                                                 SECTION 3: Location Information
+                                            ========================================================== -->
+                                            <div class="re-lux-section">
+                                                <div class="re-lux-section-head">
+                                                    <div class="re-lux-step">03</div>
+                                                    <div>
+                                                        <h3 class="re-lux-section-title">Location Information</h3>
+                                                        <p class="re-lux-section-desc">Where is your property located?</p>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row g-4">
+                                                    <div class="col-12">
+                                                        <div class="re-lux-group">
+                                                            <label class="re-lux-label">
+                                                                <i class="fa fa-map-marker re-lux-label-icon"></i>
+                                                                Complete Address <span class="re-lux-required">*</span>
+                                                            </label>
+                                                            <input type="text"
+                                                                   name="location"
+                                                                   class="re-lux-input"
+                                                                   placeholder="Street address, building name, landmarks"
+                                                                   required="required"/>
+                                                            <small class="re-lux-hint">Include nearby landmarks for easy identification</small>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-4">
+                                                        <div class="re-lux-group">
+                                                            <label class="re-lux-label">
+                                                                <i class="fa fa-map-pin re-lux-label-icon"></i>
+                                                                Locality / Area <span class="re-lux-required">*</span>
+                                                            </label>
+                                                            <input type="text"
+                                                                   name="place"
+                                                                   class="re-lux-input"
+                                                                   placeholder="e.g., Jubilee Hills"
+                                                                   required="required"/>
+                                                            <small class="re-lux-hint">Neighborhood / sector</small>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-4">
+                                                        <div class="re-lux-group">
+                                                            <label class="re-lux-label">
+                                                                <i class="fa fa-city re-lux-label-icon"></i>
+                                                                City <span class="re-lux-required">*</span>
+                                                            </label>
+                                                            <input type="text"
+                                                                   name="city"
+                                                                   class="re-lux-input"
+                                                                   placeholder="e.g., Hyderabad"
+                                                                   required="required"/>
+                                                            <small class="re-lux-hint">City name</small>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-4">
+                                                        <div class="re-lux-group">
+                                                            <label class="re-lux-label">
+                                                                <i class="fa fa-globe re-lux-label-icon"></i>
+                                                                State <span class="re-lux-required">*</span>
+                                                            </label>
+                                                            <input type="text"
+                                                                   name="state"
+                                                                   class="re-lux-input"
+                                                                   placeholder="e.g., Telangana"
+                                                                   required="required"/>
+                                                            <small class="re-lux-hint">State / Union Territory</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+
+                                            <!-- =========================================================
+                                                 SECTION 4: Property Images
+                                            ========================================================== -->
+                                            <div class="re-lux-section">
+                                                <div class="re-lux-section-head">
+                                                    <div class="re-lux-step">04</div>
+                                                    <div>
+                                                        <h3 class="re-lux-section-title">Property Images</h3>
+                                                        <p class="re-lux-section-desc">High-quality images increase buyer interest significantly</p>
+                                                    </div>
+                                                </div>
+
+                                                <div class="re-lux-upload-area">
+                                                    <div class="re-lux-upload-zone" id="uploadZone">
+                                                        <input type="file"
+                                                               name="images"
+                                                               id="images"
+                                                               accept="image/*"
+                                                               multiple="multiple"
+                                                               class="re-lux-upload-input"
+                                                               required="required"/>
+
+                                                        <div class="re-lux-upload-content">
+                                                            <div class="re-lux-upload-icon">
+                                                                <i class="fa fa-cloud-upload"></i>
+                                                            </div>
+
+                                                            <h4 class="re-lux-upload-title">Drag &amp; Drop Images Here</h4>
+                                                            <p class="re-lux-upload-text">or click to browse from your device</p>
+
+                                                            <div class="re-lux-upload-specs">
+                                                                <span class="re-lux-spec">
+                                                                    <i class="fa fa-check-circle"></i> JPG / PNG / WEBP
+                                                                </span>
+                                                                <span class="re-lux-spec">
+                                                                    <i class="fa fa-check-circle"></i> Max 10MB per image
+                                                                </span>
+                                                                <span class="re-lux-spec">
+                                                                    <i class="fa fa-check-circle"></i> First image is cover
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Image Preview Grid -->
+                                                    <div id="image-preview-list" class="re-lux-preview-grid"></div>
+                                                </div>
+                                            </div>
+
+
+                                            <!-- =========================================================
+                                                 SUBMIT
+                                            ========================================================== -->
+                                            <div class="re-lux-actions">
+                                                <button type="submit" class="re-lux-submit-btn" id="submitBtn">
+                                                    <span class="re-lux-btn-icon">
+                                                        <i class="fa fa-paper-plane"></i>
+                                                    </span>
+                                                    <span class="re-lux-btn-text">Submit Property for Review</span>
+                                                    <span class="re-lux-btn-arrow">
+                                                        <i class="fa fa-arrow-right"></i>
+                                                    </span>
+                                                </button>
+
+                                                <p class="re-lux-note">
+                                                    <i class="fa fa-shield"></i>
+                                                    Your information is secure and will be reviewed within 24 hours.
+                                                </p>
+                                            </div>
+
+                                        </form>
+                                    </div>
+                                </div>
+
+
+                                <!-- =========================================================
+                                     TRUST BADGES
+                                ========================================================== -->
+                                <div class="re-lux-trust">
+                                    <div class="row g-4">
+                                        <div class="col-md-4">
+                                            <div class="re-lux-trust-card">
+                                                <div class="re-lux-trust-icon">
+                                                    <i class="fa fa-certificate"></i>
+                                                </div>
+                                                <h4 class="re-lux-trust-title">Verified Listings</h4>
+                                                <p class="re-lux-trust-text">
+                                                    Every property is manually verified by our expert team.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <div class="re-lux-trust-card">
+                                                <div class="re-lux-trust-icon">
+                                                    <i class="fa fa-users"></i>
+                                                </div>
+                                                <h4 class="re-lux-trust-title">Genuine Buyers</h4>
+                                                <p class="re-lux-trust-text">
+                                                    Connect with serious buyers with verified interest.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <div class="re-lux-trust-card">
+                                                <div class="re-lux-trust-icon">
+                                                    <i class="fa fa-headset"></i>
+                                                </div>
+                                                <h4 class="re-lux-trust-title">24/7 Support</h4>
+                                                <p class="re-lux-trust-text">
+                                                    Dedicated support team available round the clock.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+
+
+            <!-- =========================================================
+                 JAVASCRIPT (Same Functionality)
+            ========================================================== -->
+            <script type="text/javascript">
+                document.addEventListener("DOMContentLoaded", function() {
+                    const form = document.getElementById("propertyForm");
+                    const fileInput = document.getElementById("images");
+                    const previewList = document.getElementById("image-preview-list");
+                    const uploadZone = document.getElementById("uploadZone");
+                    const submitBtn = document.getElementById("submitBtn");
+                    const progressBar = document.getElementById("formProgress");
+
+                    // Upload Zone Click
+                    if (uploadZone) {
+                        uploadZone.addEventListener("click", function() {
+                            fileInput.click();
+                        });
+                    }
+
+                    // Drag and Drop
+                    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                        uploadZone.addEventListener(eventName, preventDefaults, false);
+                    });
+
+                    function preventDefaults(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+
+                    ['dragenter', 'dragover'].forEach(eventName => {
+                        uploadZone.addEventListener(eventName, function() {
+                            uploadZone.classList.add('re-drag-active');
+                        });
+                    });
+
+                    ['dragleave', 'drop'].forEach(eventName => {
+                        uploadZone.addEventListener(eventName, function() {
+                            uploadZone.classList.remove('re-drag-active');
+                        });
+                    });
+
+                    uploadZone.addEventListener('drop', function(e) {
+                        const files = e.dataTransfer.files;
+                        fileInput.files = files;
+                        handleFiles(files);
+                    });
+
+                    // Input change
+                    fileInput.addEventListener("change", function() {
+                        handleFiles(fileInput.files);
+                    });
+
+                    // Preview handler
+                    function handleFiles(files) {
+                        previewList.innerHTML = "";
+                        if (!files || files.length === 0) return;
+
+                        Array.from(files).forEach((file, index) => {
+                            if (file.type.startsWith('image/')) {
+                                const reader = new FileReader();
+
+                                reader.onload = function(e) {
+                                    const div = document.createElement("div");
+                                    div.className = "re-preview-item" + (index === 0 ? " re-preview-cover" : "");
+
+                                    div.innerHTML = `
+                                        <div class="re-preview-wrapper">
+                                            <img src="${e.target.result}" alt="Preview ${index + 1}" class="re-preview-image"/>
+                                            <div class="re-preview-overlay">
+                                                <button type="button" class="re-preview-remove" onclick="this.closest('.re-preview-item').remove()">
+                                                    <i class="fa fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="re-preview-info">
+                                            <span class="re-preview-name">${file.name}</span>
+                                            <span class="re-preview-size">${formatFileSize(file.size)}</span>
+                                            ${index === 0 ? '<span class="re-preview-badge"><i class="fa fa-star"></i> Cover Image</span>' : ''}
+                                        </div>
+                                    `;
+
+                                    previewList.appendChild(div);
+                                };
+
+                                reader.readAsDataURL(file);
+                            }
+                        });
+                    }
+
+                    // Format file size
+                    function formatFileSize(bytes) {
+                        if (bytes === 0) return '0 Bytes';
+                        const k = 1024;
+                        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                        const i = Math.floor(Math.log(bytes) / Math.log(k));
+                        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+                    }
+
+                    // Progress tracking
+                    function updateProgress() {
+                        const inputs = form.querySelectorAll('input[required], select[required], textarea[required]');
+                        let filled = 0;
+
+                        inputs.forEach(input => {
+                            if (input.type === 'file') {
+                                if (input.files &amp; input.files.length > 0) filled++;
+                            } else if (input.value.trim() !== '') {
+                                filled++;
+                            }
+                        });
+
+                        const progress = (filled / inputs.length) * 100;
+                        progressBar.style.width = progress + '%';
+                    }
+
+                    form.addEventListener('input', updateProgress);
+                    form.addEventListener('change', updateProgress);
+
+                    // Submit loading
+                    // ⭐ FIX: the old handler only changed the button's
+                    // *style* (opacity/pointer-events), which doesn't
+                    // reliably stop a second submission if the button is
+                    // clicked again (or Enter is pressed) while the
+                    // request - especially with file uploads - is still
+                    // in flight. That was creating duplicate property
+                    // records. Now a real "already submitted" flag blocks
+                    // any further submit attempts outright, and the
+                    // button itself is disabled (not just styled).
+                    var formSubmitted = false;
+                    form.addEventListener("submit", function(e) {
+                        if (formSubmitted) {
+                            e.preventDefault();
+                            return false;
+                        }
+                        formSubmitted = true;
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<span class="re-lux-btn-icon"><i class="fa fa-spinner fa-spin"></i></span><span class="re-lux-btn-text">Processing...</span>';
+                        submitBtn.style.opacity = '0.75';
+                        submitBtn.style.pointerEvents = 'none';
+                    });
+
+                    // Focus effect
+                    const inputs = form.querySelectorAll('.re-lux-input');
+                    inputs.forEach(input => {
+                        input.addEventListener('focus', function() {
+                            this.closest('.re-lux-group').classList.add('re-focused');
+                        });
+                        input.addEventListener('blur', function() {
+                            this.closest('.re-lux-group').classList.remove('re-focused');
+                        });
+                    });
+                });
+            </script>
+
+
+            <!-- =========================================================
+                 PREMIUM LUXURY STYLES (Easy to change)
+            ========================================================== -->
+            <style type="text/css">
+
+                /* =========================================================
+                   THEME VARIABLES (Change colors here only)
+                ========================================================== */
+                :root{
+                    --lux-bg: #f6f1e7;
+                    --lux-bg-2: #fdfbf7;
+
+                    --lux-navy: #0b1b33;
+                    --lux-navy-2: #102645;
+
+                    --lux-gold: #c7a24a;
+                    --lux-gold-dark: #a9842d;
+                    --lux-gold-soft: rgba(199, 162, 74, 0.18);
+
+                    --lux-text: rgba(11, 27, 51, 0.95);
+                    --lux-muted: rgba(11, 27, 51, 0.62);
+
+                    --lux-border: rgba(11, 27, 51, 0.12);
+
+                    --lux-white: #ffffff;
+
+                    --lux-shadow-sm: 0 12px 28px rgba(16, 24, 40, 0.10);
+                    --lux-shadow-md: 0 28px 70px rgba(16, 24, 40, 0.14);
+                    --lux-shadow-lg: 0 45px 90px rgba(16, 24, 40, 0.16);
+
+                    --lux-r-xl: 32px;
+                    --lux-r-lg: 24px;
+                    --lux-r-md: 16px;
+
+                    --lux-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                    --lux-font-display: 'Playfair Display', serif;
+                }
+
+                *{box-sizing:border-box;}
+
+                /* Page wrapper */
+                .re-lux-wrapper{
+                    font-family: var(--lux-font);
+                    background:
+                        radial-gradient(circle at 20% 12%, rgba(199,162,74,0.22), transparent 55%),
+                        radial-gradient(circle at 85% 25%, rgba(11,27,51,0.12), transparent 55%),
+                        linear-gradient(135deg, var(--lux-bg), var(--lux-bg-2));
+                    min-height:100vh;
+                }
+
+                /* =========================================================
+                   HERO
+                ========================================================== */
+                .re-lux-hero{
+                    position: relative;
+                    padding: 76px 0 72px;
+                    overflow: hidden;
+                    background:
+                        radial-gradient(circle at 30% 25%, rgba(199,162,74,0.18), transparent 60%),
+                        linear-gradient(135deg, rgba(11,27,51,0.97), rgba(16,38,69,0.95));
+                    color: #fff;
+                    border-bottom: 1px solid rgba(255,255,255,0.10);
+                }
+
+                .re-lux-hero-bg{
+                    position:absolute;
+                    inset:0;
+                    background:
+                        radial-gradient(circle at 10% 10%, rgba(199,162,74,0.22), transparent 60%),
+                        radial-gradient(circle at 90% 25%, rgba(255,255,255,0.06), transparent 60%);
+                    opacity: 0.95;
+                    pointer-events:none;
+                }
+
+                .re-lux-hero-title{
+                    font-family: var(--lux-font-display);
+                    font-weight: 900;
+                    font-size: clamp(2.1rem, 4vw, 3.5rem);
+                    letter-spacing: 0.4px;
+                    margin: 0;
+                }
+
+                .re-lux-hero-subtitle{
+                    max-width: 860px;
+                    margin: 0 auto;
+                    font-size: 1.1rem;
+                    line-height: 1.7;
+                    font-weight: 500;
+                    color: rgba(255,255,255,0.78);
+                }
+
+                .re-lux-hero-badge{
+                    display:inline-flex;
+                    align-items:center;
+                    gap:10px;
+                    padding: 10px 18px;
+                    border-radius: 999px;
+
+                    font-size: 12px;
+                    font-weight: 900;
+                    letter-spacing: 1.2px;
+                    text-transform: uppercase;
+
+                    background: rgba(255,255,255,0.10);
+                    border: 1px solid rgba(199,162,74,0.40);
+                    backdrop-filter: blur(10px);
+                }
+
+                .re-lux-dot{
+                    width: 9px;
+                    height: 9px;
+                    border-radius: 50%;
+                    background: var(--lux-gold);
+                    box-shadow: 0 0 0 6px rgba(199,162,74,0.14);
+                }
+
+                /* hero stats */
+                .re-lux-hero-stats{
+                    display:flex;
+                    justify-content:center;
+                    gap: 18px;
+                    flex-wrap: wrap;
+                    margin-top: 8px;
+                }
+
+                .re-lux-stat{
+                    display:flex;
+                    align-items:center;
+                    gap: 12px;
+                    padding: 14px 18px;
+                    border-radius: 18px;
+
+                    background: rgba(255,255,255,0.08);
+                    border: 1px solid rgba(255,255,255,0.14);
+                    backdrop-filter: blur(12px);
+
+                    min-width: 210px;
+                }
+
+                .re-lux-stat-icon{
+                    width: 44px;
+                    height: 44px;
+                    border-radius: 14px;
+
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+
+                    background: rgba(199,162,74,0.18);
+                    border: 1px solid rgba(199,162,74,0.35);
+                    color: var(--lux-gold);
+                    font-size: 18px;
+                }
+
+                .re-lux-stat-text strong{
+                    display:block;
+                    font-weight: 950;
+                    font-size: 15px;
+                    letter-spacing: 0.2px;
+                }
+
+                .re-lux-stat-text span{
+                    display:block;
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: rgba(255,255,255,0.70);
+                    margin-top: 2px;
+                }
+
+                /* Divider */
+                .re-lux-divider{
+                    position:absolute;
+                    left:0;
+                    right:0;
+                    bottom:-1px;
+                    height: 42px;
+                    background: linear-gradient(to bottom, rgba(0,0,0,0), rgba(246,241,231,1));
+                }
+
+                /* =========================================================
+                   MAIN
+                ========================================================== */
+                .re-lux-main{
+                    margin-top: -42px;
+                    padding: 0 0 70px;
+                    position: relative;
+                    z-index: 10;
+                }
+
+                /* =========================================================
+                   CARD
+                ========================================================== */
+                .re-lux-card{
+                    background: rgba(255,255,255,0.94);
+                    border-radius: var(--lux-r-xl);
+                    border: 1px solid rgba(199,162,74,0.22);
+                    box-shadow: var(--lux-shadow-lg);
+                    overflow: hidden;
+                    backdrop-filter: blur(12px) saturate(140%);
+                }
+
+                /* Progress */
+                .re-lux-progress{
+                    height: 4px;
+                    background: rgba(11,27,51,0.08);
+                    overflow:hidden;
+                }
+
+                .re-lux-progress-fill{
+                    height:100%;
+                    width:0%;
+                    background: linear-gradient(90deg, var(--lux-gold), rgba(199,162,74,0.55));
+                    transition: width 0.5s ease;
+                }
+
+                /* Card header */
+                .re-lux-card-head{
+                    padding: 26px 28px;
+                    display:flex;
+                    align-items:flex-start;
+                    justify-content: space-between;
+                    gap: 18px;
+
+                    background:
+                        linear-gradient(90deg,
+                            rgba(199,162,74,0.12),
+                            rgba(255,255,255,0)
+                        );
+
+                    border-bottom: 1px solid rgba(11,27,51,0.10);
+                }
+
+                .re-lux-card-title{
+                    margin:0 0 6px;
+                    font-weight: 950;
+                    font-size: 22px;
+                    color: var(--lux-navy);
+                }
+
+                .re-lux-card-subtitle{
+                    margin:0;
+                    font-weight: 600;
+                    color: var(--lux-muted);
+                    line-height: 1.6;
+                }
+
+                .re-lux-card-head-right{
+                    display:flex;
+                    gap: 10px;
+                    flex-wrap: wrap;
+                    justify-content:flex-end;
+                }
+
+                .re-lux-chip{
+                    padding: 10px 14px;
+                    border-radius: 999px;
+                    font-weight: 850;
+                    font-size: 13px;
+
+                    background: rgba(11,27,51,0.05);
+                    border: 1px solid rgba(11,27,51,0.10);
+                    color: rgba(11,27,51,0.86);
+                    white-space: nowrap;
+                }
+
+                /* body */
+                .re-lux-card-body{
+                    padding: 30px 28px 34px;
+                }
+
+                /* =========================================================
+                   SECTIONS
+                ========================================================== */
+                .re-lux-section{
+                    padding: 22px 18px;
+                    border-radius: var(--lux-r-lg);
+                    background: rgba(255,255,255,0.78);
+                    border: 1px solid rgba(11,27,51,0.08);
+                    margin-bottom: 18px;
+                }
+
+                .re-lux-section:last-child{
+                    margin-bottom: 0;
+                }
+
+                .re-lux-section-head{
+                    display:flex;
+                    gap: 14px;
+                    align-items:center;
+                    margin-bottom: 16px;
+                    padding-bottom: 14px;
+                    border-bottom: 1px solid rgba(11,27,51,0.08);
+                }
+
+                .re-lux-step{
+                    width: 52px;
+                    height: 52px;
+                    border-radius: 18px;
+
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+
+                    font-weight: 950;
+                    font-size: 16px;
+                    letter-spacing: 0.6px;
+
+                    background: rgba(199,162,74,0.18);
+                    border: 1px solid rgba(199,162,74,0.32);
+                    color: var(--lux-navy);
+                    flex-shrink:0;
+                }
+
+                .re-lux-section-title{
+                    margin:0 0 2px;
+                    font-weight: 950;
+                    font-size: 18px;
+                    color: var(--lux-navy);
+                }
+
+                .re-lux-section-desc{
+                    margin:0;
+                    font-weight: 600;
+                    color: var(--lux-muted);
+                }
+
+                /* =========================================================
+                   FORM GROUPS
+                ========================================================== */
+                .re-lux-group{
+                    position: relative;
+                }
+
+                .re-lux-label{
+                    display:flex;
+                    align-items:center;
+                    gap: 10px;
+                    font-weight: 850;
+                    font-size: 13px;
+                    color: rgba(11,27,51,0.80);
+                    margin-bottom: 8px;
+                }
+
+                .re-lux-label-icon{
+                    color: var(--lux-gold-dark);
+                    font-size: 16px;
+                }
+
+                .re-lux-required{
+                    color: #dc2626;
+                    font-weight: 950;
+                    margin-left: 4px;
+                }
+
+                .re-lux-input{
+                    width:100%;
+                    padding: 12px 14px;
+                    border-radius: 14px;
+
+                    border: 1px solid rgba(11,27,51,0.18);
+                    background: rgba(255,255,255,0.92);
+
+                    font-size: 14px;
+                    font-weight: 700;
+                    color: rgba(11,27,51,0.92);
+
+                    outline:none;
+                    transition: all 0.25s ease;
+                }
+
+                .re-lux-input:hover{
+                    border-color: rgba(11,27,51,0.35);
+                }
+
+                .re-lux-input:focus{
+                    border-color: rgba(199,162,74,0.85);
+                    background: rgba(255,255,255,1);
+                    box-shadow: 0 0 0 4px rgba(199,162,74,0.18);
+                    transform: translateY(-1px);
+                }
+
+                .re-focused .re-lux-input{
+                    border-color: rgba(199,162,74,0.85);
+                }
+
+                .re-lux-hint{
+                    display:block;
+                    margin-top: 8px;
+                    font-weight: 600;
+                    font-size: 12.5px;
+                    color: rgba(11,27,51,0.55);
+                }
+
+                .re-lux-select{
+                    cursor:pointer;
+                }
+
+                /* prefix/unit */
+                .re-lux-unit-wrap{
+                    position:relative;
+                    display:flex;
+                    align-items:center;
+                }
+
+                .re-lux-unit{
+                    position:absolute;
+                    right: 14px;
+                    font-weight: 800;
+                    color: rgba(11,27,51,0.55);
+                    pointer-events:none;
+                    font-size: 13px;
+                }
+
+                .re-lux-prefix{
+                    position:absolute;
+                    left: 14px;
+                    font-weight: 950;
+                    color: rgba(11,27,51,0.75);
+                    pointer-events:none;
+                    z-index: 1;
+                }
+
+                .re-lux-input-prefix{
+                    padding-left: 32px;
+                }
+
+                /* =========================================================
+                   UPLOAD
+                ========================================================== */
+                .re-lux-upload-zone{
+                    position:relative;
+                    border-radius: 26px;
+                    padding: 54px 18px;
+                    text-align:center;
+                    cursor:pointer;
+
+                    border: 2px dashed rgba(11,27,51,0.20);
+                    background:
+                        radial-gradient(circle at 20% 10%, rgba(199,162,74,0.10), transparent 60%),
+                        rgba(255,255,255,0.88);
+
+                    transition: all 0.25s ease;
+                    margin-bottom: 18px;
+                }
+
+                .re-lux-upload-zone:hover,
+                .re-drag-active{
+                    border-color: rgba(199,162,74,0.75);
+                    background:
+                        radial-gradient(circle at 20% 10%, rgba(199,162,74,0.18), transparent 60%),
+                        rgba(255,255,255,0.95);
+                }
+
+                .re-lux-upload-input{
+                    position:absolute;
+                    inset:0;
+                    opacity:0;
+                    cursor:pointer;
+                }
+
+                .re-lux-upload-icon{
+                    width: 78px;
+                    height: 78px;
+                    border-radius: 22px;
+
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+
+                    margin: 0 auto 16px;
+
+                    background: rgba(199,162,74,0.18);
+                    border: 1px solid rgba(199,162,74,0.35);
+
+                    color: var(--lux-navy);
+                    font-size: 30px;
+                }
+
+                .re-lux-upload-title{
+                    font-weight: 950;
+                    color: var(--lux-navy);
+                    margin-bottom: 8px;
+                }
+
+                .re-lux-upload-text{
+                    margin:0 0 18px;
+                    font-weight: 600;
+                    color: rgba(11,27,51,0.60);
+                }
+
+                .re-lux-upload-specs{
+                    display:flex;
+                    justify-content:center;
+                    gap: 10px;
+                    flex-wrap: wrap;
+                }
+
+                .re-lux-spec{
+                    display:inline-flex;
+                    align-items:center;
+                    gap: 8px;
+                    padding: 10px 14px;
+                    border-radius: 999px;
+
+                    background: rgba(11,27,51,0.05);
+                    border: 1px solid rgba(11,27,51,0.10);
+
+                    font-weight: 750;
+                    font-size: 13px;
+                    color: rgba(11,27,51,0.72);
+                }
+
+                .re-lux-spec i{
+                    color: var(--lux-gold-dark);
+                }
+
+                /* =========================================================
+                   PREVIEW GRID (same JS classes)
+                ========================================================== */
+                .re-lux-preview-grid{
+                    display:grid;
+                    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+                    gap: 16px;
+                }
+
+                .re-preview-item{
+                    background: rgba(255,255,255,0.96);
+                    border-radius: 22px;
+                    overflow:hidden;
+
+                    border: 1px solid rgba(11,27,51,0.12);
+                    box-shadow: var(--lux-shadow-sm);
+
+                    transition: transform 0.25s ease, box-shadow 0.25s ease;
+                }
+
+                .re-preview-item:hover{
+                    transform: translateY(-6px);
+                    box-shadow: var(--lux-shadow-md);
+                }
+
+                .re-preview-cover{
+                    border-color: rgba(199,162,74,0.65);
+                    box-shadow: 0 22px 55px rgba(199,162,74,0.18);
+                }
+
+                .re-preview-wrapper{
+                    position:relative;
+                    height: 165px;
+                    overflow:hidden;
+                    background: rgba(11,27,51,0.06);
+                }
+
+                .re-preview-image{
+                    width:100%;
+                    height:100%;
+                    object-fit:cover;
+                    transition: transform 0.35s ease;
+                }
+
+                .re-preview-item:hover .re-preview-image{
+                    transform: scale(1.06);
+                }
+
+                .re-preview-overlay{
+                    position:absolute;
+                    inset:0;
+                    background: rgba(11,27,51,0.55);
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    opacity:0;
+                    transition: opacity 0.25s ease;
+                }
+
+                .re-preview-item:hover .re-preview-overlay{
+                    opacity:1;
+                }
+
+                .re-preview-remove{
+                    width: 46px;
+                    height: 46px;
+                    border-radius: 50%;
+                    border: none;
+
+                    background: rgba(255,255,255,0.95);
+                    color: #b91c1c;
+
+                    font-size: 18px;
+                    cursor:pointer;
+                    transition: transform 0.25s ease, background 0.25s ease;
+                }
+
+                .re-preview-remove:hover{
+                    background: #b91c1c;
+                    color: #fff;
+                    transform: rotate(90deg) scale(1.06);
+                }
+
+                .re-preview-info{
+                    padding: 14px 14px 16px;
+                }
+
+                .re-preview-name{
+                    display:block;
+                    font-weight: 850;
+                    font-size: 13px;
+                    color: rgba(11,27,51,0.92);
+                    margin-bottom: 4px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+
+                .re-preview-size{
+                    display:block;
+                    font-weight: 650;
+                    font-size: 12px;
+                    color: rgba(11,27,51,0.55);
+                }
+
+                .re-preview-badge{
+                    display:inline-flex;
+                    align-items:center;
+                    gap: 8px;
+                    margin-top: 10px;
+
+                    padding: 8px 12px;
+                    border-radius: 999px;
+
+                    background: rgba(199,162,74,0.18);
+                    border: 1px solid rgba(199,162,74,0.35);
+
+                    font-weight: 900;
+                    font-size: 12px;
+                    color: rgba(11,27,51,0.88);
+                }
+
+                /* =========================================================
+                   ACTIONS
+                ========================================================== */
+                .re-lux-actions{
+                    text-align:center;
+                    margin-top: 28px;
+                    padding-top: 10px;
+                }
+
+                .re-lux-submit-btn{
+                    display:inline-flex;
+                    align-items:center;
+                    gap: 12px;
+
+                    padding: 16px 36px;
+                    border-radius: 18px;
+                    border: none;
+
+                    font-weight: 950;
+                    font-size: 15px;
+                    letter-spacing: 0.2px;
+
+                    background: linear-gradient(90deg, var(--lux-gold), var(--lux-gold-dark));
+                    color: var(--lux-navy);
+
+                    cursor:pointer;
+                    transition: transform 0.25s ease, box-shadow 0.25s ease;
+                    box-shadow: 0 18px 55px rgba(199,162,74,0.25);
+                }
+
+                .re-lux-submit-btn:hover{
+                    transform: translateY(-3px) scale(1.02);
+                    box-shadow: 0 26px 75px rgba(199,162,74,0.32);
+                }
+
+                .re-lux-btn-arrow{
+                    transition: transform 0.25s ease;
+                }
+
+                .re-lux-submit-btn:hover .re-lux-btn-arrow{
+                    transform: translateX(6px);
+                }
+
+                .re-lux-note{
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    gap: 8px;
+                    margin-top: 14px;
+
+                    font-weight: 650;
+                    color: rgba(11,27,51,0.55);
+                }
+
+                .re-lux-note i{
+                    color: var(--lux-gold-dark);
+                }
+
+                /* =========================================================
+                   TRUST CARDS
+                ========================================================== */
+                .re-lux-trust{
+                    margin-top: 22px;
+                }
+
+                .re-lux-trust-card{
+                    height:100%;
+                    padding: 26px 20px;
+                    border-radius: 26px;
+
+                    background: rgba(255,255,255,0.90);
+                    border: 1px solid rgba(11,27,51,0.10);
+                    box-shadow: var(--lux-shadow-sm);
+
+                    text-align:center;
+                    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+                }
+
+                .re-lux-trust-card:hover{
+                    transform: translateY(-6px);
+                    border-color: rgba(199,162,74,0.30);
+                    box-shadow: var(--lux-shadow-md);
+                }
+
+                .re-lux-trust-icon{
+                    width: 64px;
+                    height: 64px;
+                    border-radius: 20px;
+
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+
+                    margin: 0 auto 14px;
+
+                    background: rgba(199,162,74,0.18);
+                    border: 1px solid rgba(199,162,74,0.32);
+
+                    color: var(--lux-navy);
+                    font-size: 22px;
+                }
+
+                .re-lux-trust-title{
+                    font-weight: 950;
+                    color: rgba(11,27,51,0.92);
+                    margin-bottom: 10px;
+                }
+
+                .re-lux-trust-text{
+                    margin:0;
+                    font-weight: 600;
+                    color: rgba(11,27,51,0.60);
+                    line-height: 1.7;
+                }
+
+                /* =========================================================
+                   RESPONSIVE
+                ========================================================== */
+                @media (max-width: 992px){
+                    .re-lux-card-head{
+                        flex-direction: column;
+                        align-items:flex-start;
+                    }
+                    .re-lux-card-head-right{
+                        justify-content:flex-start;
+                    }
+                }
+
+                @media (max-width: 768px){
+                    .re-lux-hero{
+                        padding: 56px 0 58px;
+                    }
+                    .re-lux-card-body{
+                        padding: 22px 18px 26px;
+                    }
+                    .re-lux-card-head{
+                        padding: 22px 18px;
+                    }
+                    .re-lux-section{
+                        padding: 18px 14px;
+                    }
+                    .re-lux-upload-zone{
+                        padding: 40px 14px;
+                    }
+                    .re-lux-submit-btn{
+                        width:100%;
+                        justify-content:center;
+                    }
+                }
+
+                @media (max-width: 480px){
+                    .re-lux-hero-stats{
+                        gap: 12px;
+                    }
+                    .re-lux-stat{
+                        min-width: 100%;
+                    }
+                }
+
+            </style>
+
+        </t>
+    </template>
+
+
+    <!-- =========================================================
+         SUCCESS TEMPLATE (Luxury Premium)
+    ========================================================== -->
+    <template id="property_submission_success" name="Property Submission Success - Luxury Premium">
+        <t t-call="website.layout">
+            <div class="re-lux-success">
+
+                <div class="container">
+                    <div class="row justify-content-center">
+                        <div class="col-lg-6 col-md-8">
+
+                            <div class="re-lux-success-card">
+                                <div class="re-lux-success-icon">
+                                    <i class="fa fa-check"></i>
+                                </div>
+
+                                <h1 class="re-lux-success-title">Submission Successful!</h1>
+
+                                <p class="re-lux-success-msg">
+                                    Thank you for listing your property with us.
+                                    Our verification team will review it within 24 hours.
+                                </p>
+
+                                <div class="re-lux-success-actions">
+                                    <a href="/" class="re-lux-success-btn re-lux-btn-primary">
+                                        <i class="fa fa-home"></i>
+                                        <span>Back to Home</span>
+                                    </a>
+
+                                    <a href="/shop" class="re-lux-success-btn re-lux-btn-secondary">
+                                        <i class="fa fa-search"></i>
+                                        <span>Browse Properties</span>
+                                    </a>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <style type="text/css">
+                .re-lux-success{
+                    min-height:100vh;
+                    display:flex;
+                    align-items:center;
+                    padding: 70px 14px;
+
+                    background:
+                        radial-gradient(circle at 20% 12%, rgba(199,162,74,0.22), transparent 55%),
+                        radial-gradient(circle at 85% 25%, rgba(11,27,51,0.14), transparent 55%),
+                        linear-gradient(135deg, #0b1b33, #102645);
+                }
+
+                .re-lux-success-card{
+                    background: rgba(255,255,255,0.95);
+                    border-radius: 34px;
+                    padding: 52px 30px;
+                    text-align:center;
+
+                    border: 1px solid rgba(199,162,74,0.22);
+                    box-shadow: 0 40px 120px rgba(0,0,0,0.25);
+                }
+
+                .re-lux-success-icon{
+                    width: 92px;
+                    height: 92px;
+                    border-radius: 50%;
+
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+
+                    margin: 0 auto 20px;
+
+                    background: rgba(199,162,74,0.18);
+                    border: 1px solid rgba(199,162,74,0.35);
+                    color: #0b1b33;
+
+                    font-size: 34px;
+                }
+
+                .re-lux-success-title{
+                    font-family: 'Playfair Display', serif;
+                    font-weight: 900;
+                    font-size: 2.3rem;
+                    color: rgba(11,27,51,0.95);
+                    margin-bottom: 12px;
+                }
+
+                .re-lux-success-msg{
+                    margin: 0 auto 24px;
+                    max-width: 520px;
+
+                    font-weight: 650;
+                    font-size: 1.05rem;
+                    line-height: 1.7;
+
+                    color: rgba(11,27,51,0.62);
+                }
+
+                .re-lux-success-actions{
+                    display:flex;
+                    justify-content:center;
+                    gap: 12px;
+                    flex-wrap: wrap;
+                }
+
+                .re-lux-success-btn{
+                    display:inline-flex;
+                    align-items:center;
+                    gap: 10px;
+
+                    padding: 14px 22px;
+                    border-radius: 18px;
+                    font-weight: 900;
+                    text-decoration:none;
+                    transition: transform 0.25s ease;
+                }
+
+                .re-lux-btn-primary{
+                    background: linear-gradient(90deg, #c7a24a, #a9842d);
+                    color: #0b1b33;
+                }
+
+                .re-lux-btn-primary:hover{
+                    transform: translateY(-3px);
+                    color: #0b1b33;
+                }
+
+                .re-lux-btn-secondary{
+                    background: rgba(11,27,51,0.06);
+                    border: 1px solid rgba(11,27,51,0.14);
+                    color: rgba(11,27,51,0.85);
+                }
+
+                .re-lux-btn-secondary:hover{
+                    transform: translateY(-3px);
+                    color: rgba(11,27,51,0.85);
+                }
+
+                @media (max-width: 768px){
+                    .re-lux-success-card{
+                        padding: 44px 18px;
+                    }
+                    .re-lux-success-actions{
+                        flex-direction: column;
+                    }
+                    .re-lux-success-btn{
+                        width:100%;
+                        justify-content:center;
+                    }
+                }
+            </style>
+
+        </t>
+    </template>
+
+</odoo>

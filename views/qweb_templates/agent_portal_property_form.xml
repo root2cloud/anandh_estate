@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="agent_portal_add_property" name="Add Property">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+
+            <div class="container mt-4 mb-5">
+                <div class="row">
+                    <div class="col-lg-8 offset-lg-2">
+                        <!-- Error Message -->
+                        <div t-if="error" class="alert alert-danger alert-dismissible fade show">
+                            <i class="fa fa-exclamation-circle"/>
+                            Error submitting property. Please try again.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                        </div>
+
+                        <div class="card shadow border-0">
+                            <div class="card-header bg-gradient-primary text-white text-center py-4"
+                                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                <i class="fa fa-plus-circle fa-3x mb-2"/>
+                                <h3 class="mb-0">Submit New Property</h3>
+                            </div>
+
+                            <div class="card-body p-4">
+                                <form action="/my/agent/property/submit" method="POST" enctype="multipart/form-data"
+                                      class="needs-validation" id="agentAddPropertyForm">
+                                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+
+                                    <!-- Profile Photo Section -->
+                                    <div class="mb-4">
+                                        <h5 class="mb-3">
+                                            <i class="fa fa-camera text-primary"/>
+                                            Profile Photo
+                                        </h5>
+                                        <div class="mb-3">
+                                            <label class="form-label">Main Property Image</label>
+                                            <input type="file" name="main_image" class="form-control" accept="image/*"/>
+                                            <div class="form-text">Upload main property photo (JPG, PNG)</div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label">Gallery Images (Multiple)</label>
+                                            <input type="file" name="gallery_images" class="form-control"
+                                                   accept="image/*" multiple="1"/>
+                                            <div class="form-text">You can select multiple images</div>
+                                        </div>
+                                    </div>
+
+                                    <hr class="my-4"/>
+
+                                    <!-- Personal Information Section -->
+                                    <div class="mb-4">
+                                        <h5 class="mb-3">
+                                            <i class="fa fa-info-circle text-primary"/>
+                                            Personal Information
+                                        </h5>
+
+                                        <div class="mb-3">
+                                            <label class="form-label">Property Name *</label>
+                                            <input type="text" name="property_name" class="form-control" required="1"
+                                                   placeholder="e.g., Luxury 3BHK Apartment"/>
+                                        </div>
+
+                                        <div class="row">
+                                            <!--                                            <div class="col-md-6 mb-3">-->
+                                            <!--                                                <label class="form-label">Property Type *</label>-->
+                                            <!--                                                <select name="property_type" class="form-select" required="1">-->
+                                            <!--                                                    <option value="">Select Type</option>-->
+                                            <!--                                                    <option value="apartment">Apartment</option>-->
+                                            <!--                                                    <option value="house">House</option>-->
+                                            <!--                                                    <option value="villa">Villa</option>-->
+                                            <!--                                                    <option value="land">Land</option>-->
+                                            <!--                                                    <option value="commercial">Commercial</option>-->
+                                            <!--                                                </select>-->
+                                            <!--                                            </div>-->
+
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">State *</label>
+                                                <select name="state_id" class="form-select" required="1">
+                                                    <option value="">Select State</option>
+                                                    <t t-foreach="request.env['res.country.state'].sudo().search([('country_id.code', '=', 'IN')])"
+                                                       t-as="state">
+                                                        <option t-att-value="state.id">
+                                                            <t t-esc="state.name"/>
+                                                        </option>
+                                                    </t>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Category</label>
+                                                <select name="category_id" class="form-select">
+                                                    <option value="">Select Category</option>
+                                                    <t t-foreach="categories" t-as="cat">
+                                                        <option t-att-value="cat.id">
+                                                            <t t-esc="cat.name"/>
+                                                        </option>
+                                                    </t>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Price (₹) *</label>
+                                                <input type="number" name="price" class="form-control" required="1"
+                                                       min="0" placeholder="5000000"/>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">Plot Area (sq ft)</label>
+                                                <input type="number" name="plot_area" class="form-control"
+                                                       min="0" placeholder="1200"/>
+                                            </div>
+                                        </div>
+
+                                        <!--                                        <div class="row">-->
+                                        <!--                                            <div class="col-md-6 mb-3">-->
+                                        <!--                                                <label class="form-label">Bedrooms</label>-->
+                                        <!--                                                <input type="number" name="bedrooms" class="form-control"-->
+                                        <!--                                                       min="0" value="0" placeholder="3"/>-->
+                                        <!--                                            </div>-->
+                                        <!--                                            <div class="col-md-6 mb-3">-->
+                                        <!--                                                <label class="form-label">Bathrooms</label>-->
+                                        <!--                                                <input type="number" name="bathrooms" class="form-control"-->
+                                        <!--                                                       min="0" value="0" placeholder="2"/>-->
+                                        <!--                                            </div>-->
+                                        <!--                                        </div>-->
+
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">City *</label>
+                                                <input type="text" name="city" class="form-control" required="1"
+                                                       placeholder="Hyderabad"/>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label">ZIP Code</label>
+                                                <input type="text" name="zip_code" class="form-control"
+                                                       placeholder="500001"/>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label">Street Address</label>
+                                            <input type="text" name="street" class="form-control"
+                                                   placeholder="Plot No 123, Road No 45"/>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label">Full Address</label>
+                                            <textarea name="address" class="form-control" rows="2"
+                                                      placeholder="Complete address with landmarks"></textarea>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label">Short Description</label>
+                                            <textarea name="short_description" class="form-control" rows="2"
+                                                      placeholder="Brief property description (1-2 lines)"></textarea>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label">Detailed Description</label>
+                                            <textarea name="description" class="form-control" rows="5"
+                                                      placeholder="Detailed property information, amenities, nearby facilities, etc."></textarea>
+                                        </div>
+                                    </div>
+
+                                    <!-- Info Alert -->
+                                    <div class="alert alert-info d-flex align-items-center">
+                                        <i class="fa fa-info-circle fa-2x me-3"/>
+                                        <div>
+                                            <strong>Note:</strong>
+                                            Your property will be reviewed by our admin team before publishing on the
+                                            website.
+                                        </div>
+                                    </div>
+
+                                    <!-- Submit Buttons -->
+                                    <div class="d-grid gap-2">
+                                        <button type="submit" class="btn btn-primary btn-lg" id="agentAddPropertySubmitBtn">
+                                            <i class="fa fa-check-circle"/>
+                                            Submit Property
+                                        </button>
+                                        <a href="/my/agent/dashboard" class="btn btn-outline-secondary">
+                                            <i class="fa fa-times"/>
+                                            Cancel
+                                        </a>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ⭐ FIX: prevent duplicate property submissions if
+                 "Submit Property" is clicked more than once while the
+                 form (with image uploads) is still processing. -->
+            <script type="text/javascript">
+                document.addEventListener('DOMContentLoaded', function () {
+                    var form = document.getElementById('agentAddPropertyForm');
+                    var submitBtn = document.getElementById('agentAddPropertySubmitBtn');
+                    var formSubmitted = false;
+
+                    if (form) {
+                        form.addEventListener('submit', function (e) {
+                            if (formSubmitted) {
+                                e.preventDefault();
+                                return false;
+                            }
+                            formSubmitted = true;
+                            if (submitBtn) {
+                                submitBtn.disabled = true;
+                                submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Submitting...';
+                            }
+                        });
+                    }
+                });
+            </script>
+        </t>
+    </template>
+</odoo>

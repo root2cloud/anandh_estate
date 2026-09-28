@@ -1,0 +1,13 @@
+<odoo>
+    <record id="activity_agent_registration_review" model="mail.activity.type">
+        <field name="name">Agent Registration Approval</field>
+        <field name="res_model">agent.registration</field>
+        <field name="icon">fa-user-check</field>
+    </record>
+
+    <record id="activity_customer_registration_review" model="mail.activity.type">
+        <field name="name">Customer Registration Approval</field>
+        <field name="res_model">customer.registration</field>
+        <field name="icon">fa-address-card</field>
+    </record>
+</odoo>

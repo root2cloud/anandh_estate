@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Customers List View (lightweight, focused on real-estate customers) -->
+    <record id="view_real_estate_customer_tree" model="ir.ui.view">
+        <field name="name">real.estate.customer.tree</field>
+        <field name="model">res.partner</field>
+        <field name="arch" type="xml">
+            <list string="Customers">
+                <field name="name"/>
+                <field name="email"/>
+                <field name="phone"/>
+                <field name="city"/>
+                <field name="state_id"/>
+                <field name="customer_since"/>
+                <field name="user_id" string="Portal User" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_real_estate_customer_form" model="ir.ui.view">
+        <field name="name">real.estate.customer.form</field>
+        <field name="model">res.partner</field>
+        <field name="arch" type="xml">
+            <form string="Customer">
+                <sheet>
+                    <field name="image_1920" widget="image" class="oe_avatar" options="{'size': [120, 120]}"/>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Customer Name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Contact">
+                            <field name="email" widget="email"/>
+                            <field name="phone" widget="phone"/>
+                            <field name="user_id" readonly="1" string="Portal User"/>
+                        </group>
+                        <group string="Location">
+                            <field name="street"/>
+                            <field name="city"/>
+                            <field name="state_id"/>
+                            <field name="zip"/>
+                            <field name="country_id"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="customer_since" readonly="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Registration History">
+                            <field name="registration_ids" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="interested_in"/>
+                                    <field name="submission_date"/>
+                                    <field name="status"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_real_estate_customer" model="ir.actions.act_window">
+        <field name="name">Customers</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_real_estate_customer_tree')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_real_estate_customer_form')})]"/>
+        <field name="domain">[('is_real_estate_customer', '=', True)]</field>
+        <field name="context">{'default_is_real_estate_customer': True, 'default_is_company': False}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No customers yet!
+            </p>
+            <p>
+                Approved customer registrations will appear here automatically.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_real_estate_customer"
+              name="Customers"
+              parent="menu_real_estate_root"
+              action="action_real_estate_customer"
+              sequence="50"/>
+
+</odoo>
