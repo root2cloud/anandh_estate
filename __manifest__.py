@@ -47,6 +47,7 @@ A complete real estate management platform with:
         'views/qweb_templates/site_header.xml',
         'views/qweb_templates/property_map_template.xml',
         'views/qweb_templates/property_detail_page.xml',
+        'views/qweb_templates/property_flier_page.xml',
         'views/qweb_templates/properties_menu_page.xml',
         'views/qweb_templates/website_registration_template.xml',
         # 'views/qweb_templates/agent_directory_template.xml',

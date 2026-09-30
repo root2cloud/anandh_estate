@@ -1,0 +1,402 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="property_flier_page" name="Property Flier">
+        <t t-call="website.layout">
+            <t t-set="no_header" t-value="True"/>
+            <t t-set="no_footer" t-value="True"/>
+            <t t-set="head">
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+                <link rel="stylesheet" href="/real_estate_management/static/src/css/property_flier.css?v=4"/>
+                <meta property="og:type" content="website"/>
+                <meta property="og:title" t-att-content="flier.get('name') or 'Property Flier'"/>
+                <meta property="og:description" t-att-content="flier.get('address') or flier.get('description') or ''"/>
+                <meta property="og:image" t-att-content="flier.get('image_url')"/>
+                <meta property="og:url" t-att-content="qr_link"/>
+            </t>
+
+            <div class="flier-page">
+
+                <!-- ═════════ TOOLBAR (not printed) ═════════ -->
+                <div class="flier-toolbar no-print">
+                    <a t-att-href="'/property/%s' % property.id" class="ft-btn ft-ghost">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </a>
+
+                    <div class="ft-actions">
+                        <div class="ft-share" id="flShare" t-att-data-title="flier.get('name') or 'Property Flier'">
+                            <button type="button" class="ft-btn ft-ghost ft-share-btn" id="flShareBtn"
+                                    aria-haspopup="true" aria-expanded="false" title="Share link">
+                                <i class="fas fa-link"></i>
+                            </button>
+                            <div class="ft-share-menu" id="flShareMenu" role="menu">
+                                <a href="#" id="flShareWa" target="_blank" rel="noopener" role="menuitem">
+                                    <i class="fab fa-whatsapp"></i> WhatsApp
+                                </a>
+                                <button type="button" id="flShareCopy" role="menuitem">
+                                    <i class="fas fa-copy"></i> <span>Copy link</span>
+                                </button>
+                                <a href="#" id="flShareMail" target="_blank" rel="noopener" role="menuitem">
+                                    <i class="fas fa-envelope"></i> Gmail
+                                </a>
+                            </div>
+                        </div>
+                        <button type="button" class="ft-btn ft-gold" onclick="window.print()">
+                            <i class="fas fa-print"></i> Print / Save PDF
+                        </button>
+                        <button type="button" class="ft-btn ft-ghost" id="flierDownloadPng">
+                            <i class="fas fa-image"></i> Download PNG
+                        </button>
+                    </div>
+                </div>
+
+
+                <!-- ═════════ THE FLIER (A4) ═════════ -->
+                <div class="flier-sheet" id="flierSheet">
+
+                    <div class="fl-top">
+                        <div class="fl-brand">
+                            <i class="fas fa-building"></i>
+                            <span>Real Estate Management</span>
+                        </div>
+                        <div class="fl-tag" t-if="flier.get('status')" t-out="flier['status']"/>
+                        <div class="fl-tag" t-else="">For Sale</div>
+                    </div>
+
+                    <div class="fl-hero">
+                        <img t-att-src="flier['image_url']" alt="Property" crossorigin="anonymous"/>
+                        <div class="fl-price-badge">
+                            <div class="fl-price" t-out="flier['price']"/>
+                            <div class="fl-ppsf" t-if="flier.get('price_per_sqft')" t-out="flier['price_per_sqft']"/>
+                        </div>
+                    </div>
+
+                    <div t-if="flier.get('gallery')" class="fl-gallery">
+                        <t t-foreach="flier['gallery']" t-as="g">
+                            <img t-att-src="g" alt="Gallery" crossorigin="anonymous"/>
+                        </t>
+                    </div>
+
+                    <div class="fl-body">
+                        <h1 class="fl-title" t-out="flier['name']"/>
+
+                        <div class="fl-stars" t-if="flier.get('rating')">
+                            <t t-foreach="range(flier['rating'])" t-as="s"><i class="fas fa-star"></i></t>
+                        </div>
+
+                        <div class="fl-address" t-if="flier.get('address')">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span t-out="flier['address']"/>
+                            <t t-if="flier.get('zip_code')"> - <span t-out="flier['zip_code']"/></t>
+                        </div>
+
+                        <!-- key facts -->
+                        <div class="fl-facts">
+                            <t t-if="flier.get('highlights')">
+                                <!-- remote page scraped: highlights come as ready text -->
+                                <t t-foreach="flier['highlights']" t-as="h">
+                                    <div class="fl-fact"><span class="fl-fact-v" t-out="h"/></div>
+                                </t>
+                            </t>
+                            <t t-else="">
+                                <div class="fl-fact" t-if="flier.get('plot_area')">
+                                    <i class="fas fa-expand-arrows-alt"></i>
+                                    <span class="fl-fact-v"><t t-out="flier['plot_area']"/> Sq.Ft</span>
+                                    <span class="fl-fact-l">Plot Area</span>
+                                </div>
+                                <div class="fl-fact" t-if="flier.get('facing')">
+                                    <i class="fas fa-compass"></i>
+                                    <span class="fl-fact-v" t-out="flier['facing']"/>
+                                    <span class="fl-fact-l">Facing</span>
+                                </div>
+                                <div class="fl-fact" t-if="flier.get('title_status')">
+                                    <i class="fas fa-certificate"></i>
+                                    <span class="fl-fact-v" t-out="flier['title_status']"/>
+                                    <span class="fl-fact-l">Title</span>
+                                </div>
+                                <div class="fl-fact" t-if="flier.get('road_width')">
+                                    <i class="fas fa-road"></i>
+                                    <span class="fl-fact-v"><t t-out="flier['road_width']"/> Ft</span>
+                                    <span class="fl-fact-l">Road Width</span>
+                                </div>
+                            </t>
+                        </div>
+
+                        <!-- Property Overview -->
+                        <div class="fl-section" t-if="flier.get('overview_html') or flier.get('description')">
+                            <h3>Property Overview</h3>
+                            <div class="fl-rich" t-if="flier.get('overview_html')" t-out="flier['overview_html']"/>
+                            <p class="fl-desc" t-if="flier.get('description')" t-out="flier['description']"/>
+                        </div>
+
+                        <div class="fl-section" t-if="flier.get('amenities')">
+                            <h3>Features &amp; Amenities</h3>
+                            <div class="fl-chips">
+                                <t t-foreach="flier['amenities']" t-as="a">
+                                    <span class="fl-chip"><i class="fas fa-check"></i> <t t-out="a"/></span>
+                                </t>
+                            </div>
+                        </div>
+
+                        <!-- About This Property -->
+                        <div class="fl-section" t-if="flier.get('about_html')">
+                            <h3>About This Property</h3>
+                            <div class="fl-rich" t-out="flier['about_html']"/>
+                        </div>
+
+                        <!-- Location &amp; Nearby -->
+                        <div class="fl-section" t-if="flier.get('nearby_html') or flier.get('landmarks')">
+                            <h3>Location &amp; Nearby Landmarks</h3>
+                            <div class="fl-rich" t-if="flier.get('nearby_html')" t-out="flier['nearby_html']"/>
+                            <p class="fl-landmarks" t-if="flier.get('landmarks')" t-out="flier['landmarks']"/>
+                        </div>
+                    </div>
+
+                    <div class="fl-footer">
+                        <div class="fl-contact">
+                            <div class="fl-contact-h">Contact</div>
+                            <div class="fl-contact-name" t-if="flier.get('contact_name')" t-out="flier['contact_name']"/>
+                            <div t-if="flier.get('contact_phone')"><i class="fas fa-phone"></i> <span t-out="flier['contact_phone']"/></div>
+                            <div t-if="flier.get('contact_email')"><i class="fas fa-envelope"></i> <span t-out="flier['contact_email']"/></div>
+                            <div class="fl-link"><i class="fas fa-globe"></i> <span t-out="qr_link"/></div>
+                        </div>
+                        <div class="fl-qr">
+                            <img t-att-src="qr_src" alt="QR" crossorigin="anonymous"/>
+                            <span>Scan for details</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═════════ CHAT + REGISTRATION CARDS (below the flier, not printed / not in PNG) ═════════ -->
+                <div class="fl-extra no-print">
+
+                    <!-- Chat with our Assistant -->
+                    <section class="fl-extra-block">
+                        <h2 class="fl-extra-title">Chat with our Assistant</h2>
+                        <div class="fl-chat-card">
+                            <div class="fl-chat-messages" id="flChatMessages">
+                                <div class="fl-chat-bubble fl-chat-bot">Hi! Ask me about properties, locations or pricing, or scroll down to register your details.</div>
+                            </div>
+                            <div class="fl-chat-form">
+                                <input type="text" id="flChatInput" class="fl-chat-input" placeholder="Type your message..." autocomplete="off" maxlength="500"/>
+                                <button type="button" id="flChatSend" class="fl-chat-send" aria-label="Send">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Registration -->
+                    <section class="fl-extra-block">
+                        <h2 class="fl-extra-title">Registration</h2>
+                        <p class="fl-extra-sub">Fill out your details and we will get back to you</p>
+                        <div class="fl-reg-card">
+                            <form id="flRegForm" novalidate="novalidate" t-att-data-action="'/property/%s/flier/register' % property.id">
+                                <div class="fl-reg-grid fl-reg-2">
+                                    <div class="fl-reg-field">
+                                        <label for="flRegName">Full Name *</label>
+                                        <input type="text" id="flRegName" name="full_name" required="required"/>
+                                        <small class="fl-reg-err" data-err="full_name"></small>
+                                    </div>
+                                    <div class="fl-reg-field">
+                                        <label for="flRegPhone">Phone Number *</label>
+                                        <input type="tel" id="flRegPhone" name="phone" required="required"/>
+                                        <small class="fl-reg-err" data-err="phone"></small>
+                                    </div>
+                                    <div class="fl-reg-field">
+                                        <label for="flRegEmail">Email *</label>
+                                        <input type="email" id="flRegEmail" name="email" required="required"/>
+                                        <small class="fl-reg-err" data-err="email"></small>
+                                    </div>
+                                    <div class="fl-reg-field">
+                                        <label for="flRegAddress">Address *</label>
+                                        <input type="text" id="flRegAddress" name="address" required="required"/>
+                                        <small class="fl-reg-err" data-err="address"></small>
+                                    </div>
+                                </div>
+                                <div class="fl-reg-grid fl-reg-3">
+                                    <div class="fl-reg-field">
+                                        <label for="flRegState">State *</label>
+                                        <select id="flRegState" name="state_id" required="required">
+                                            <option value="">Select State</option>
+                                            <t t-foreach="states" t-as="st">
+                                                <option t-att-value="st.id" t-out="st.name"/>
+                                            </t>
+                                        </select>
+                                        <small class="fl-reg-err" data-err="state_id"></small>
+                                    </div>
+                                    <div class="fl-reg-field">
+                                        <label for="flRegCity">City *</label>
+                                        <input type="text" id="flRegCity" name="city" required="required"/>
+                                        <small class="fl-reg-err" data-err="city"></small>
+                                    </div>
+                                    <div class="fl-reg-field">
+                                        <label for="flRegPin">Pincode *</label>
+                                        <input type="text" id="flRegPin" name="pincode" inputmode="numeric" maxlength="6" required="required"/>
+                                        <small class="fl-reg-err" data-err="pincode"></small>
+                                    </div>
+                                </div>
+                                <div class="fl-reg-msg" id="flRegMsg" role="status"></div>
+                                <button type="submit" class="fl-reg-submit" id="flRegSubmit">Submit Registration</button>
+                            </form>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+            <script>
+                (function () {
+                    var png = document.getElementById('flierDownloadPng');
+                    if (png) {
+                        png.addEventListener('click', function () {
+                            if (typeof html2canvas === 'undefined') { window.print(); return; }
+                            html2canvas(document.getElementById('flierSheet'), {
+                                scale: 2, useCORS: true, backgroundColor: '#ffffff'
+                            }).then(function (canvas) {
+                                var a = document.createElement('a');
+                                a.download = 'property-flier.png';
+                                a.href = canvas.toDataURL('image/png');
+                                a.click();
+                            }).catch(function () { window.print(); });
+                        });
+                    }
+                })();
+            </script>
+
+            <script>
+                (function () {
+                    /* ---------- AI chat card ---------- */
+                    var chatId = <t t-out="chat_property_id"/>;
+                    var msgs = document.getElementById('flChatMessages');
+                    var input = document.getElementById('flChatInput');
+                    var send = document.getElementById('flChatSend');
+
+                    function addBubble(role, text, loading) {
+                        var b = document.createElement('div');
+                        b.className = 'fl-chat-bubble fl-chat-' + role + (loading ? ' fl-chat-loading' : '');
+                        b.textContent = text;
+                        msgs.appendChild(b);
+                        msgs.scrollTop = msgs.scrollHeight;
+                        return b;
+                    }
+                    function ask() {
+                        var q = (input.value || '').trim();
+                        if (!q) { return; }
+                        addBubble('user', q, false);
+                        input.value = '';
+                        send.disabled = true;
+                        var wait = addBubble('bot', 'Thinking...', true);
+                        var fd = new FormData();
+                        fd.append('question', q);
+                        fetch('/api/property/' + chatId + '/ask', { method: 'POST', body: fd })
+                            .then(function (r) { return r.json(); })
+                            .then(function (d) {
+                                wait.classList.remove('fl-chat-loading');
+                                wait.textContent = d.success ? d.answer : (d.error || 'Sorry, something went wrong.');
+                                if (!d.success) { wait.classList.add('fl-chat-error'); }
+                            })
+                            .catch(function () {
+                                wait.classList.remove('fl-chat-loading');
+                                wait.classList.add('fl-chat-error');
+                                wait.textContent = 'Sorry, something went wrong. Please try again.';
+                            })
+                            .then(function () { send.disabled = false; msgs.scrollTop = msgs.scrollHeight; });
+                    }
+                    if (send) {
+                        send.addEventListener('click', ask);
+                        input.addEventListener('keydown', function (e) {
+                            if (e.key === 'Enter') { e.preventDefault(); ask(); }
+                        });
+                    }
+
+                    /* ---------- Registration card ---------- */
+                    var form = document.getElementById('flRegForm');
+                    if (form) {
+                        var box = document.getElementById('flRegMsg');
+                        var btn = document.getElementById('flRegSubmit');
+                        function clearErrors() {
+                            form.querySelectorAll('.fl-reg-err').forEach(function (e) { e.textContent = ''; });
+                            form.querySelectorAll('.fl-reg-invalid').forEach(function (e) { e.classList.remove('fl-reg-invalid'); });
+                            box.className = 'fl-reg-msg'; box.textContent = '';
+                        }
+                        form.addEventListener('submit', function (ev) {
+                            ev.preventDefault();
+                            clearErrors();
+                            btn.disabled = true; btn.textContent = 'Submitting...';
+                            fetch(form.getAttribute('data-action'), { method: 'POST', body: new FormData(form) })
+                                .then(function (r) { return r.json(); })
+                                .then(function (d) {
+                                    if (d.success) {
+                                        form.reset();
+                                        box.className = 'fl-reg-msg fl-reg-ok';
+                                        box.textContent = 'Thank you! Your registration (' + d.reference + ') was submitted. We will get back to you soon.';
+                                    } else {
+                                        box.className = 'fl-reg-msg fl-reg-bad';
+                                        box.textContent = d.error || 'Could not submit. Please try again.';
+                                        Object.keys(d.errors || {}).forEach(function (k) {
+                                            var f = form.querySelector('[name="' + k + '"]');
+                                            var m = form.querySelector('[data-err="' + k + '"]');
+                                            if (f) { f.classList.add('fl-reg-invalid'); }
+                                            if (m) { m.textContent = d.errors[k]; }
+                                        });
+                                    }
+                                })
+                                .catch(function () {
+                                    box.className = 'fl-reg-msg fl-reg-bad';
+                                    box.textContent = 'Network error. Please try again.';
+                                })
+                                .then(function () { btn.disabled = false; btn.textContent = 'Submit Registration'; });
+                        });
+                    }
+                })();
+            </script>
+
+            <script>
+                (function () {
+                    var wrap = document.getElementById('flShare');
+                    if (!wrap) { return; }
+                    var btn = document.getElementById('flShareBtn');
+                    var menu = document.getElementById('flShareMenu');
+                    var title = wrap.getAttribute('data-title') || 'Property Flier';
+                    var url = window.location.href;
+
+                    document.getElementById('flShareWa').href =
+                        'https://wa.me/?text=' + encodeURIComponent(url);
+                    document.getElementById('flShareMail').href =
+                        'https://mail.google.com/mail/?view=cm&amp;fs=1&amp;su=' + encodeURIComponent(title) +
+                        '&amp;body=' + encodeURIComponent(url);
+
+                    function close() { menu.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }
+                    btn.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        var open = menu.classList.toggle('open');
+                        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    });
+                    document.addEventListener('click', function (e) { if (!wrap.contains(e.target)) { close(); } });
+                    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { close(); } });
+                    menu.querySelectorAll('a').forEach(function (a) { a.addEventListener('click', close); });
+
+                    var copyBtn = document.getElementById('flShareCopy');
+                    copyBtn.addEventListener('click', function () {
+                        var label = copyBtn.querySelector('span');
+                        function done(ok) {
+                            label.textContent = ok ? 'Link copied!' : 'Copy failed';
+                            setTimeout(function () { label.textContent = 'Copy link'; close(); }, 1200);
+                        }
+                        if (navigator.clipboard &amp;&amp; window.isSecureContext) {
+                            navigator.clipboard.writeText(url).then(function () { done(true); }, function () { done(false); });
+                        } else {
+                            var ta = document.createElement('textarea');
+                            ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
+                            document.body.appendChild(ta); ta.select();
+                            var ok = false;
+                            try { ok = document.execCommand('copy'); } catch (err) {}
+                            document.body.removeChild(ta);
+                            done(ok);
+                        }
+                    });
+                })();
+            </script>
+        </t>
+    </template>
+</odoo>

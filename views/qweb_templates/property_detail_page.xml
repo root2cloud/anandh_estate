@@ -9,6 +9,7 @@
                 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"/>
                 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
                 <link rel="stylesheet" href="/real_estate_management/static/src/css/property_detail.css"/>
+                <link rel="stylesheet" href="/real_estate_management/static/src/css/property_flier.css"/>
             </t>
 
             <div class="property-detail-page">
@@ -121,6 +122,11 @@
                                                 </div>
                                             </div>
                                             <div class="share-save-block">
+                                                <!-- NEW: Create a Flier (left of Share) -->
+                                                <a t-att-href="'/property/%s/flier' % property.id" class="btn-icon btn-create-flier" target="_blank">
+                                                    <i class="fas fa-file-image"></i>
+                                                    <span>Create a Flier</span>
+                                                </a>
                                                 <button class="btn-icon" onclick="toggleShareMenu(event)">
                                                     <i class="fas fa-share-alt"></i>
                                                     <span>Share</span>

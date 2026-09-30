@@ -597,12 +597,16 @@ class RealEstateController(http.Controller):
     @http.route('/agent/register', type='http', auth='public', website=True)
     def agent_registration_form(self, **kwargs):
         categories = request.env['property.category'].sudo().search([])
-        states = request.env['res.country.state'].sudo().search([
-            ('country_id', '=', request.env.company.country_id.id)
-        ], order='name')
+        # All countries + ALL states of every country. The template filters
+        # the State dropdown in the browser when a Country is picked.
+        countries = request.env['res.country'].sudo().search([], order='name')
+        states = request.env['res.country.state'].sudo().search([], order='country_id, name')
+        india = request.env.ref('base.in', raise_if_not_found=False)
         return request.render('real_estate_management.agent_registration_form_template', {
             'categories': categories,
+            'countries': countries,
             'states': states,
+            'default_country_id': india.id if india else False,
         })
 
     @http.route('/agent/register/submit', type='http', auth='public', website=True, csrf=False, methods=['POST'])
@@ -614,6 +618,32 @@ class RealEstateController(http.Controller):
             resume = request.httprequest.files.get('resume')
             portfolio_images = request.httprequest.files.getlist('portfolio_images')
 
+            # ---- Country / State handling (any country) ----
+            country_id = int(post.get('country_id') or 0) or False
+            state_id = int(post.get('state_id') or 0) or False
+            state_name = (post.get('state_name') or '').strip()
+            if not state_id and state_name and country_id:
+                # Country has no states in Odoo -> reuse or create one
+                State = request.env['res.country.state'].sudo()
+                state_rec = State.search([
+                    ('country_id', '=', country_id),
+                    ('name', '=ilike', state_name),
+                ], limit=1)
+                if not state_rec:
+                    base_code = (state_name[:3] or 'UNK').upper()
+                    code, n = base_code, 1
+                    while State.search_count([('country_id', '=', country_id), ('code', '=', code)]):
+                        n += 1
+                        code = '%s%s' % (base_code[:2], n)
+                    state_rec = State.create({
+                        'name': state_name,
+                        'code': code,
+                        'country_id': country_id,
+                    })
+                state_id = state_rec.id
+            if not state_id:
+                raise UserError('Please select or enter your State / Province.')
+
             registration_vals = {
                 'agent_name': post.get('agent_name'),
                 'email': post.get('email'),
@@ -624,7 +654,8 @@ class RealEstateController(http.Controller):
                 'license_number': post.get('license_number'),
                 'experience_years': int(post.get('experience_years', 0)),
                 'city': post.get('city'),
-                'state_id': int(post.get('state_id')),
+                'country_id': country_id,
+                'state_id': state_id,
                 'zip_code': post.get('zip_code'),
                 'short_bio': post.get('short_bio'),
                 'detailed_bio': post.get('detailed_bio'),

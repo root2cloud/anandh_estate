@@ -226,7 +226,7 @@
                                                 </div>
 
                                                 <div class="row g-4">
-                                                    <div class="col-md-4">
+                                                    <div class="col-md-6">
                                                         <div class="re-agent-group">
                                                             <label class="re-agent-label">City <span class="re-agent-required">*</span></label>
                                                             <input type="text" name="city" class="re-agent-input"
@@ -234,21 +234,41 @@
                                                         </div>
                                                     </div>
 
-                                                    <div class="col-md-4">
+                                                    <div class="col-md-6">
                                                         <div class="re-agent-group">
-                                                            <label class="re-agent-label">State <span class="re-agent-required">*</span></label>
-                                                            <select name="state_id" class="re-agent-input re-agent-select" required="required">
-                                                                <option value="">Select State</option>
-                                                                <t t-foreach="states" t-as="state">
-                                                                    <option t-att-value="state.id" t-esc="state.name"/>
+                                                            <label class="re-agent-label">Country <span class="re-agent-required">*</span></label>
+                                                            <select name="country_id" id="reAgentCountry" class="re-agent-input re-agent-select" required="required">
+                                                                <option value="">Select Country</option>
+                                                                <t t-foreach="countries" t-as="country">
+                                                                    <option t-att-value="country.id"
+                                                                            t-att-selected="'selected' if country.id == default_country_id else None"
+                                                                            t-esc="country.name"/>
                                                                 </t>
                                                             </select>
                                                         </div>
                                                     </div>
 
-                                                    <div class="col-md-4">
+                                                    <div class="col-md-6">
                                                         <div class="re-agent-group">
-                                                            <label class="re-agent-label">ZIP Code</label>
+                                                            <label class="re-agent-label">State / Province <span class="re-agent-required">*</span></label>
+                                                            <select name="state_id" id="reAgentState" class="re-agent-input re-agent-select">
+                                                                <option value="">Select State</option>
+                                                                <t t-foreach="states" t-as="state">
+                                                                    <option t-att-value="state.id"
+                                                                            t-att-data-country="state.country_id.id"
+                                                                            t-esc="state.name"/>
+                                                                </t>
+                                                            </select>
+                                                            <!-- Shown only when the chosen country has no states in Odoo -->
+                                                            <input type="text" name="state_name" id="reAgentStateName"
+                                                                   class="re-agent-input" style="display:none;"
+                                                                   placeholder="Enter your State / Province"/>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-6">
+                                                        <div class="re-agent-group">
+                                                            <label class="re-agent-label">ZIP / Postal Code</label>
                                                             <input type="text" name="zip_code" class="re-agent-input"
                                                                    placeholder="500001"/>
                                                         </div>
@@ -480,6 +500,43 @@
             ========================================================== -->
             <script type="text/javascript">
                 document.addEventListener('DOMContentLoaded', function () {
+                    // ---- Country -> State dependent dropdown ----
+                    var countrySel = document.getElementById('reAgentCountry');
+                    var stateSel = document.getElementById('reAgentState');
+                    var stateText = document.getElementById('reAgentStateName');
+                    if (countrySel &amp;&amp; stateSel) {
+                        var allStateOptions = Array.prototype.slice.call(stateSel.querySelectorAll('option[data-country]'));
+                        function filterStates() {
+                            var cid = countrySel.value;
+                            var shown = 0;
+                            stateSel.value = '';
+                            allStateOptions.forEach(function (opt) {
+                                if (opt.parentNode) { opt.parentNode.removeChild(opt); }
+                            });
+                            allStateOptions.forEach(function (opt) {
+                                if (cid &amp;&amp; opt.getAttribute('data-country') === cid) {
+                                    stateSel.appendChild(opt);
+                                    shown++;
+                                }
+                            });
+                            if (cid &amp;&amp; shown === 0) {
+                                // no states stored for this country -> free-text fallback
+                                stateSel.style.display = 'none';
+                                stateSel.required = false;
+                                stateText.style.display = '';
+                                stateText.required = true;
+                            } else {
+                                stateSel.style.display = '';
+                                stateSel.required = true;
+                                stateText.style.display = 'none';
+                                stateText.required = false;
+                                stateText.value = '';
+                            }
+                        }
+                        countrySel.addEventListener('change', filterStates);
+                        filterStates();
+                    }
+
                     var form = document.querySelector('.re-agent-form');
                     var submitBtn = form ? form.querySelector('.re-agent-submit-btn') : null;
                     var formSubmitted = false;
