@@ -508,6 +508,10 @@
                     /* ---------- image rendering (PNG) ---------- */
                     function renderBlob(done) {
                         var node = document.getElementById('flierSheet' + current);
+                        var prevMargin = node.style.margin;
+                        node.style.margin = '0';
+                        var origDone = done;
+                        done = function (b) { node.style.margin = prevMargin; origDone(b); };
                         function viaCanvas() {
                             if (typeof html2canvas === 'undefined') { done(null); return; }
                             html2canvas(node, { scale: 2, useCORS: true, backgroundColor: null })
