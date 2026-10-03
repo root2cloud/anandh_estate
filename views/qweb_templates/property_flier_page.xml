@@ -6,7 +6,8 @@
             <t t-set="no_footer" t-value="True"/>
             <t t-set="head">
                 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
-                <link rel="stylesheet" href="/real_estate_management/static/src/css/property_flier.css?v=4"/>
+                <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Great+Vibes&amp;family=Montserrat:wght@400;500;600;700;800&amp;family=Playfair+Display:wght@600;700;800&amp;display=swap"/>
+                <link rel="stylesheet" href="/real_estate_management/static/src/css/property_flier.css?v=9"/>
                 <meta property="og:type" content="website"/>
                 <meta property="og:title" t-att-content="flier.get('name') or 'Property Flier'"/>
                 <meta property="og:description" t-att-content="flier.get('address') or flier.get('description') or ''"/>
@@ -32,6 +33,12 @@
                                 <a href="#" id="flShareWa" target="_blank" rel="noopener" role="menuitem">
                                     <i class="fab fa-whatsapp"></i> WhatsApp
                                 </a>
+                                <button type="button" id="flSharePdf" role="menuitem">
+                                    <i class="fas fa-file-pdf"></i> <span>Share as PDF (clickable QR)</span>
+                                </button>
+                                <button type="button" id="flShareImg" role="menuitem">
+                                    <i class="fas fa-image"></i> <span>Share as image</span>
+                                </button>
                                 <button type="button" id="flShareCopy" role="menuitem">
                                     <i class="fas fa-copy"></i> <span>Copy link</span>
                                 </button>
@@ -40,8 +47,11 @@
                                 </a>
                             </div>
                         </div>
-                        <button type="button" class="ft-btn ft-gold" onclick="window.print()">
-                            <i class="fas fa-print"></i> Print / Save PDF
+                        <button type="button" class="ft-btn ft-gold" id="flierDownloadPdf" title="PDF with a clickable QR code">
+                            <i class="fas fa-file-pdf"></i> Download PDF
+                        </button>
+                        <button type="button" class="ft-btn ft-ghost" onclick="window.print()">
+                            <i class="fas fa-print"></i> Print
                         </button>
                         <button type="button" class="ft-btn ft-ghost" id="flierDownloadPng">
                             <i class="fas fa-image"></i> Download PNG
@@ -50,230 +60,770 @@
                 </div>
 
 
-                <!-- ═════════ THE FLIER (A4) ═════════ -->
-                <div class="flier-sheet" id="flierSheet">
+                <!-- ═════════ STYLE PICKER (not printed) ═════════ -->
+                <div class="fl-picker no-print" id="flPicker">
+                    <span class="fl-picker-label">Choose your flier style</span>
+                    <div class="fl-picker-btns">
+                        <button type="button" t-att-class="'fl-pick' + (' active' if design == '1' else '')" data-design="1"><b>1</b><span>Royal Navy</span></button>
+                        <button type="button" t-att-class="'fl-pick' + (' active' if design == '2' else '')" data-design="2"><b>2</b><span>Emerald Luxe</span></button>
+                        <button type="button" t-att-class="'fl-pick' + (' active' if design == '3' else '')" data-design="3"><b>3</b><span>Modern Sky</span></button>
+                        <button type="button" t-att-class="'fl-pick' + (' active' if design == '4' else '')" data-design="4"><b>4</b><span>Sunset Bold</span></button>
+                    </div>
+                </div>
 
-                    <div class="fl-top">
-                        <div class="fl-brand">
-                            <i class="fas fa-building"></i>
-                            <span>Real Estate Management</span>
+                <div class="fl-stage">
+
+                <!-- ═════════ DESIGN 1 : ROYAL NAVY ═════════ -->
+                <div t-att-class="'fl-sheet flier-sheet' + (' active' if design == '1' else '')" id="flierSheet1">
+
+                    <!-- ===== HERO ===== -->
+                    <div class="pf-hero">
+                        <img class="pf-hero-img" t-att-src="flier['image_url']" alt="Property" crossorigin="anonymous"/>
+                        <div class="pf-hero-shade"></div>
+
+                        <div class="pf-badge">
+                            <i class="fas fa-crown"></i>
+                            <span>Premium</span>
+                            <b t-if="flier.get('category')" t-out="flier['category']"/>
+                            <b t-else="">Property</b>
+                            <span>Investment</span>
                         </div>
-                        <div class="fl-tag" t-if="flier.get('status')" t-out="flier['status']"/>
-                        <div class="fl-tag" t-else="">For Sale</div>
+
+                        <div class="pf-script-top">Your Dream Property<br/>Awaits You</div>
+
+                        <div class="pf-titlebox">
+                            <h1 class="pf-title" t-out="flier['name']"/>
+                            <div class="pf-sub">
+                                <span class="pf-line"></span>
+                                <span t-if="flier.get('city')" t-out="flier['city']"/>
+                                <span t-else="" t-out="flier.get('address')"/>
+                                <span class="pf-line"></span>
+                            </div>
+                            <div class="pf-tags">
+                                <span>Prime Location</span><i></i><span>High Returns</span><i></i><span>Smart Investment</span>
+                            </div>
+                        </div>
+
+                        <div class="pf-script-bottom">
+                            Invest in a better future…
+                            <small>SECURE YOUR FUTURE</small>
+                        </div>
+
+                        <div class="pf-pricebox">
+                            <i class="fas fa-crown pf-pb-crown"></i>
+                            <div class="pf-pb-area" t-if="flier.get('area_sqyd')"><t t-out="flier['area_sqyd']"/> Sq. Yards</div>
+                            <div class="pf-pb-type">
+                                <t t-if="flier.get('facing')"><t t-out="flier['facing']"/> Facing </t>Property
+                            </div>
+                            <div class="pf-pb-price" t-out="flier.get('price_short') or flier['price']"/>
+                            <div class="pf-pb-per" t-if="flier.get('price_per_sqyd')"><t t-out="flier['price_per_sqyd']"/> / Sq. Yd.</div>
+                            <div class="pf-pb-ribbon">TOTAL VALUE</div>
+                        </div>
                     </div>
 
-                    <div class="fl-hero">
-                        <img t-att-src="flier['image_url']" alt="Property" crossorigin="anonymous"/>
-                        <div class="fl-price-badge">
-                            <div class="fl-price" t-out="flier['price']"/>
-                            <div class="fl-ppsf" t-if="flier.get('price_per_sqft')" t-out="flier['price_per_sqft']"/>
+                    <!-- ===== DETAILS ROW ===== -->
+                    <div class="pf-row3">
+                        <div class="pf-card">
+                            <div class="pf-card-h"><i class="fas fa-vector-square"></i> Plot Details</div>
+                            <div class="pf-li" t-if="flier.get('area_sqyd')">
+                                <i class="fas fa-ruler-combined"></i>
+                                <div><small>Total Area</small>
+                                    <b><t t-out="flier['area_sqyd']"/> Sq. Yards</b>
+                                    <em>(~<t t-out="flier['area_sqft']"/> Sq. Ft.)</em></div>
+                            </div>
+                            <div class="pf-li">
+                                <i class="fas fa-indian-rupee-sign"></i>
+                                <div><small t-if="flier.get('price_per_sqyd')">Price</small>
+                                    <b t-if="flier.get('price_per_sqyd')"><t t-out="flier['price_per_sqyd']"/> / Sq. Yd.</b>
+                                    <small>Total Value</small>
+                                    <b t-out="flier.get('price_short') or flier['price']"/></div>
+                            </div>
+                        </div>
+
+                        <div class="pf-card">
+                            <div class="pf-card-h"><i class="fas fa-file-signature"></i> Title &amp; Approval</div>
+                            <div class="pf-check" t-if="flier.get('facing')"><i class="fas fa-circle-check"></i> <b>Vastu <t t-out="flier['facing']"/> Facing</b></div>
+                            <div class="pf-check" t-if="flier.get('title_status')"><i class="fas fa-circle-check"></i> <b t-out="flier['title_status']"/></div>
+                            <div class="pf-check" t-if="flier.get('road_width') and flier['road_width'] != '0'"><i class="fas fa-circle-check"></i> <b><t t-out="flier['road_width']"/> Ft Wide Road</b></div>
+                            <div class="pf-check" t-if="flier.get('status')"><i class="fas fa-circle-check"></i> <b t-out="flier['status']"/></div>
+                        </div>
+
+                        <div class="pf-photo">
+                            <img t-if="flier.get('gallery')" t-att-src="flier['gallery'][0]" alt="Gallery" crossorigin="anonymous"/>
+                            <img t-else="" t-att-src="flier['image_url']" alt="Property" crossorigin="anonymous"/>
+                            <div class="pf-photo-cap" t-if="flier.get('road_width') and flier['road_width'] != '0'">
+                                <i class="fas fa-location-dot"></i> <t t-out="flier['road_width']"/> Ft Wide Road Access
+                            </div>
+                            <div class="pf-photo-cap" t-elif="flier.get('city')"><i class="fas fa-location-dot"></i> <t t-out="flier['city']"/></div>
                         </div>
                     </div>
 
-                    <div t-if="flier.get('gallery')" class="fl-gallery">
-                        <t t-foreach="flier['gallery']" t-as="g">
-                            <img t-att-src="g" alt="Gallery" crossorigin="anonymous"/>
-                        </t>
+                    <!-- ===== STRATEGIC LOCATION ADVANTAGES ===== -->
+                    <div class="pf-navy">
+                        <div class="pf-pill">STRATEGIC LOCATION ADVANTAGES</div>
+                        <div class="pf-cols4">
+                            <div class="pf-col">
+                                <i class="fas fa-location-dot"></i>
+                                <h4>Prime Location</h4>
+                                <p><t t-out="flier.get('address')"/><t t-if="flier.get('zip_code')"> - <t t-out="flier['zip_code']"/></t>.
+                                   A well-connected address with everyday conveniences close by.</p>
+                            </div>
+                            <div class="pf-col">
+                                <i class="fas fa-road"></i>
+                                <h4>Road Access</h4>
+                                <p t-if="flier.get('road_width') and flier['road_width'] != '0'">Approached by a <t t-out="flier['road_width']"/> ft wide road, giving easy access and hassle-free commuting.</p>
+                                <p t-else="">Good road connectivity for hassle-free commuting.</p>
+                            </div>
+                            <div class="pf-col">
+                                <i class="fas fa-city"></i>
+                                <h4>Nearby Landmarks</h4>
+                                <ul t-if="flier.get('landmark_list')">
+                                    <li t-foreach="flier['landmark_list']" t-as="lm" t-out="lm"/>
+                                </ul>
+                                <p t-else="">Close to schools, hospitals, markets and public transport.</p>
+                            </div>
+                            <div class="pf-col">
+                                <i class="fas fa-house-chimney"></i>
+                                <h4>Premium Living</h4>
+                                <p t-if="flier.get('amenities')"><t t-out="', '.join(flier['amenities'])"/>.</p>
+                                <p t-else="">A peaceful setting offering the ideal blend of comfort and urban convenience.</p>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="fl-body">
-                        <h1 class="fl-title" t-out="flier['name']"/>
-
-                        <div class="fl-stars" t-if="flier.get('rating')">
-                            <t t-foreach="range(flier['rating'])" t-as="s"><i class="fas fa-star"></i></t>
+                    <!-- ===== HIGH GROWTH ===== -->
+                    <div class="pf-growth">
+                        <div class="pf-gold-h"><i class="fas fa-arrow-trend-up"></i> HIGH GROWTH &amp; FUTURE PROSPECTS</div>
+                        <div class="pf-cols4 pf-light">
+                            <div class="pf-col">
+                                <i class="fas fa-chart-line"></i>
+                                <h4>Capital Appreciation</h4>
+                                <p>A growing locality<t t-if="flier.get('city')"> in <t t-out="flier['city']"/></t> with strong demand for well-located plots and homes.</p>
+                            </div>
+                            <div class="pf-col">
+                                <i class="fas fa-landmark"></i>
+                                <h4>Future Ready Area</h4>
+                                <p>Near growing infrastructure, services and commercial activity.</p>
+                            </div>
+                            <div class="pf-col">
+                                <i class="fas fa-shield-halved"></i>
+                                <h4>Secure Legal Title</h4>
+                                <p><t t-if="flier.get('title_status')"><t t-out="flier['title_status']"/>. </t>Verified documents for a safe, transparent purchase.</p>
+                            </div>
+                            <div class="pf-col">
+                                <i class="fas fa-house-circle-check"></i>
+                                <h4>Ideal Size</h4>
+                                <p t-if="flier.get('area_sqyd')">A spacious <t t-out="flier['area_sqyd']"/> Sq. Yds. (<t t-out="flier['area_sqft']"/> Sq. Ft.) plot with freedom to design your dream home.</p>
+                                <p t-else="">A well-sized property with freedom to design your dream home.</p>
+                            </div>
                         </div>
+                    </div>
 
-                        <div class="fl-address" t-if="flier.get('address')">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span t-out="flier['address']"/>
-                            <t t-if="flier.get('zip_code')"> - <span t-out="flier['zip_code']"/></t>
-                        </div>
-
-                        <!-- key facts -->
-                        <div class="fl-facts">
-                            <t t-if="flier.get('highlights')">
-                                <!-- remote page scraped: highlights come as ready text -->
-                                <t t-foreach="flier['highlights']" t-as="h">
-                                    <div class="fl-fact"><span class="fl-fact-v" t-out="h"/></div>
-                                </t>
-                            </t>
-                            <t t-else="">
-                                <div class="fl-fact" t-if="flier.get('plot_area')">
-                                    <i class="fas fa-expand-arrows-alt"></i>
-                                    <span class="fl-fact-v"><t t-out="flier['plot_area']"/> Sq.Ft</span>
-                                    <span class="fl-fact-l">Plot Area</span>
-                                </div>
-                                <div class="fl-fact" t-if="flier.get('facing')">
-                                    <i class="fas fa-compass"></i>
-                                    <span class="fl-fact-v" t-out="flier['facing']"/>
-                                    <span class="fl-fact-l">Facing</span>
-                                </div>
-                                <div class="fl-fact" t-if="flier.get('title_status')">
-                                    <i class="fas fa-certificate"></i>
-                                    <span class="fl-fact-v" t-out="flier['title_status']"/>
-                                    <span class="fl-fact-l">Title</span>
-                                </div>
-                                <div class="fl-fact" t-if="flier.get('road_width')">
-                                    <i class="fas fa-road"></i>
-                                    <span class="fl-fact-v"><t t-out="flier['road_width']"/> Ft</span>
-                                    <span class="fl-fact-l">Road Width</span>
-                                </div>
-                            </t>
-                        </div>
-
-                        <!-- Property Overview -->
-                        <div class="fl-section" t-if="flier.get('overview_html') or flier.get('description')">
-                            <h3>Property Overview</h3>
+                    <!-- ===== OVERVIEW / ABOUT (property's own saved info) ===== -->
+                    <div class="pf-info" t-if="flier.get('overview_html') or flier.get('description') or flier.get('about_html') or flier.get('highlights')">
+                        <div class="pf-info-box" t-if="flier.get('overview_html') or flier.get('description') or flier.get('highlights')">
+                            <h3><i class="fas fa-star"></i> Property Overview</h3>
                             <div class="fl-rich" t-if="flier.get('overview_html')" t-out="flier['overview_html']"/>
+                            <ul class="pf-hl" t-if="flier.get('highlights')">
+                                <li t-foreach="flier['highlights']" t-as="h" t-out="h"/>
+                            </ul>
                             <p class="fl-desc" t-if="flier.get('description')" t-out="flier['description']"/>
                         </div>
-
-                        <div class="fl-section" t-if="flier.get('amenities')">
-                            <h3>Features &amp; Amenities</h3>
-                            <div class="fl-chips">
-                                <t t-foreach="flier['amenities']" t-as="a">
-                                    <span class="fl-chip"><i class="fas fa-check"></i> <t t-out="a"/></span>
-                                </t>
-                            </div>
-                        </div>
-
-                        <!-- About This Property -->
-                        <div class="fl-section" t-if="flier.get('about_html')">
-                            <h3>About This Property</h3>
+                        <div class="pf-info-box" t-if="flier.get('about_html')">
+                            <h3><i class="fas fa-circle-info"></i> About This Property</h3>
                             <div class="fl-rich" t-out="flier['about_html']"/>
                         </div>
-
-                        <!-- Location &amp; Nearby -->
-                        <div class="fl-section" t-if="flier.get('nearby_html') or flier.get('landmarks')">
-                            <h3>Location &amp; Nearby Landmarks</h3>
-                            <div class="fl-rich" t-if="flier.get('nearby_html')" t-out="flier['nearby_html']"/>
-                            <p class="fl-landmarks" t-if="flier.get('landmarks')" t-out="flier['landmarks']"/>
+                    </div>
+                    <div class="pf-info pf-info-one" t-if="flier.get('nearby_html')">
+                        <div class="pf-info-box">
+                            <h3><i class="fas fa-map-location-dot"></i> Location &amp; Nearby</h3>
+                            <div class="fl-rich" t-out="flier['nearby_html']"/>
                         </div>
                     </div>
 
-                    <div class="fl-footer">
-                        <div class="fl-contact">
-                            <div class="fl-contact-h">Contact</div>
-                            <div class="fl-contact-name" t-if="flier.get('contact_name')" t-out="flier['contact_name']"/>
-                            <div t-if="flier.get('contact_phone')"><i class="fas fa-phone"></i> <span t-out="flier['contact_phone']"/></div>
-                            <div t-if="flier.get('contact_email')"><i class="fas fa-envelope"></i> <span t-out="flier['contact_email']"/></div>
-                            <div class="fl-link"><i class="fas fa-globe"></i> <span t-out="qr_link"/></div>
+                    <!-- ===== VERIFY + MAP ===== -->
+                    <div class="pf-bottom">
+                        <div class="pf-verify">
+                            <i class="fas fa-shield-halved"></i>
+                            <div>
+                                <h4>ONLINE VERIFICATION &amp; LOCATION GUIDE</h4>
+                                <p>For complete transaction security, title documents can be verified with the official government land records and registration portals.
+                                   Registration charges approx. <t t-out="flier.get('registration_pct') or '7'"/>%<t t-if="flier.get('emi')"> | EMI facility available</t>.</p>
+                            </div>
                         </div>
-                        <div class="fl-qr">
-                            <img t-att-src="qr_src" alt="QR" crossorigin="anonymous"/>
-                            <span>Scan for details</span>
+                        <div class="pf-map">
+                            <div class="pf-map-txt">
+                                <i class="fas fa-map-location-dot"></i>
+                                <div><b>View on<br/>Google Maps</b>
+                                    <span t-out="map_link"/></div>
+                            </div>
+                            <div class="pf-qr">
+                                <a class="fl-qr-link" t-att-href="info_url" target="_blank" rel="noopener"><img class="fl-qr-img" t-att-src="qr_src" t-att-data-qr="info_url" alt="QR" crossorigin="anonymous"/></a>
+                                <small>Scan for Details</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ===== CONTACT ===== -->
+                    <div class="pf-footer">
+                        <div class="pf-foot-logo"><i class="fas fa-tree"></i></div>
+                        <div class="pf-contact">
+                            <small>FOR MORE DETAILS CONTACT</small>
+                            <div class="pf-phone"><i class="fas fa-phone-volume"></i> <span t-out="flier.get('contact_phone')"/></div>
+                            <div class="pf-cn" t-if="flier.get('contact_name') or flier.get('contact_email')">
+                                <t t-out="flier.get('contact_name')"/><t t-if="flier.get('contact_name') and flier.get('contact_email')"> | </t><t t-out="flier.get('contact_email')"/>
+                            </div>
+                        </div>
+                        <div class="pf-script-foot">Own a Piece<br/>of Paradise</div>
+                    </div>
+                </div>
+
+                    <!-- ═════════ DESIGN 2 : EMERALD LUXE ═════════ -->
+                    <div t-att-class="'fl-sheet fd2' + (' active' if design == '2' else '')" id="flierSheet2">
+                        <div class="top">
+                            <img t-att-src="flier['image_url']" alt="Property" crossorigin="anonymous"/>
+                            <div class="brand">
+                                <b>REAL ESTATE MANAGEMENT</b>
+                                <span><t t-out="(flier.get('category') or 'Property').upper()"/> · <t t-out="(flier.get('status') or 'For Sale').upper()"/></span>
+                            </div>
+                            <div class="head">
+                                <small t-out="(flier.get('city') or '').upper()"/>
+                                <h1 t-out="flier['name']"/>
+                                <p>Where luxury meets legacy</p>
+                            </div>
+                            <div class="seal">
+                                <small>TOTAL VALUE</small>
+                                <b t-out="flier.get('price_short') or flier['price']"/>
+                                <em t-if="flier.get('price_per_sqyd')"><t t-out="flier['price_per_sqyd']"/>/Sq.Yd.</em>
+                            </div>
+                        </div>
+                        <div class="stats">
+                            <div class="stat" t-if="flier.get('area_sqyd')"><i class="fas fa-ruler-combined"></i><b><t t-out="flier['area_sqyd']"/> Sq.Yd</b><small>Plot Area</small></div>
+                            <div class="stat" t-if="flier.get('facing')"><i class="fas fa-compass"></i><b t-out="flier['facing']"/><small>Facing</small></div>
+                            <div class="stat" t-if="flier.get('road_width') and flier['road_width'] != '0'"><i class="fas fa-road"></i><b><t t-out="flier['road_width']"/> Ft</b><small>Road Width</small></div>
+                            <div class="stat" t-if="flier.get('title_status')"><i class="fas fa-certificate"></i><b t-out="flier['title_status']"/><small>Title</small></div>
+                        </div>
+                        <div class="grid">
+                            <div class="panel">
+                                <h3><i class="fas fa-location-dot"></i> Location Advantages</h3>
+                                <ul>
+                                    <t t-if="flier.get('landmark_list')"><li t-foreach="flier['landmark_list']" t-as="lm" t-out="lm"/></t>
+                                    <t t-else=""><li>Close to schools, hospitals and markets</li><li>Easy access to public transport</li></t>
+                                </ul>
+                                <p class="addr" t-if="flier.get('address')"><i class="fas fa-map-pin"></i> <t t-out="flier['address']"/><t t-if="flier.get('zip_code')"> - <t t-out="flier['zip_code']"/></t></p>
+                            </div>
+                            <div class="panel">
+                                <h3><i class="fas fa-gem"></i> Amenities</h3>
+                                <div class="chips" t-if="flier.get('amenities')">
+                                    <span class="chip" t-foreach="flier['amenities']" t-as="a"><i class="fas fa-check"></i><t t-out="a"/></span>
+                                </div>
+                                <p class="addr" t-else="">A peaceful setting with the ideal blend of comfort and urban convenience.</p>
+                            </div>
+                        </div>
+                        <div class="cta">
+                            <div class="ph">
+                                <small>BOOK A SITE VISIT</small>
+                                <b><i class="fas fa-phone-volume"></i> <t t-out="flier.get('contact_phone')"/></b>
+                                <span><t t-out="flier.get('contact_name')"/><t t-if="flier.get('contact_name') and flier.get('contact_email')"> | </t><t t-out="flier.get('contact_email')"/></span>
+                            </div>
+                            <div><a class="fl-qr-link" t-att-href="info_url" target="_blank" rel="noopener"><img class="fl-qr-img" t-att-src="qr_src" t-att-data-qr="info_url" alt="QR" crossorigin="anonymous"/></a><div class="qt">SCAN FOR DETAILS</div></div>
+                        </div>
+                    </div>
+
+                    <!-- ═════════ DESIGN 3 : MODERN SKY ═════════ -->
+                    <div t-att-class="'fl-sheet fd3' + (' active' if design == '3' else '')" id="flierSheet3">
+                        <div class="hero">
+                            <img t-att-src="flier['image_url']" alt="Property" crossorigin="anonymous"/>
+                            <div class="ht">
+                                <span class="tag"><t t-out="(flier.get('category') or 'Property').upper()"/> · <t t-out="(flier.get('status') or 'For Sale').upper()"/></span>
+                                <h1 t-out="flier['name']"/>
+                                <p><i class="fas fa-location-dot"></i><t t-out="(flier.get('city') or flier.get('address') or '').upper()"/></p>
+                            </div>
+                            <div class="pricetag">
+                                <small>TOTAL VALUE</small>
+                                <b t-out="flier.get('price_short') or flier['price']"/>
+                                <span t-if="flier.get('price_per_sqyd')"><t t-out="flier['price_per_sqyd']"/> / Sq.Yd.</span>
+                            </div>
+                        </div>
+                        <div class="cards">
+                            <div class="c" t-if="flier.get('area_sqyd')"><i class="fas fa-ruler-combined"></i><b><t t-out="flier['area_sqyd']"/> Sq.Yd</b><small>Area</small></div>
+                            <div class="c" t-if="flier.get('facing')"><i class="fas fa-compass"></i><b t-out="flier['facing']"/><small>Facing</small></div>
+                            <div class="c" t-if="flier.get('road_width') and flier['road_width'] != '0'"><i class="fas fa-road"></i><b><t t-out="flier['road_width']"/> Ft</b><small>Road</small></div>
+                            <div class="c" t-if="flier.get('title_status')"><i class="fas fa-file-shield"></i><b t-out="flier['title_status']"/><small>Approval</small></div>
+                        </div>
+                        <div class="two">
+                            <div class="box">
+                                <h3>Nearby Landmarks</h3>
+                                <ul class="tl">
+                                    <t t-if="flier.get('landmark_list')"><li t-foreach="flier['landmark_list']" t-as="lm" t-out="lm"/></t>
+                                    <t t-else=""><li>Close to schools, hospitals and markets</li><li>Easy access to public transport</li></t>
+                                </ul>
+                                <p class="addr" t-if="flier.get('address')"><i class="fas fa-map-pin"></i> <t t-out="flier['address']"/></p>
+                            </div>
+                            <div class="box">
+                                <h3>Features &amp; Amenities</h3>
+                                <t t-if="flier.get('amenities')">
+                                    <span class="chip" t-foreach="flier['amenities']" t-as="a"><i class="fas fa-check"></i><t t-out="a"/></span>
+                                </t>
+                                <p class="addr" style="margin-top:12px">Registration approx. <t t-out="flier.get('registration_pct') or '7'"/>% · A perfect blend of comfort, connectivity and long-term value.</p>
+                            </div>
+                        </div>
+                        <div class="foot">
+                            <div class="l">
+                                <small>CALL TO BOOK A VISIT</small>
+                                <b><i class="fas fa-phone"></i> <t t-out="flier.get('contact_phone')"/></b>
+                                <span><t t-out="flier.get('contact_name')"/><t t-if="flier.get('contact_name') and flier.get('contact_email')"> | </t><t t-out="flier.get('contact_email')"/></span>
+                            </div>
+                            <div style="text-align:center"><a class="fl-qr-link" t-att-href="info_url" target="_blank" rel="noopener"><img class="fl-qr-img" t-att-src="qr_src" t-att-data-qr="info_url" alt="QR" crossorigin="anonymous"/></a><div style="font-size:9px;margin-top:3px">SCAN FOR DETAILS</div></div>
+                        </div>
+                    </div>
+
+                    <!-- ═════════ DESIGN 4 : SUNSET BOLD ═════════ -->
+                    <div t-att-class="'fl-sheet fd4' + (' active' if design == '4' else '')" id="flierSheet4">
+                        <img class="bg" t-att-src="flier['image_url']" alt="Property" crossorigin="anonymous"/>
+                        <div class="ov"></div>
+                        <div class="rib">LIMITED OFFER</div>
+                        <div class="tt"><t t-out="(flier.get('category') or 'Property').upper()"/> PROPERTY<b>Own your future</b></div>
+                        <div class="mid">
+                            <small t-out="(flier.get('city') or '').upper()"/>
+                            <h1 t-out="flier['name']"/>
+                            <p t-out="flier.get('address')"/>
+                        </div>
+                        <div class="big">
+                            <div><small>TOTAL VALUE</small><b t-out="flier.get('price_short') or flier['price']"/></div>
+                            <div class="r">
+                                <t t-if="flier.get('area_sqyd')"><t t-out="flier['area_sqyd']"/> Sq. Yards<br/></t>
+                                <t t-if="flier.get('price_per_sqyd')"><t t-out="flier['price_per_sqyd']"/> / Sq.Yd.<br/></t>
+                                <t t-if="flier.get('facing')"><t t-out="flier['facing']"/> Facing</t>
+                            </div>
+                        </div>
+                        <div class="tiles">
+                            <div class="tile" t-if="flier.get('area_sqft')"><i class="fas fa-ruler-combined"></i><b t-out="flier['area_sqft']"/><small>Sq. Ft.</small></div>
+                            <div class="tile" t-if="flier.get('facing')"><i class="fas fa-compass"></i><b t-out="flier['facing']"/><small>Facing</small></div>
+                            <div class="tile" t-if="flier.get('road_width') and flier['road_width'] != '0'"><i class="fas fa-road"></i><b><t t-out="flier['road_width']"/> Ft</b><small>Road</small></div>
+                            <div class="tile" t-if="flier.get('title_status')"><i class="fas fa-shield-halved"></i><b t-out="flier['title_status']"/><small>Title</small></div>
+                        </div>
+                        <div class="cols">
+                            <div class="cp">
+                                <h3>Why invest here</h3>
+                                <ul>
+                                    <t t-if="flier.get('landmark_list')"><li t-foreach="flier['landmark_list']" t-as="lm" t-out="lm"/></t>
+                                    <t t-else=""><li>Close to schools, hospitals and markets</li><li>Easy access to public transport</li></t>
+                                </ul>
+                            </div>
+                            <div class="cp">
+                                <h3>Amenities</h3>
+                                <t t-if="flier.get('amenities')"><span class="chip" t-foreach="flier['amenities']" t-as="a" t-out="a"/></t>
+                                <t t-else=""><span class="chip">Prime location</span><span class="chip">Verified documents</span></t>
+                            </div>
+                        </div>
+                        <div class="bar">
+                            <div class="l">
+                                <small>CALL NOW · SITE VISITS OPEN</small>
+                                <b><i class="fas fa-phone-volume"></i> <t t-out="flier.get('contact_phone')"/></b>
+                                <span><t t-out="flier.get('contact_name')"/><t t-if="flier.get('contact_name') and flier.get('contact_email')"> | </t><t t-out="flier.get('contact_email')"/></span>
+                            </div>
+                            <a class="fl-qr-link" t-att-href="info_url" target="_blank" rel="noopener"><img class="fl-qr-img" t-att-src="qr_src" t-att-data-qr="info_url" alt="QR" crossorigin="anonymous"/></a>
                         </div>
                     </div>
                 </div>
 
-                <!-- ═════════ CHAT + REGISTRATION CARDS (below the flier, not printed / not in PNG) ═════════ -->
-                <div class="fl-extra no-print">
-
-                    <!-- Chat with our Assistant -->
-                    <section class="fl-extra-block">
-                        <h2 class="fl-extra-title">Chat with our Assistant</h2>
-                        <div class="fl-chat-card">
-                            <div class="fl-chat-messages" id="flChatMessages">
-                                <div class="fl-chat-bubble fl-chat-bot">Hi! Ask me about properties, locations or pricing, or scroll down to register your details.</div>
-                            </div>
-                            <div class="fl-chat-form">
-                                <input type="text" id="flChatInput" class="fl-chat-input" placeholder="Type your message..." autocomplete="off" maxlength="500"/>
-                                <button type="button" id="flChatSend" class="fl-chat-send" aria-label="Send">
-                                    <i class="fas fa-paper-plane"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Registration -->
-                    <section class="fl-extra-block">
-                        <h2 class="fl-extra-title">Registration</h2>
-                        <p class="fl-extra-sub">Fill out your details and we will get back to you</p>
-                        <div class="fl-reg-card">
-                            <form id="flRegForm" novalidate="novalidate" t-att-data-action="'/property/%s/flier/register' % property.id">
-                                <div class="fl-reg-grid fl-reg-2">
-                                    <div class="fl-reg-field">
-                                        <label for="flRegName">Full Name *</label>
-                                        <input type="text" id="flRegName" name="full_name" required="required"/>
-                                        <small class="fl-reg-err" data-err="full_name"></small>
-                                    </div>
-                                    <div class="fl-reg-field">
-                                        <label for="flRegPhone">Phone Number *</label>
-                                        <input type="tel" id="flRegPhone" name="phone" required="required"/>
-                                        <small class="fl-reg-err" data-err="phone"></small>
-                                    </div>
-                                    <div class="fl-reg-field">
-                                        <label for="flRegEmail">Email *</label>
-                                        <input type="email" id="flRegEmail" name="email" required="required"/>
-                                        <small class="fl-reg-err" data-err="email"></small>
-                                    </div>
-                                    <div class="fl-reg-field">
-                                        <label for="flRegAddress">Address *</label>
-                                        <input type="text" id="flRegAddress" name="address" required="required"/>
-                                        <small class="fl-reg-err" data-err="address"></small>
-                                    </div>
-                                </div>
-                                <div class="fl-reg-grid fl-reg-3">
-                                    <div class="fl-reg-field">
-                                        <label for="flRegState">State *</label>
-                                        <select id="flRegState" name="state_id" required="required">
-                                            <option value="">Select State</option>
-                                            <t t-foreach="states" t-as="st">
-                                                <option t-att-value="st.id" t-out="st.name"/>
-                                            </t>
-                                        </select>
-                                        <small class="fl-reg-err" data-err="state_id"></small>
-                                    </div>
-                                    <div class="fl-reg-field">
-                                        <label for="flRegCity">City *</label>
-                                        <input type="text" id="flRegCity" name="city" required="required"/>
-                                        <small class="fl-reg-err" data-err="city"></small>
-                                    </div>
-                                    <div class="fl-reg-field">
-                                        <label for="flRegPin">Pincode *</label>
-                                        <input type="text" id="flRegPin" name="pincode" inputmode="numeric" maxlength="6" required="required"/>
-                                        <small class="fl-reg-err" data-err="pincode"></small>
-                                    </div>
-                                </div>
-                                <div class="fl-reg-msg" id="flRegMsg" role="status"></div>
-                                <button type="submit" class="fl-reg-submit" id="flRegSubmit">Submit Registration</button>
-                            </form>
-                        </div>
-                    </section>
-                </div>
             </div>
 
             <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
             <script>
                 (function () {
+                    var current = '<t t-out="design"/>';
+                    var sheets = document.querySelectorAll('.fl-sheet');
+                    var picks = document.querySelectorAll('.fl-pick');
+                    var wrap = document.getElementById('flShare');
+                    var title = wrap ? (wrap.getAttribute('data-title') || 'Property Flier') : 'Property Flier';
+                    var wa = document.getElementById('flShareWa');
+                    var mail = document.getElementById('flShareMail');
+
+                    function pageUrl() { return window.location.href; }
+
+                    /* link opened by the QR code (the property information page) */
+                    function infoUrl() {
+                        var img = document.querySelector('.fl-qr-img');
+                        var u = img ? img.getAttribute('data-qr') : '';
+                        return u ? u : pageUrl();
+                    }
+
+                    /* ---------- QR: if the server could not draw it, draw it here ---------- */
+                    function fixQr(img) {
+                        if (img.naturalWidth > 0) { return; }
+                        if (img.getAttribute('data-qr-fixed')) { return; }
+                        var text = img.getAttribute('data-qr');
+                        if (!text) { return; }
+                        if (typeof QRCode === 'undefined') { return; }
+                        img.setAttribute('data-qr-fixed', '1');
+                        var tmp = document.createElement('div');
+                        try {
+                            new QRCode(tmp, { text: text, width: 240, height: 240, correctLevel: QRCode.CorrectLevel.M });
+                        } catch (e) { return; }
+                        var c = tmp.querySelector('canvas');
+                        if (c) { img.src = c.toDataURL('image/png'); }
+                    }
+                    document.querySelectorAll('.fl-qr-img').forEach(function (img) {
+                        img.addEventListener('error', function () { fixQr(img); });
+                    });
+                    window.addEventListener('load', function () {
+                        document.querySelectorAll('.fl-qr-img').forEach(fixQr);
+                    });
+
+                    function refreshShareLinks() {
+                        var url = pageUrl();
+                        if (wa) { wa.href = 'https://wa.me/?text=' + encodeURIComponent(title + ' ' + url); }
+                        if (mail) {
+                            mail.href = 'https://mail.google.com/mail/?view=cm&amp;fs=1&amp;su=' + encodeURIComponent(title) +
+                                '&amp;body=' + encodeURIComponent(url);
+                        }
+                    }
+
+                    /* ---------- design picker ---------- */
+                    function selectDesign(n) {
+                        current = String(n);
+                        sheets.forEach(function (s) {
+                            s.classList.toggle('active', s.id === 'flierSheet' + current);
+                        });
+                        picks.forEach(function (p) {
+                            p.classList.toggle('active', p.getAttribute('data-design') === current);
+                        });
+                        try {
+                            var u = new URL(window.location.href);
+                            u.searchParams.set('design', current);
+                            window.history.replaceState(null, '', u.toString());
+                        } catch (e) {}
+                        refreshShareLinks();
+                    }
+                    picks.forEach(function (p) {
+                        p.addEventListener('click', function () { selectDesign(p.getAttribute('data-design')); });
+                    });
+                    selectDesign(current);
+
+                    /* ---------- image rendering (PNG) ---------- */
+                    function renderBlob(done) {
+                        var node = document.getElementById('flierSheet' + current);
+                        function viaCanvas() {
+                            if (typeof html2canvas === 'undefined') { done(null); return; }
+                            html2canvas(node, { scale: 2, useCORS: true, backgroundColor: null })
+                                .then(function (c) { c.toBlob(function (b) { done(b); }, 'image/png'); })
+                                .catch(function () { done(null); });
+                        }
+                        if (window.htmlToImage) {
+                            window.htmlToImage.toBlob(node, { pixelRatio: 2, cacheBust: true })
+                                .then(function (b) { if (b) { done(b); } else { viaCanvas(); } })
+                                .catch(viaCanvas);
+                        } else {
+                            viaCanvas();
+                        }
+                    }
+                    function saveBlob(blob) {
+                        if (!blob) { window.print(); return; }
+                        var a = document.createElement('a');
+                        a.download = 'property-flier-' + current + '.png';
+                        a.href = URL.createObjectURL(blob);
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                    }
+
+
+                    /* ---------- PDF with clickable QR code ---------- */
+                    function blobToDataUrl(blob, cb) {
+                        var fr = new FileReader();
+                        fr.onload = function () { cb(fr.result); };
+                        fr.readAsDataURL(blob);
+                    }
+                    function buildPdf(done) {
+                        var node = document.getElementById('flierSheet' + current);
+                        if (!window.jspdf) { done(null); return; }
+                        renderBlob(function (blob) {
+                            if (!blob) { done(null); return; }
+                            blobToDataUrl(blob, function (dataUrl) {
+                                try {
+                                    var w = node.offsetWidth;
+                                    var h = node.offsetHeight;
+                                    var doc = new window.jspdf.jsPDF({
+                                        orientation: w > h ? 'l' : 'p',
+                                        unit: 'px', format: [w, h], hotfixes: ['px_scaling']
+                                    });
+                                    doc.addImage(dataUrl, 'PNG', 0, 0, w, h);
+                                    var base = node.getBoundingClientRect();
+                                    /* QR code -> property information page */
+                                    node.querySelectorAll('.fl-qr-img').forEach(function (q) {
+                                        var r = q.getBoundingClientRect();
+                                        doc.link(r.left - base.left, r.top - base.top, r.width, r.height,
+                                                 { url: q.getAttribute('data-qr') || infoUrl() });
+                                    });
+                                    /* phone number -> tap to call */
+                                    var ph = node.querySelector('.pf-phone, .cta b, .foot b, .bar b');
+                                    if (ph) {
+                                        var digits = (ph.textContent || '').replace(/[^0-9+]/g, '');
+                                        if (digits) {
+                                            var pr = ph.getBoundingClientRect();
+                                            doc.link(pr.left - base.left, pr.top - base.top, pr.width, pr.height,
+                                                     { url: 'tel:' + digits });
+                                        }
+                                    }
+                                    done(doc.output('blob'));
+                                } catch (e) { done(null); }
+                            });
+                        });
+                    }
+                    function savePdf(blob) {
+                        if (!blob) { window.print(); return; }
+                        var a = document.createElement('a');
+                        a.download = 'property-flier-' + current + '.pdf';
+                        a.href = URL.createObjectURL(blob);
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                    }
+                    var pdfBtn = document.getElementById('flierDownloadPdf');
+                    if (pdfBtn) {
+                        pdfBtn.addEventListener('click', function () { buildPdf(savePdf); });
+                    }
+
                     var png = document.getElementById('flierDownloadPng');
                     if (png) {
-                        png.addEventListener('click', function () {
-                            if (typeof html2canvas === 'undefined') { window.print(); return; }
-                            html2canvas(document.getElementById('flierSheet'), {
-                                scale: 2, useCORS: true, backgroundColor: '#ffffff'
-                            }).then(function (canvas) {
-                                var a = document.createElement('a');
-                                a.download = 'property-flier.png';
-                                a.href = canvas.toDataURL('image/png');
-                                a.click();
-                            }).catch(function () { window.print(); });
+                        png.addEventListener('click', function () { renderBlob(saveBlob); });
+                    }
+
+                    /* ---------- share menu ---------- */
+                    if (!wrap) { return; }
+                    var btn = document.getElementById('flShareBtn');
+                    var menu = document.getElementById('flShareMenu');
+
+                    function closeMenu() { menu.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }
+                    btn.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        var open = menu.classList.toggle('open');
+                        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    });
+                    document.addEventListener('click', function (e) { if (!wrap.contains(e.target)) { closeMenu(); } });
+                    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeMenu(); } });
+                    menu.querySelectorAll('a').forEach(function (a) { a.addEventListener('click', closeMenu); });
+
+                    var copyBtn = document.getElementById('flShareCopy');
+                    copyBtn.addEventListener('click', function () {
+                        var label = copyBtn.querySelector('span');
+                        var url = pageUrl();
+                        function done(ok) {
+                            label.textContent = ok ? 'Link copied!' : 'Copy failed';
+                            setTimeout(function () { label.textContent = 'Copy link'; closeMenu(); }, 1200);
+                        }
+                        if (navigator.clipboard &amp;&amp; window.isSecureContext) {
+                            navigator.clipboard.writeText(url).then(function () { done(true); }, function () { done(false); });
+                        } else {
+                            var ta = document.createElement('textarea');
+                            ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
+                            document.body.appendChild(ta); ta.select();
+                            var ok = false;
+                            try { ok = document.execCommand('copy'); } catch (err) {}
+                            document.body.removeChild(ta);
+                            done(ok);
+                        }
+                    });
+
+                    var pdfShare = document.getElementById('flSharePdf');
+                    if (pdfShare) {
+                        pdfShare.addEventListener('click', function () {
+                            closeMenu();
+                            buildPdf(function (blob) {
+                                if (!blob) { window.print(); return; }
+                                var file = new File([blob], 'property-flier-' + current + '.pdf', { type: 'application/pdf' });
+                                if (navigator.canShare) {
+                                    if (navigator.canShare({ files: [file] })) {
+                                        navigator.share({ files: [file], title: title, text: title + ' ' + infoUrl() }).catch(function () {});
+                                        return;
+                                    }
+                                }
+                                savePdf(blob);
+                            });
+                        });
+                    }
+
+                    var imgBtn = document.getElementById('flShareImg');
+                    if (imgBtn) {
+                        imgBtn.addEventListener('click', function () {
+                            closeMenu();
+                            renderBlob(function (blob) {
+                                if (!blob) { window.print(); return; }
+                                var file = new File([blob], 'property-flier-' + current + '.png', { type: 'image/png' });
+                                if (navigator.canShare) {
+                                    if (navigator.canShare({ files: [file] })) {
+                                        navigator.share({ files: [file], title: title, text: title + ' - details: ' + infoUrl() }).catch(function () {});
+                                        return;
+                                    }
+                                }
+                                saveBlob(blob);
+                            });
                         });
                     }
                 })();
             </script>
+        </t>
+    </template>
+
+    <!-- ═════════════════════════════════════════════════════════════
+         Page opened when the QR code on a flier is scanned
+         (/property/<id>/info)  - property photo + information
+         ═════════════════════════════════════════════════════════════ -->
+    <template id="property_info_page" name="Property Information (QR page)">
+        <t t-call="website.layout">
+            <t t-set="no_header" t-value="True"/>
+            <t t-set="no_footer" t-value="True"/>
+            <t t-set="head">
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+                <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&amp;family=Playfair+Display:wght@600;700;800&amp;display=swap"/>
+                <link rel="stylesheet" href="/real_estate_management/static/src/css/property_flier.css?v=9"/>
+                <meta property="og:type" content="website"/>
+                <meta property="og:title" t-att-content="p.get('name')"/>
+                <meta property="og:description" t-att-content="p.get('address') or p.get('description') or ''"/>
+                <meta property="og:image" t-att-content="og_image"/>
+                <meta property="og:url" t-att-content="page_url"/>
+            </t>
+
+            <div class="pi-page">
+                <div class="pi-card">
+
+                    <!-- photo -->
+                    <div class="pi-hero">
+                        <img t-att-src="p['image_url']" t-att-alt="p.get('name')"/>
+                        <div class="pi-hero-shade"></div>
+                        <span class="pi-tag" t-out="p.get('status') or 'For Sale'"/>
+                        <div class="pi-hero-txt">
+                            <small t-if="p.get('category')" t-out="p['category']"/>
+                            <h1 t-out="p['name']"/>
+                            <div t-if="p.get('address')" class="pi-addr"><i class="fas fa-location-dot"></i> <t t-out="p['address']"/><t t-if="p.get('zip_code')"> - <t t-out="p['zip_code']"/></t></div>
+                        </div>
+                    </div>
+
+                    <!-- price -->
+                    <div class="pi-price">
+                        <div>
+                            <small>TOTAL VALUE</small>
+                            <b t-out="p.get('price_short') or p['price']"/>
+                        </div>
+                        <div class="pi-price-r" t-if="p.get('price_per_sqft')">
+                            <span t-out="p['price_per_sqft']"/>
+                            <span t-if="p.get('price_per_sqyd')"><t t-out="p['price_per_sqyd']"/>/sq yd</span>
+                        </div>
+                    </div>
+
+                    <!-- facts -->
+                    <div class="pi-facts">
+                        <div t-if="p.get('plot_area') and p['plot_area'] != '0'"><i class="fas fa-ruler-combined"></i><b><t t-out="p['plot_area']"/> Sq.Ft</b><small>Plot Area<t t-if="p.get('area_sqyd')"> (<t t-out="p['area_sqyd']"/> Sq.Yd)</t></small></div>
+                        <div t-if="p.get('facing')"><i class="fas fa-compass"></i><b t-out="p['facing']"/><small>Facing</small></div>
+                        <div t-if="p.get('road_width') and p['road_width'] != '0'"><i class="fas fa-road"></i><b><t t-out="p['road_width']"/> Ft</b><small>Road Width</small></div>
+                        <div t-if="p.get('title_status')"><i class="fas fa-certificate"></i><b t-out="p['title_status']"/><small>Title</small></div>
+                    </div>
+
+                    <!-- gallery -->
+                    <div class="pi-sec" t-if="gallery_all">
+                        <h3><i class="fas fa-images"></i> Photos</h3>
+                        <div class="pi-gallery">
+                            <a t-foreach="gallery_all" t-as="g" t-att-href="g" target="_blank"><img t-att-src="g" alt="Property photo" loading="lazy"/></a>
+                        </div>
+                    </div>
+
+                    <!-- about -->
+                    <div class="pi-sec" t-if="p.get('description') or p.get('overview_html') or p.get('about_html')">
+                        <h3><i class="fas fa-circle-info"></i> About this property</h3>
+                        <p class="pi-desc" t-if="p.get('description')" t-out="p['description']"/>
+                        <div class="pi-rich" t-if="p.get('overview_html')" t-out="p['overview_html']"/>
+                        <div class="pi-rich" t-if="p.get('about_html')" t-out="p['about_html']"/>
+                    </div>
+
+                    <!-- amenities -->
+                    <div class="pi-sec" t-if="p.get('amenities')">
+                        <h3><i class="fas fa-gem"></i> Features &amp; Amenities</h3>
+                        <div class="pi-chips">
+                            <span t-foreach="p['amenities']" t-as="a"><i class="fas fa-check"></i> <t t-out="a"/></span>
+                        </div>
+                    </div>
+
+                    <!-- location -->
+                    <div class="pi-sec" t-if="p.get('landmarks') or p.get('nearby_html') or maps_url">
+                        <h3><i class="fas fa-map-location-dot"></i> Location &amp; Nearby</h3>
+                        <p class="pi-desc" t-if="p.get('landmarks')" t-out="p['landmarks']" style="white-space:pre-line"/>
+                        <div class="pi-rich" t-if="p.get('nearby_html')" t-out="p['nearby_html']"/>
+                        <a t-if="maps_url" t-att-href="maps_url" target="_blank" rel="noopener" class="pi-btn pi-btn-light"><i class="fas fa-location-arrow"></i> View on Google Maps</a>
+                    </div>
+
+                    <!-- chat assistant -->
+                    <div class="pi-sec" id="piChatSec">
+                        <h3><i class="fas fa-comments"></i> Chat with our Assistant</h3>
+                        <div class="pi-chat">
+                            <div class="pi-chat-msgs" id="piChatMessages">
+                                <div class="pi-bubble pi-bot">Hi! Ask me about this property, its location or pricing, or scroll down to register your details.</div>
+                            </div>
+                            <div class="pi-chat-form">
+                                <input type="text" id="piChatInput" placeholder="Type your message..." autocomplete="off" maxlength="500"/>
+                                <button type="button" id="piChatSend" aria-label="Send"><i class="fas fa-paper-plane"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- registration -->
+                    <div class="pi-sec" id="piRegSec">
+                        <h3><i class="fas fa-user-plus"></i> Registration</h3>
+                        <p class="pi-desc">Fill out your details and we will get back to you.</p>
+                        <form id="piRegForm" class="pi-reg" novalidate="novalidate" t-att-data-action="'/property/%s/flier/register' % property.id">
+                            <input type="hidden" name="from_qr" value="1"/>
+                            <div class="pi-fld"><label for="piRegName">Full Name *</label>
+                                <input type="text" id="piRegName" name="full_name" required="required"/><small class="pi-err" data-err="full_name"></small></div>
+                            <div class="pi-fld"><label for="piRegPhone">Phone Number *</label>
+                                <input type="tel" id="piRegPhone" name="phone" required="required"/><small class="pi-err" data-err="phone"></small></div>
+                            <div class="pi-fld"><label for="piRegEmail">Email *</label>
+                                <input type="email" id="piRegEmail" name="email" required="required"/><small class="pi-err" data-err="email"></small></div>
+                            <div class="pi-fld"><label for="piRegAddress">Address *</label>
+                                <input type="text" id="piRegAddress" name="address" required="required"/><small class="pi-err" data-err="address"></small></div>
+                            <div class="pi-fld"><label for="piRegState">State *</label>
+                                <select id="piRegState" name="state_id" required="required">
+                                    <option value="">Select State</option>
+                                    <t t-foreach="states" t-as="st"><option t-att-value="st.id" t-out="st.name"/></t>
+                                </select><small class="pi-err" data-err="state_id"></small></div>
+                            <div class="pi-fld"><label for="piRegCity">City *</label>
+                                <input type="text" id="piRegCity" name="city" required="required"/><small class="pi-err" data-err="city"></small></div>
+                            <div class="pi-fld"><label for="piRegPin">Pincode *</label>
+                                <input type="text" id="piRegPin" name="pincode" inputmode="numeric" maxlength="6" required="required"/><small class="pi-err" data-err="pincode"></small></div>
+                            <div class="pi-reg-msg" id="piRegMsg" role="status"></div>
+                            <button type="submit" class="pi-btn pi-btn-gold pi-reg-submit" id="piRegSubmit">Submit Registration</button>
+                        </form>
+                    </div>
+
+                    <!-- contact -->
+                    <div class="pi-contact">
+                        <div class="pi-contact-h">Interested? Contact</div>
+                        <div class="pi-contact-name" t-if="p.get('contact_name')" t-out="p['contact_name']"/>
+                        <div class="pi-contact-line" t-if="p.get('contact_phone')"><i class="fas fa-phone"></i> <t t-out="p['contact_phone']"/></div>
+                        <div class="pi-contact-line" t-if="p.get('contact_email')"><i class="fas fa-envelope"></i> <t t-out="p['contact_email']"/></div>
+                        <div class="pi-actions">
+                            <a t-if="tel_href" t-att-href="tel_href" class="pi-btn pi-btn-gold"><i class="fas fa-phone-volume"></i> Call now</a>
+                            <a t-if="wa_href" t-att-href="wa_href" target="_blank" rel="noopener" class="pi-btn pi-btn-wa"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+                        </div>
+                    </div>
+
+                    <a t-att-href="'/property/%s' % property.id" class="pi-more">View full property page <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
 
             <script>
                 (function () {
-                    /* ---------- AI chat card ---------- */
+                    /* ---------- chat assistant ---------- */
                     var chatId = <t t-out="chat_property_id"/>;
-                    var msgs = document.getElementById('flChatMessages');
-                    var input = document.getElementById('flChatInput');
-                    var send = document.getElementById('flChatSend');
-
+                    var msgs = document.getElementById('piChatMessages');
+                    var input = document.getElementById('piChatInput');
+                    var send = document.getElementById('piChatSend');
                     function addBubble(role, text, loading) {
                         var b = document.createElement('div');
-                        b.className = 'fl-chat-bubble fl-chat-' + role + (loading ? ' fl-chat-loading' : '');
+                        b.className = 'pi-bubble pi-' + role + (loading ? ' pi-loading' : '');
                         b.textContent = text;
                         msgs.appendChild(b);
                         msgs.scrollTop = msgs.scrollHeight;
@@ -291,13 +841,13 @@
                         fetch('/api/property/' + chatId + '/ask', { method: 'POST', body: fd })
                             .then(function (r) { return r.json(); })
                             .then(function (d) {
-                                wait.classList.remove('fl-chat-loading');
+                                wait.classList.remove('pi-loading');
                                 wait.textContent = d.success ? d.answer : (d.error || 'Sorry, something went wrong.');
-                                if (!d.success) { wait.classList.add('fl-chat-error'); }
+                                if (!d.success) { wait.classList.add('pi-error'); }
                             })
                             .catch(function () {
-                                wait.classList.remove('fl-chat-loading');
-                                wait.classList.add('fl-chat-error');
+                                wait.classList.remove('pi-loading');
+                                wait.classList.add('pi-error');
                                 wait.textContent = 'Sorry, something went wrong. Please try again.';
                             })
                             .then(function () { send.disabled = false; msgs.scrollTop = msgs.scrollHeight; });
@@ -309,15 +859,15 @@
                         });
                     }
 
-                    /* ---------- Registration card ---------- */
-                    var form = document.getElementById('flRegForm');
+                    /* ---------- registration form ---------- */
+                    var form = document.getElementById('piRegForm');
                     if (form) {
-                        var box = document.getElementById('flRegMsg');
-                        var btn = document.getElementById('flRegSubmit');
+                        var box = document.getElementById('piRegMsg');
+                        var btn = document.getElementById('piRegSubmit');
                         function clearErrors() {
-                            form.querySelectorAll('.fl-reg-err').forEach(function (e) { e.textContent = ''; });
-                            form.querySelectorAll('.fl-reg-invalid').forEach(function (e) { e.classList.remove('fl-reg-invalid'); });
-                            box.className = 'fl-reg-msg'; box.textContent = '';
+                            form.querySelectorAll('.pi-err').forEach(function (e) { e.textContent = ''; });
+                            form.querySelectorAll('.pi-invalid').forEach(function (e) { e.classList.remove('pi-invalid'); });
+                            box.className = 'pi-reg-msg'; box.textContent = '';
                         }
                         form.addEventListener('submit', function (ev) {
                             ev.preventDefault();
@@ -328,73 +878,26 @@
                                 .then(function (d) {
                                     if (d.success) {
                                         form.reset();
-                                        box.className = 'fl-reg-msg fl-reg-ok';
+                                        box.className = 'pi-reg-msg pi-ok';
                                         box.textContent = 'Thank you! Your registration (' + d.reference + ') was submitted. We will get back to you soon.';
                                     } else {
-                                        box.className = 'fl-reg-msg fl-reg-bad';
+                                        box.className = 'pi-reg-msg pi-bad';
                                         box.textContent = d.error || 'Could not submit. Please try again.';
                                         Object.keys(d.errors || {}).forEach(function (k) {
                                             var f = form.querySelector('[name="' + k + '"]');
                                             var m = form.querySelector('[data-err="' + k + '"]');
-                                            if (f) { f.classList.add('fl-reg-invalid'); }
+                                            if (f) { f.classList.add('pi-invalid'); }
                                             if (m) { m.textContent = d.errors[k]; }
                                         });
                                     }
                                 })
                                 .catch(function () {
-                                    box.className = 'fl-reg-msg fl-reg-bad';
+                                    box.className = 'pi-reg-msg pi-bad';
                                     box.textContent = 'Network error. Please try again.';
                                 })
                                 .then(function () { btn.disabled = false; btn.textContent = 'Submit Registration'; });
                         });
                     }
-                })();
-            </script>
-
-            <script>
-                (function () {
-                    var wrap = document.getElementById('flShare');
-                    if (!wrap) { return; }
-                    var btn = document.getElementById('flShareBtn');
-                    var menu = document.getElementById('flShareMenu');
-                    var title = wrap.getAttribute('data-title') || 'Property Flier';
-                    var url = window.location.href;
-
-                    document.getElementById('flShareWa').href =
-                        'https://wa.me/?text=' + encodeURIComponent(url);
-                    document.getElementById('flShareMail').href =
-                        'https://mail.google.com/mail/?view=cm&amp;fs=1&amp;su=' + encodeURIComponent(title) +
-                        '&amp;body=' + encodeURIComponent(url);
-
-                    function close() { menu.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); }
-                    btn.addEventListener('click', function (e) {
-                        e.stopPropagation();
-                        var open = menu.classList.toggle('open');
-                        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-                    });
-                    document.addEventListener('click', function (e) { if (!wrap.contains(e.target)) { close(); } });
-                    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { close(); } });
-                    menu.querySelectorAll('a').forEach(function (a) { a.addEventListener('click', close); });
-
-                    var copyBtn = document.getElementById('flShareCopy');
-                    copyBtn.addEventListener('click', function () {
-                        var label = copyBtn.querySelector('span');
-                        function done(ok) {
-                            label.textContent = ok ? 'Link copied!' : 'Copy failed';
-                            setTimeout(function () { label.textContent = 'Copy link'; close(); }, 1200);
-                        }
-                        if (navigator.clipboard &amp;&amp; window.isSecureContext) {
-                            navigator.clipboard.writeText(url).then(function () { done(true); }, function () { done(false); });
-                        } else {
-                            var ta = document.createElement('textarea');
-                            ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
-                            document.body.appendChild(ta); ta.select();
-                            var ok = false;
-                            try { ok = document.execCommand('copy'); } catch (err) {}
-                            document.body.removeChild(ta);
-                            done(ok);
-                        }
-                    });
                 })();
             </script>
         </t>

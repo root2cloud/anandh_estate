@@ -35,6 +35,8 @@ from urllib.parse import urlparse, urlencode
 import requests
 from lxml import html as lxml_html  # bundled with Odoo
 
+from markupsafe import Markup, escape
+
 from odoo import http
 from odoo.http import request
 
@@ -58,6 +60,39 @@ class PropertyFlierController(http.Controller):
             return '₹0.00'
 
     @staticmethod
+    def _money_short(value):
+        """1.25 Cr / 85 Lakh style price used on the flier price badge."""
+        try:
+            v = float(value or 0)
+        except (TypeError, ValueError):
+            return '\u20b90'
+        if v >= 1e7:
+            return '\u20b9%s Cr' % ('{:.2f}'.format(v / 1e7).rstrip('0').rstrip('.'))
+        if v >= 1e5:
+            return '\u20b9%s Lakh' % ('{:.2f}'.format(v / 1e5).rstrip('0').rstrip('.'))
+        return '\u20b9{:,.0f}'.format(v)
+
+    @staticmethod
+    def _landmark_list(text, limit=4):
+        """Nearby-landmarks text -> short list of lines for the poster."""
+        parts = re.split(r'[\n;]+|,\s*(?=[A-Za-z])', text or '')
+        out = []
+        for part in parts:
+            part = re.sub(r'^[\s\-\*\u2022\d\.\)]+', '', part).strip()
+            if part and part not in out:
+                out.append(part)
+        return out[:limit]
+
+    @staticmethod
+    def _maps_url(prop, address):
+        if prop.latitude and prop.longitude:
+            return 'https://www.google.com/maps?q=%s,%s' % (prop.latitude, prop.longitude)
+        query = ', '.join(filter(None, [address, prop.zip_code]))
+        if query:
+            return 'https://www.google.com/maps/search/?api=1&' + urlencode({'query': query})
+        return ''
+
+    @staticmethod
     def _clean_landmarks(text):
         """Hide placeholder values such as 'To be updated' on the flier."""
         text = (text or '').strip()
@@ -66,21 +101,97 @@ class PropertyFlierController(http.Controller):
         return text
 
     @staticmethod
-    def _qr_data_uri(value):
-        """QR code embedded as a data URI (no extra request, works when printing/PNG)."""
+    def _qr_png(value, size=300):
+        """PNG bytes of a QR code (Odoo's own barcode renderer) or None."""
         try:
-            png = request.env['ir.actions.report'].sudo().barcode('QR', value, width=200, height=200)
-            return 'data:image/png;base64,' + base64.b64encode(png).decode()
+            return request.env['ir.actions.report'].sudo().barcode(
+                'QR', value, width=size, height=size)
         except Exception as e:
-            _logger.warning('Flier: QR generation failed (%s)', e)
-            return '/report/barcode/?' + urlencode({
-                'barcode_type': 'QR', 'value': value, 'width': 200, 'height': 200})
+            _logger.warning('Flier: server-side QR generation failed (%s)', e)
+            return None
+
+    @classmethod
+    def _qr_data_uri(cls, value):
+        """
+        QR code embedded as a data URI. Returns '' when the server cannot draw it;
+        the flier page then draws the same QR in the browser (data-qr attribute).
+        """
+        png = cls._qr_png(value, 200)
+        return ('data:image/png;base64,' + base64.b64encode(png).decode()) if png else ''
+
+    @staticmethod
+    def _public_base(default_base):
+        """
+        Address printed inside the QR code. Set the system parameter
+        `real_estate.flier_public_url` (e.g. http://16.192.24.205:8098 or your domain)
+        so the QR opens from any phone; otherwise the address of the current request is used.
+        """
+        custom = request.env['ir.config_parameter'].sudo().get_param('real_estate.flier_public_url')
+        return (custom or default_base or '').strip().rstrip('/')
 
     def _selection_label(self, prop, field_name):
         value = prop[field_name]
         if not value:
             return ''
         return dict(prop._fields[field_name]._description_selection(prop.env)).get(value, value)
+
+    @staticmethod
+    def _usable_html(value):
+        """True when an AI Html field holds real content (not empty / placeholder)."""
+        text = (value or '').strip() if not hasattr(value, 'striptags') else value.striptags().strip()
+        return bool(text) and 'Information not available' not in text
+
+    @staticmethod
+    def _bullets(items):
+        items = [i for i in items if i]
+        if not items:
+            return ''
+        return Markup('<ul>%s</ul>') % Markup('').join(
+            Markup('<li>%s</li>') % escape(i) for i in items)
+
+    def _fallback_overview_html(self, prop):
+        """
+        Overview built only from the property's own saved fields. Used when
+        the AI highlights have not been generated (yet) so that EVERY flier
+        shows its own property information.
+        """
+        category = prop.category_id.name if prop.category_id else ''
+        items = []
+        if category and prop.city:
+            items.append('%s property located in %s.' % (category, prop.city))
+        elif prop.city:
+            items.append('Property located in %s.' % prop.city)
+        if prop.plot_area:
+            line = 'Plot area of {:g} sq ft'.format(prop.plot_area)
+            facing = self._selection_label(prop, 'facing_direction')
+            if facing:
+                line += ', %s facing' % facing
+            items.append(line + '.')
+        title = self._selection_label(prop, 'title_status')
+        if title:
+            items.append('Title status: %s.' % title)
+        if prop.road_width:
+            items.append('{:g} ft wide approach road.'.format(prop.road_width))
+        if prop.price:
+            line = 'Priced at %s' % self._money(prop.price)
+            if prop.price_per_sqft:
+                line += ' (\u20b9{:,.0f} per sq ft)'.format(prop.price_per_sqft)
+            items.append(line + '.')
+        if prop.gated_community:
+            items.append('Located in a gated community.')
+        if prop.emi_available:
+            items.append('EMI facility available.')
+        return self._bullets(items)
+
+    def _fallback_nearby_html(self, prop, address):
+        """Location block used when no landmarks and no AI nearby-places exist."""
+        where = ', '.join(filter(None, [address, prop.zip_code]))
+        if not where:
+            return ''
+        return self._bullets([
+            'Located at %s.' % where,
+            'Contact the listing agent below for details of nearby schools, hospitals and transit.',
+        ])
 
     def _flier_data_from_record(self, prop, base_url):
         """Build the plain dict the flier template renders, from a DB record."""
@@ -103,6 +214,16 @@ class PropertyFlierController(http.Controller):
         for att in prop.gallery_image_ids[:3]:
             gallery.append('%s/web/image/ir.attachment/%s/datas' % (base_url, att.id))
 
+        landmarks = self._clean_landmarks(prop.nearby_landmarks)
+
+        overview_html = prop.ai_key_highlights if self._usable_html(prop.ai_key_highlights) else ''
+        if not overview_html and not (prop.short_description or '').strip():
+            overview_html = self._fallback_overview_html(prop)
+
+        nearby_html = prop.ai_nearby_places if self._usable_html(prop.ai_nearby_places) else ''
+        if not nearby_html and not landmarks:
+            nearby_html = self._fallback_nearby_html(prop, address)
+
         return {
             'id': prop.id,
             'name': prop.name or '',
@@ -118,11 +239,22 @@ class PropertyFlierController(http.Controller):
             'status': self._selection_label(prop, 'status'),
             'rating': int(prop.rating or 0),
             'description': prop.short_description or '',
-            'landmarks': self._clean_landmarks(prop.nearby_landmarks),
+            'landmarks': landmarks,
+            # ---- poster (reference-style flier) extras ----
+            'price_short': self._money_short(prop.price),
+            'city': prop.city or '',
+            'state': prop.state_id.name if prop.state_id else '',
+            'area_sqyd': '{:,.0f}'.format((prop.plot_area or 0) / 9.0) if prop.plot_area else '',
+            'area_sqft': '{:,.0f}'.format(prop.plot_area or 0) if prop.plot_area else '',
+            'price_per_sqyd': '\u20b9{:,.0f}'.format((prop.price_per_sqft or 0) * 9.0) if prop.price_per_sqft else '',
+            'landmark_list': self._landmark_list(landmarks),
+            'maps_url': self._maps_url(prop, address),
+            'registration_pct': '{:g}'.format(prop.registration_charges or 0),
+            'emi': bool(prop.emi_available),
             # rich sections shown on the detail page (Html fields -> Markup)
-            'overview_html': prop.ai_key_highlights or '',
+            'overview_html': overview_html,
             'about_html': prop.detailed_description or '',
-            'nearby_html': prop.ai_nearby_places or '',
+            'nearby_html': nearby_html,
             'amenities': amenities,
             'contact_name': prop.contact_name or '',
             'contact_phone': prop.contact_phone or '',
@@ -289,23 +421,29 @@ class PropertyFlierController(http.Controller):
         if not qr_link:
             qr_link = data['property_url']
 
-        qr_src = self._qr_data_uri(qr_link)
+        # QR on the poster -> public "property information" page (photo + details)
+        shown_id = data['id'] if data.get('source') == 'local' else prop.id
+        info_url = '%s/property/%s/info' % (self._public_base(base_url), shown_id)
+        qr_target = qr_link if ref else info_url
+        qr_src = self._qr_data_uri(qr_target)
+        map_link = data.get('maps_url') or qr_target
 
-        # the AI chat card asks about the property shown on the flier; when the
-        # flier was loaded from another site, fall back to the current property
-        chat_property_id = data['id'] if data.get('source') == 'local' else prop.id
+        # which of the 4 flier styles is shown (1-4); also used by shared links
+        design = str(kwargs.get('design') or '1')
+        if design not in ('1', '2', '3', '4'):
+            design = '1'
 
         return request.render('real_estate_management.property_flier_page', {
+            'design': design,
             'property': prop,
             'flier': data,
             'ref': ref,
             'ref_message': message,
             'qr_link': qr_link,
             'qr_src': qr_src,
+            'map_link': map_link,
+            'info_url': qr_target,
             'default_reference': DEFAULT_REFERENCE_LINK,
-            # ---- registration + chat cards (below the flier) ----
-            'states': self._get_states(),
-            'chat_property_id': chat_property_id,
         })
 
     # ─────────────────────────────────────────────────────────────
@@ -362,8 +500,28 @@ class PropertyFlierController(http.Controller):
             return self._json({'success': False, 'errors': errors,
                                'error': 'Please correct the highlighted fields.'})
 
+        # 1) the "Flyer Property Registrations" record shown in the backend
         try:
-            reg = request.env['customer.registration'].sudo().create({
+            flier_reg = request.env['flier.registration'].sudo().create({
+                'property_id': prop.id,
+                'customer_name': name,
+                'phone': phone,
+                'email': email,
+                'address': address,
+                'city': city,
+                'state_id': int(state_raw),
+                'zip_code': pincode,
+                'source': 'qr' if post.get('from_qr') else 'flier',
+                'status': 'new',
+            })
+        except Exception:
+            _logger.exception('Flier: registration failed')
+            return self._json({'success': False,
+                               'error': 'Something went wrong. Please try again.'})
+
+        # 2) keep the existing customer-registration request (approval workflow) as before
+        try:
+            cust = request.env['customer.registration'].sudo().create({
                 'customer_name': name,
                 'email': email,
                 'phone': phone,
@@ -372,14 +530,15 @@ class PropertyFlierController(http.Controller):
                 'state_id': int(state_raw),
                 'zip_code': pincode,
                 'interested_in': 'buy',
-                'notes': 'Registered from the flier of "%s" (property ID %s).' % (prop.name, prop.id),
+                'notes': 'Registered from the flier of "%s" (property ID %s). Flyer registration: %s.'
+                         % (prop.name, prop.id, flier_reg.name),
                 'status': 'submitted',
             })
-            return self._json({'success': True, 'reference': reg.name})
+            flier_reg.customer_registration_id = cust.id
         except Exception:
-            _logger.exception('Flier: registration failed')
-            return self._json({'success': False,
-                               'error': 'Something went wrong. Please try again.'})
+            _logger.exception('Flier: customer registration copy failed (flyer registration was saved)')
+
+        return self._json({'success': True, 'reference': flier_reg.name})
 
     @http.route('/api/property/<int:property_id>/flier-data', type='http', auth='public',
                 website=True, methods=['GET'], csrf=False)
@@ -394,3 +553,54 @@ class PropertyFlierController(http.Controller):
             json.dumps(result),
             headers=[('Content-Type', 'application/json'),
                      ('Cache-Control', 'no-cache, no-store')])
+
+    # ─────────────────────────────────────────────────────────────
+    # QR landing page: what opens when the flier's QR code is scanned
+    # ─────────────────────────────────────────────────────────────
+    @http.route('/property/<int:property_id>/info', type='http', auth='public', website=True)
+    def property_info_page(self, property_id, **kwargs):
+        prop = request.env['property.property'].sudo().browse(property_id)
+        if not prop.exists() or not prop.is_published:
+            return request.not_found()
+
+        base_url = request.httprequest.host_url.rstrip('/')
+        # relative image URLs -> they work on whatever address the phone used to open the page
+        data = self._flier_data_from_record(prop, '')
+        gallery_all = ['/web/image/ir.attachment/%s/datas' % att.id for att in prop.gallery_image_ids]
+
+        digits = re.sub(r'\D', '', data.get('contact_phone') or '')
+        if len(digits) == 10:
+            digits = '91' + digits
+        page_url = '%s/property/%s/info' % (self._public_base(base_url), prop.id)
+        wa_text = 'Hi, I am interested in "%s" (%s).' % (prop.name, page_url)
+
+        return request.render('real_estate_management.property_info_page', {
+            'property': prop,
+            'p': data,
+            'gallery_all': gallery_all,
+            'tel_href': ('tel:+%s' % digits) if digits else '',
+            'wa_href': ('https://wa.me/%s?%s' % (digits, urlencode({'text': wa_text}))) if digits else '',
+            'maps_url': self._maps_url(prop, data.get('address')),
+            'og_image': '%s/web/image/property.property/%s/image' % (base_url, prop.id),
+            'page_url': page_url,
+            # chat assistant + registration form shown on this page
+            'states': self._get_states(),
+            'chat_property_id': prop.id,
+        })
+
+    @http.route('/property/<int:property_id>/qr.png', type='http', auth='public', website=True)
+    def property_qr_image(self, property_id, **kwargs):
+        """Downloadable QR code image of a property (opens its information page)."""
+        prop = request.env['property.property'].sudo().browse(property_id)
+        if not prop.exists() or not prop.is_published:
+            return request.not_found()
+        url = '%s/property/%s/info' % (
+            self._public_base(request.httprequest.host_url.rstrip('/')), prop.id)
+        png = self._qr_png(url, 500)
+        if not png:
+            return request.not_found()
+        return request.make_response(png, headers=[
+            ('Content-Type', 'image/png'),
+            ('Content-Disposition', 'inline; filename="property-%s-qr.png"' % prop.id),
+            ('Cache-Control', 'public, max-age=3600'),
+        ])

@@ -892,6 +892,16 @@ class Property(models.Model):
         return True
 
     @api.model
+    def _cron_generate_missing_ai_content(self):
+        """Entry point called by the scheduled action in data/ai_content_cron.xml.
+
+        The scheduled action calls model._cron_generate_missing_ai_content(),
+        but only cron_generate_pending_ai_content() existed, so the nightly job
+        failed every time and properties never got their AI overview / nearby
+        places. This wrapper makes the scheduled action work."""
+        return self.cron_generate_pending_ai_content(batch_size=10)
+
+    @api.model
     def get_city_investment_info(self, city_name):
         """Generate city investment info using FREE Google Gemini API"""
         if not city_name:

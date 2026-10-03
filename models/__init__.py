@@ -8,3 +8,4 @@ from . import agent_registration
 from . import customer_registration
 from . import res_partner
 from . import dashboard_models
+from . import flier_registration

@@ -38,6 +38,7 @@ A complete real estate management platform with:
         'views/website_menu.xml',
         'views/property_registration_views.xml',
         'views/customer_registration_views.xml',
+        'views/flier_registration_views.xml',
         'views/customer_views.xml',
         'views/agent_views.xml',
         'views/agent_registration_views.xml',

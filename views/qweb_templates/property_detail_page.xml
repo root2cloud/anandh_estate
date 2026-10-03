@@ -122,11 +122,13 @@
                                                 </div>
                                             </div>
                                             <div class="share-save-block">
-                                                <!-- NEW: Create a Flier (left of Share) -->
-                                                <a t-att-href="'/property/%s/flier' % property.id" class="btn-icon btn-create-flier" target="_blank">
-                                                    <i class="fas fa-file-image"></i>
-                                                    <span>Create a Flier</span>
-                                                </a>
+                                                <!-- Create a Flier (left of Share) - visible to administrators only -->
+                                                <t t-if="request.env.user.has_group('base.group_system')">
+                                                    <a t-att-href="'/property/%s/flier' % property.id" class="btn-icon btn-create-flier" target="_blank">
+                                                        <i class="fas fa-file-image"></i>
+                                                        <span>Create a Flier</span>
+                                                    </a>
+                                                </t>
                                                 <button class="btn-icon" onclick="toggleShareMenu(event)">
                                                     <i class="fas fa-share-alt"></i>
                                                     <span>Share</span>
