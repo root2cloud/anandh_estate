@@ -687,6 +687,7 @@
                 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&amp;family=Playfair+Display:wght@600;700;800&amp;display=swap"/>
                 <link rel="stylesheet" href="/real_estate_management/static/src/css/property_flier.css?v=9"/>
                 <meta property="og:type" content="website"/>
+                <style>header#top, .o_frontend_to_backend_nav, .o_frontend_to_backend_apps_menu, .o_frontend_to_backend_edit_btn, #oe_main_menu_navbar { display: none !important; } html { scrollbar-width: none; } html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }</style>
                 <meta property="og:title" t-att-content="p.get('name')"/>
                 <meta property="og:description" t-att-content="p.get('address') or p.get('description') or ''"/>
                 <meta property="og:image" t-att-content="og_image"/>
