@@ -557,6 +557,36 @@ class PropertyFlierController(http.Controller):
     # ─────────────────────────────────────────────────────────────
     # QR landing page: what opens when the flier's QR code is scanned
     # ─────────────────────────────────────────────────────────────
+    _INFO_PAGE_CSS = (
+        '<style id="pi-no-chrome">'
+        'header#top, #ai-news-ticker-box, .o_frontend_to_backend_nav, '
+        '.o_frontend_to_backend_apps_menu, .o_frontend_to_backend_edit_btn, '
+        '#oe_main_menu_navbar { display: none !important; } '
+        'html { scrollbar-width: none; } '
+        'html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }'
+        '</style>'
+    )
+
+    def _render_info_without_chrome(self, values):
+        """Render the QR landing page for EVERYONE (public visitors and admins) without the
+        site navbar, the red TRENDING ticker, the admin corner icon or the scrollbar.
+        Done in Python so it does not depend on cached views/CSS or on a module upgrade."""
+        response = request.render('real_estate_management.property_info_page', values)
+        try:
+            body = response.render()
+            if isinstance(body, bytes):
+                body = body.decode('utf-8')
+            body = str(body)
+            if '</head>' in body:
+                body = body.replace('</head>', self._INFO_PAGE_CSS + '</head>', 1)
+            return request.make_response(body, headers=[
+                ('Content-Type', 'text/html; charset=utf-8'),
+                ('Cache-Control', 'no-cache'),
+            ])
+        except Exception:
+            _logger.exception('Info page: could not strip site chrome, serving normal page')
+            return response
+
     @http.route('/property/<int:property_id>/info', type='http', auth='public', website=True)
     def property_info_page(self, property_id, **kwargs):
         prop = request.env['property.property'].sudo().browse(property_id)
@@ -574,7 +604,7 @@ class PropertyFlierController(http.Controller):
         page_url = '%s/property/%s/info' % (self._public_base(base_url), prop.id)
         wa_text = 'Hi, I am interested in "%s" (%s).' % (prop.name, page_url)
 
-        return request.render('real_estate_management.property_info_page', {
+        return self._render_info_without_chrome({
             'property': prop,
             'p': data,
             'gallery_all': gallery_all,
