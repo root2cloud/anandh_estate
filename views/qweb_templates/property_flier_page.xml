@@ -515,7 +515,7 @@
                                 .catch(function () { done(null); });
                         }
                         if (window.htmlToImage) {
-                            window.htmlToImage.toBlob(node, { pixelRatio: 2, cacheBust: true })
+                            window.htmlToImage.toBlob(node, { pixelRatio: 2, cacheBust: true, width: node.offsetWidth, height: node.offsetHeight, style: { margin: '0', maxWidth: 'none', transform: 'none', boxShadow: 'none', borderRadius: '0' } })
                                 .then(function (b) { if (b) { done(b); } else { viaCanvas(); } })
                                 .catch(viaCanvas);
                         } else {
