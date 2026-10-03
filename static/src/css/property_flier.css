@@ -589,3 +589,13 @@ a.btn-icon.btn-create-flier:hover {
 
 /* clickable QR code (works inside printed / saved PDFs too) */
 a.fl-qr-link { display: block; line-height: 0; text-decoration: none; color: inherit; }
+
+/* QR info page: hide site chrome */
+body:has(.pi-page) header#top,
+body:has(.pi-page) #ai-news-ticker-box,
+body:has(.pi-page) .o_frontend_to_backend_nav,
+body:has(.pi-page) .o_frontend_to_backend_apps_menu,
+body:has(.pi-page) .o_frontend_to_backend_edit_btn,
+body:has(.pi-page) #oe_main_menu_navbar { display: none !important; }
+html:has(.pi-page) { scrollbar-width: none; }
+html:has(.pi-page)::-webkit-scrollbar, body:has(.pi-page)::-webkit-scrollbar { display: none; }
