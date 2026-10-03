@@ -423,6 +423,7 @@ class Property(models.Model):
             'Content-Type': 'application/json'
         }
 
+        gemini_model = self.env['ir.config_parameter'].sudo().get_param('gemini.model', 'gemini-3.6-flash')
         payload = {
             'contents': [
                 {'parts': [{'text': prompt}]}
@@ -430,14 +431,9 @@ class Property(models.Model):
             'systemInstruction': {
                 'parts': [{'text': 'You are a real estate analyst. Return only JSON.'}]
             },
-            'generationConfig': {
-                'temperature': 0.3,
-                'maxOutputTokens': 2500,
-                'responseMimeType': 'application/json'
-            }
+            'generationConfig': self._json_generation_config(gemini_model, 8192),
         }
 
-        gemini_model = self.env['ir.config_parameter'].sudo().get_param('gemini.model', 'gemini-3.6-flash')
         gemini_url = (
             'https://generativelanguage.googleapis.com/v1beta/models/'
             f'{gemini_model}:generateContent?key={api_key}'
@@ -450,7 +446,7 @@ class Property(models.Model):
                 gemini_url,
                 headers=headers,
                 payload=payload,
-                timeout=30
+                timeout=90
             )
 
             _logger.info(f"📥 Response status: {response.status_code}")
@@ -461,7 +457,11 @@ class Property(models.Model):
                 return False
 
             response_data = response.json()
-            response_text = response_data['candidates'][0]['content']['parts'][0]['text'].strip()
+            candidate = response_data['candidates'][0]
+            finish_reason = candidate.get('finishReason', '')
+            response_text = candidate['content']['parts'][0]['text'].strip()
+            if finish_reason == 'MAX_TOKENS':
+                _logger.warning("Gemini output hit maxOutputTokens for %s", self.name)
 
             # Clean JSON
             if response_text.startswith('```'):
@@ -475,7 +475,8 @@ class Property(models.Model):
             except json.JSONDecodeError as e:
                 _logger.error(f"JSON parse error: {e}\nResponse: {response_text}")
                 snippet = response_text[:300] if response_text else '(empty response)'
-                self.write({'ai_last_error': f"Could not parse AI response as JSON: {e}. Raw output: {snippet}"})
+                reason = 'Response was cut off (token limit)' if finish_reason == 'MAX_TOKENS' else 'Could not parse AI response as JSON'
+                self.write({'ai_last_error': f"{reason}: {e}. Raw output: {snippet}"})
                 return False
 
             # Convert to HTML — handles both flat lists (simple sections) and
@@ -548,6 +549,23 @@ class Property(models.Model):
         if extras:
             block += "\n\nADDITIONAL LISTING NOTES:\n" + "\n".join(f"- {e}" for e in extras)
         return block
+
+    @staticmethod
+    def _json_generation_config(model_name, max_tokens=8192):
+        """Config for structured-JSON generation. Thinking tokens count against
+        maxOutputTokens, so thinking is minimised and the limit is generous;
+        otherwise the JSON gets cut off mid-string."""
+        config = {
+            'temperature': 0.3,
+            'maxOutputTokens': max_tokens,
+            'responseMimeType': 'application/json',
+        }
+        name = (model_name or '').lower()
+        if 'gemini-2.5' in name and 'pro' not in name:
+            config['thinkingConfig'] = {'thinkingBudget': 0}
+        elif name.startswith('gemini-3'):
+            config['thinkingConfig'] = {'thinkingLevel': 'low'}
+        return config
 
     @staticmethod
     def _qa_generation_config(model_name):
@@ -954,6 +972,7 @@ class Property(models.Model):
             'Content-Type': 'application/json'
         }
 
+        gemini_model = self.env['ir.config_parameter'].sudo().get_param('gemini.model', 'gemini-3.6-flash')
         payload = {
             'contents': [
                 {'parts': [{'text': prompt}]}
@@ -961,14 +980,9 @@ class Property(models.Model):
             'systemInstruction': {
                 'parts': [{'text': 'You are a real estate analyst. Return only JSON.'}]
             },
-            'generationConfig': {
-                'temperature': 0.3,
-                'maxOutputTokens': 1500,
-                'responseMimeType': 'application/json'
-            }
+            'generationConfig': self._json_generation_config(gemini_model, 4096),
         }
 
-        gemini_model = self.env['ir.config_parameter'].sudo().get_param('gemini.model', 'gemini-3.6-flash')
         gemini_url = (
             'https://generativelanguage.googleapis.com/v1beta/models/'
             f'{gemini_model}:generateContent?key={api_key}'
@@ -994,7 +1008,7 @@ class Property(models.Model):
                 gemini_url,
                 headers=headers,
                 payload=payload,
-                timeout=30
+                timeout=90
             )
 
             if response.status_code != 200:
