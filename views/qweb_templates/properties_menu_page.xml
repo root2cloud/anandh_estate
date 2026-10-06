@@ -1,208 +1,9 @@
 <odoo>
     <template id="property_listing_template" name="Luxury Property Listing Page (Black + Gold)">
         <t t-call="website.layout">
-        <main class="main-container">
-
-            <!-- 🏡 Hero Section -->
-            <section class="hero-section">
-                <div class="hero-overlay"/>
-                <div class="hero-content">
-                    <h1>Find Your Dream Property</h1>
-                    <p>Luxury homes, villas, and premium plots — curated just for you.</p>
-                    <a href="#properties" class="explore-btn">Explore Now</a>
-                </div>
-            </section>
-
-            <!-- 🎯 "Interested In" Context Banner -->
-            <!-- Shown when the customer arrived here from the Customer
-                 Dashboard "Add New Property" chooser after picking
-                 Buying / Renting / Investment instead of Selling. -->
-            <t t-if="interested_in and interested_in != 'sell'">
-                <section class="interest-context-banner">
-                    <div class="interest-context-inner">
-                        <span class="interest-context-icon">
-                            <i t-attf-class="fa {{'fa-shopping-cart' if interested_in == 'buy' else ('fa-key' if interested_in == 'rent' else 'fa-line-chart')}}"/>
-                        </span>
-                        <span class="interest-context-text">
-                            Showing properties for
-                            <strong t-esc="{'buy': 'Buying', 'rent': 'Renting', 'invest': 'Investment'}.get(interested_in, 'You')"/>
-                            <t t-if="exclude_own"> — your own listed properties are excluded.</t>
-                        </span>
-                        <a href="/properties" class="interest-context-clear">
-                            <i class="fa fa-times me-1"/> Clear
-                        </a>
-                    </div>
-                </section>
-            </t>
-
-            <!-- 🔍 Search Section -->
-            <!-- ⭐ FIX: the search card normally has a negative top-margin so
-                 it "floats up" over the hero section. When the banner above
-                 is present, that same negative margin pulled the search
-                 card up over the banner text and hid it. Now the pull-up
-                 only happens when the banner is NOT there; the banner
-                 itself gets the pull-up treatment instead, so there's
-                 never any overlap either way. -->
-            <section t-attf-class="search-section #{'search-section-after-banner' if interested_in and interested_in != 'sell' else ''}">
-                <div class="search-card">
-                    <form method="get" action="/properties" class="search-form">
-
-                        <!-- Preserve the "Interested In" context across searches -->
-                        <input type="hidden" name="interested_in" t-att-value="interested_in"/>
-                        <input type="hidden" name="exclude_own" t-att-value="exclude_own"/>
-
-                        <div class="input-group">
-                            <label>Search</label>
-                            <input type="text" name="search" placeholder="Name, Location, ZIP" t-att-value="search"/>
-                        </div>
-
-                        <div class="input-group">
-                            <label>City</label>
-                            <input type="text" name="city" placeholder="Enter city" t-att-value="city"/>
-                        </div>
-
-                        <div class="input-group">
-                            <label>ZIP</label>
-                            <input type="text" name="zip_code" placeholder="Enter ZIP" t-att-value="zip_code"/>
-                        </div>
-
-                        <div class="input-group">
-                            <label>Rating</label>
-                            <select name="rating">
-                                <option value="" t-att-selected="'selected' if not rating else None">Any Rating</option>
-                                <option value="5" t-att-selected="'selected' if rating=='5' else None">5 Stars</option>
-                                <option value="4" t-att-selected="'selected' if rating=='4' else None">4 Stars &amp; Up</option>
-                                <option value="3" t-att-selected="'selected' if rating=='3' else None">3 Stars &amp; Up</option>
-                                <option value="2" t-att-selected="'selected' if rating=='2' else None">2 Stars &amp; Up</option>
-                                <option value="1" t-att-selected="'selected' if rating=='1' else None">1 Star &amp; Up</option>
-                            </select>
-                        </div>
-
-                        <div class="search-btn-wrap">
-                            <button type="submit" class="search-btn">
-                                <i class="fa fa-search me-1"></i>
-                                Search
-                            </button>
-                        </div>
-                    </form>
-
-                    <div class="back-wrap">
-                        <a href="/" class="back-btn">
-                            <i class="fa fa-arrow-left"/>
-                            Back to Home Page
-                        </a>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 🏘 Property Listing Section -->
-            <section id="properties" class="property-section">
-                <div class="property-container">
-
-                    <t t-if="properties">
-                        <div class="property-grid">
-                            <t t-foreach="properties" t-as="prop">
-                                <article class="property-card fade-in">
-
-                                    <!-- ⭐ Property Image with STATUS RIBBON -->
-                                    <div class="property-image-wrapper">
-                                        <div class="property-image">
-                                            <img t-if="prop['image_url']" t-att-src="prop['image_url']" alt="Property Image"/>
-                                            <img t-else="" src="/web/static/img/placeholder.png" alt="No Image"/>
-                                        </div>
-
-                                        <!-- ⭐ STATUS RIBBON -->
-                                        <div class="status-ribbon-wrapper">
-                                            <t t-if="prop.get('status') == 'available'">
-                                                <span class="status-ribbon ribbon-available">
-                                                    <i class="fa fa-check-circle"></i> AVAILABLE
-                                                </span>
-                                            </t>
-
-                                            <t t-elif="prop.get('status') == 'sold'">
-                                                <span class="status-ribbon ribbon-sold">
-                                                    <i class="fa fa-tag"></i> SOLD
-                                                </span>
-                                            </t>
-
-                                            <t t-elif="prop.get('status') == 'rented'">
-                                                <span class="status-ribbon ribbon-rented">
-                                                    <i class="fa fa-key"></i> RENTED
-                                                </span>
-                                            </t>
-                                        </div>
-
-                                        <!-- Luxury Image Overlay -->
-                                        <div class="image-glow"/>
-                                    </div>
-
-                                    <!-- Property Info -->
-                                    <div class="property-info">
-                                        <div class="property-top">
-                                            <h3 class="property-name" t-esc="prop['name']"/>
-                                            <p class="category">
-                                                <i class="fa fa-tags"></i>
-                                                <t t-esc="prop['category']"/>
-                                            </p>
-                                            <div class="property-rating" t-raw="prop['rating_html']"/>
-                                        </div>
-
-                                        <div class="property-price">
-                                            <span class="currency">₹</span>
-                                            <span class="amount">
-                                                <t t-esc="prop['price']"/>
-                                            </span>
-                                        </div>
-
-                                        <div class="meta">
-                                            <div class="meta-row">
-                                                <span class="meta-label">Plot Area</span>
-                                                <span class="meta-value">
-                                                    <t t-esc="prop['plot_area']"/> sq.ft
-                                                </span>
-                                            </div>
-
-                                            <div class="meta-row">
-                                                <span class="meta-label">Price / Sq.Ft</span>
-                                                <span class="meta-value">
-                                                    ₹ <t t-esc="prop['price_per_sqft']"/>
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        <p class="location">
-                                            <i class="fa fa-map-marker-alt"></i>
-                                            <t t-esc="prop['city']"/> - <t t-esc="prop['zip_code']"/>
-                                        </p>
-
-                                        <a t-att-href="'/property/' + str(prop['id'])" class="view-btn">
-                                            View Details
-                                            <i class="fa fa-arrow-right ms-1"></i>
-                                        </a>
-                                    </div>
-
-                                </article>
-                            </t>
-                        </div>
-                    </t>
-
-                    <t t-if="not properties or not len(properties)">
-                        <div class="empty-state">
-                            <div class="empty-icon">
-                                <i class="fa fa-home"></i>
-                            </div>
-                            <p class="no-results">No properties found matching your criteria.</p>
-                            <p class="no-results-sub">Try adjusting your search filters and search again.</p>
-                        </div>
-                    </t>
-
-                </div>
-            </section>
-
-        </main>
-
-        <!-- 💎 Luxury Black + Gold CSS -->
-        <style>
+        <!-- 💎 Luxury Black + Gold CSS (in <head> so the page never shows unstyled while loading) -->
+        <t t-set="head">
+            <style>
             /* ==============================
                💎 Luxury Black + Gold Theme
             ============================== */
@@ -766,6 +567,208 @@
                 .property-image { height: 220px; }
             }
         </style>
+        </t>
+        <main class="main-container">
+
+            <!-- 🏡 Hero Section -->
+            <section class="hero-section">
+                <div class="hero-overlay"/>
+                <div class="hero-content">
+                    <h1>Find Your Dream Property</h1>
+                    <p>Luxury homes, villas, and premium plots — curated just for you.</p>
+                    <a href="#properties" class="explore-btn">Explore Now</a>
+                </div>
+            </section>
+
+            <!-- 🎯 "Interested In" Context Banner -->
+            <!-- Shown when the customer arrived here from the Customer
+                 Dashboard "Add New Property" chooser after picking
+                 Buying / Renting / Investment instead of Selling. -->
+            <t t-if="interested_in and interested_in != 'sell'">
+                <section class="interest-context-banner">
+                    <div class="interest-context-inner">
+                        <span class="interest-context-icon">
+                            <i t-attf-class="fa {{'fa-shopping-cart' if interested_in == 'buy' else ('fa-key' if interested_in == 'rent' else 'fa-line-chart')}}"/>
+                        </span>
+                        <span class="interest-context-text">
+                            Showing properties for
+                            <strong t-esc="{'buy': 'Buying', 'rent': 'Renting', 'invest': 'Investment'}.get(interested_in, 'You')"/>
+                            <t t-if="exclude_own"> — your own listed properties are excluded.</t>
+                        </span>
+                        <a href="/properties" class="interest-context-clear">
+                            <i class="fa fa-times me-1"/> Clear
+                        </a>
+                    </div>
+                </section>
+            </t>
+
+            <!-- 🔍 Search Section -->
+            <!-- ⭐ FIX: the search card normally has a negative top-margin so
+                 it "floats up" over the hero section. When the banner above
+                 is present, that same negative margin pulled the search
+                 card up over the banner text and hid it. Now the pull-up
+                 only happens when the banner is NOT there; the banner
+                 itself gets the pull-up treatment instead, so there's
+                 never any overlap either way. -->
+            <section t-attf-class="search-section #{'search-section-after-banner' if interested_in and interested_in != 'sell' else ''}">
+                <div class="search-card">
+                    <form method="get" action="/properties" class="search-form">
+
+                        <!-- Preserve the "Interested In" context across searches -->
+                        <input type="hidden" name="interested_in" t-att-value="interested_in"/>
+                        <input type="hidden" name="exclude_own" t-att-value="exclude_own"/>
+
+                        <div class="input-group">
+                            <label>Search</label>
+                            <input type="text" name="search" placeholder="Name, Location, ZIP" t-att-value="search"/>
+                        </div>
+
+                        <div class="input-group">
+                            <label>City</label>
+                            <input type="text" name="city" placeholder="Enter city" t-att-value="city"/>
+                        </div>
+
+                        <div class="input-group">
+                            <label>ZIP</label>
+                            <input type="text" name="zip_code" placeholder="Enter ZIP" t-att-value="zip_code"/>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Rating</label>
+                            <select name="rating">
+                                <option value="" t-att-selected="'selected' if not rating else None">Any Rating</option>
+                                <option value="5" t-att-selected="'selected' if rating=='5' else None">5 Stars</option>
+                                <option value="4" t-att-selected="'selected' if rating=='4' else None">4 Stars &amp; Up</option>
+                                <option value="3" t-att-selected="'selected' if rating=='3' else None">3 Stars &amp; Up</option>
+                                <option value="2" t-att-selected="'selected' if rating=='2' else None">2 Stars &amp; Up</option>
+                                <option value="1" t-att-selected="'selected' if rating=='1' else None">1 Star &amp; Up</option>
+                            </select>
+                        </div>
+
+                        <div class="search-btn-wrap">
+                            <button type="submit" class="search-btn">
+                                <i class="fa fa-search me-1"></i>
+                                Search
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="back-wrap">
+                        <a href="/" class="back-btn">
+                            <i class="fa fa-arrow-left"/>
+                            Back to Home Page
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 🏘 Property Listing Section -->
+            <section id="properties" class="property-section">
+                <div class="property-container">
+
+                    <t t-if="properties">
+                        <div class="property-grid">
+                            <t t-foreach="properties" t-as="prop">
+                                <article class="property-card fade-in">
+
+                                    <!-- ⭐ Property Image with STATUS RIBBON -->
+                                    <div class="property-image-wrapper">
+                                        <div class="property-image">
+                                            <img t-if="prop['image_url']" t-att-src="prop['image_url']" alt="Property Image" loading="lazy" decoding="async"/>
+                                            <img t-else="" src="/web/static/img/placeholder.png" alt="No Image"/>
+                                        </div>
+
+                                        <!-- ⭐ STATUS RIBBON -->
+                                        <div class="status-ribbon-wrapper">
+                                            <t t-if="prop.get('status') == 'available'">
+                                                <span class="status-ribbon ribbon-available">
+                                                    <i class="fa fa-check-circle"></i> AVAILABLE
+                                                </span>
+                                            </t>
+
+                                            <t t-elif="prop.get('status') == 'sold'">
+                                                <span class="status-ribbon ribbon-sold">
+                                                    <i class="fa fa-tag"></i> SOLD
+                                                </span>
+                                            </t>
+
+                                            <t t-elif="prop.get('status') == 'rented'">
+                                                <span class="status-ribbon ribbon-rented">
+                                                    <i class="fa fa-key"></i> RENTED
+                                                </span>
+                                            </t>
+                                        </div>
+
+                                        <!-- Luxury Image Overlay -->
+                                        <div class="image-glow"/>
+                                    </div>
+
+                                    <!-- Property Info -->
+                                    <div class="property-info">
+                                        <div class="property-top">
+                                            <h3 class="property-name" t-esc="prop['name']"/>
+                                            <p class="category">
+                                                <i class="fa fa-tags"></i>
+                                                <t t-esc="prop['category']"/>
+                                            </p>
+                                            <div class="property-rating" t-raw="prop['rating_html']"/>
+                                        </div>
+
+                                        <div class="property-price">
+                                            <span class="currency">₹</span>
+                                            <span class="amount">
+                                                <t t-esc="prop['price']"/>
+                                            </span>
+                                        </div>
+
+                                        <div class="meta">
+                                            <div class="meta-row">
+                                                <span class="meta-label">Plot Area</span>
+                                                <span class="meta-value">
+                                                    <t t-esc="prop['plot_area']"/> sq.ft
+                                                </span>
+                                            </div>
+
+                                            <div class="meta-row">
+                                                <span class="meta-label">Price / Sq.Ft</span>
+                                                <span class="meta-value">
+                                                    ₹ <t t-esc="prop['price_per_sqft']"/>
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <p class="location">
+                                            <i class="fa fa-map-marker-alt"></i>
+                                            <t t-esc="prop['city']"/> - <t t-esc="prop['zip_code']"/>
+                                        </p>
+
+                                        <a t-att-href="'/property/' + str(prop['id'])" class="view-btn">
+                                            View Details
+                                            <i class="fa fa-arrow-right ms-1"></i>
+                                        </a>
+                                    </div>
+
+                                </article>
+                            </t>
+                        </div>
+                    </t>
+
+                    <t t-if="not properties or not len(properties)">
+                        <div class="empty-state">
+                            <div class="empty-icon">
+                                <i class="fa fa-home"></i>
+                            </div>
+                            <p class="no-results">No properties found matching your criteria.</p>
+                            <p class="no-results-sub">Try adjusting your search filters and search again.</p>
+                        </div>
+                    </t>
+
+                </div>
+            </section>
+
+        </main>
+
+
         </t>
     </template>
 </odoo>

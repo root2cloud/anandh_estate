@@ -294,27 +294,59 @@ class Property(models.Model):
 
     def _post_gemini_with_retry(self, url, headers, payload, timeout=30, max_retries=3, base_delay=2):
         """
-        POST to the Gemini API, automatically retrying on 503 (model overloaded)
-        or 429 (rate limited) responses with a short exponential backoff.
-        Returns the final requests.Response object (which may still be non-200
-        if every retry was exhausted — callers should still check status_code).
+        POST to the Gemini API.
+
+        * 503 (overloaded) / short 429 (per-minute limit): retried with a short backoff.
+        * Daily quota exhausted (429 "retry in ...h"), model not found (404) or still
+          failing after the retries: the SAME request is automatically sent to the fallback
+          models (system parameters `gemini.fallback_model` and `gemini.fallback_model_2`,
+          defaults gemini-3.5-flash and gemini-3.5-flash-lite), so AI content keeps working
+          when the main model has no quota left.
+        Returns the final requests.Response object (callers still check status_code).
         """
-        response = None
-        for attempt in range(1, max_retries + 1):
-            response = requests.post(url, headers=headers, json=payload, timeout=timeout)
+        import re as _re
 
-            if response.status_code not in (503, 429):
-                return response  # success, or a non-retryable error — return immediately
+        def _quota_exhausted(resp):
+            text = (resp.text or '').lower()
+            return resp.status_code == 429 and (
+                _re.search(r'retry in \d+h', text) or 'perday' in text or 'per day' in text)
 
-            if attempt < max_retries:
-                delay = base_delay * attempt  # 2s, 4s, 6s...
-                _logger.warning(
-                    f"⏳ Gemini API busy (status {response.status_code}), "
-                    f"retrying in {delay}s (attempt {attempt}/{max_retries})..."
-                )
-                time.sleep(delay)
+        def _post_one(target_url):
+            response = None
+            for attempt in range(1, max_retries + 1):
+                response = requests.post(target_url, headers=headers, json=payload, timeout=timeout)
+                if response.status_code not in (503, 429):
+                    return response
+                if _quota_exhausted(response):
+                    return response  # waiting will not help - try another model instead
+                if attempt < max_retries:
+                    delay = base_delay * attempt  # 2s, 4s, 6s...
+                    _logger.warning(
+                        f"⏳ Gemini API busy (status {response.status_code}), "
+                        f"retrying in {delay}s (attempt {attempt}/{max_retries})...")
+                    time.sleep(delay)
+            return response
 
-        return response  # last attempt's response, even if still failing
+        response = _post_one(url)
+        if response.status_code in (429, 503, 404):
+            match = _re.search(r'models/([^:/?]+):generateContent', url)
+            if match:
+                params = self.env['ir.config_parameter'].sudo()
+                fallbacks = [
+                    params.get_param('gemini.fallback_model', 'gemini-3.5-flash'),
+                    params.get_param('gemini.fallback_model_2', 'gemini-3.5-flash-lite'),
+                ]
+                for fb in fallbacks:
+                    if not fb or fb == match.group(1):
+                        continue
+                    _logger.warning(
+                        f"⚠️ Gemini model {match.group(1)} failed (status {response.status_code}); "
+                        f"trying fallback model {fb}")
+                    fb_response = _post_one(url.replace(f"models/{match.group(1)}:", f"models/{fb}:"))
+                    if fb_response.status_code == 200:
+                        return fb_response
+                    response = fb_response
+        return response
 
     def _build_property_facts_block(self):
         """
@@ -366,6 +398,39 @@ class Property(models.Model):
             facts.append(f"Status: {dict(self._fields['status'].selection).get(self.status)}")
 
         return '\n'.join(f"- {f}" for f in facts)
+
+    # ==================== AUTOMATIC AI CONTENT ====================
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super().create(vals_list)
+        records._schedule_ai_content_generation()
+        return records
+
+    def write(self, vals):
+        result = super().write(vals)
+        # a property that was just published should get its content too
+        if vals.get('is_published'):
+            self._schedule_ai_content_generation()
+        return result
+
+    def _schedule_ai_content_generation(self):
+        """Ask the scheduled action to generate AI content right now.
+
+        This does not slow down saving: the Gemini calls run in the background
+        cron job, a few seconds after the property is saved. If it fails, the
+        status shows it and the "Regenerate AI Content" button can be clicked."""
+        pending = self.filtered(
+            lambda r: not r.ai_content_generated and r.ai_generation_attempts < r.AI_MAX_ATTEMPTS)
+        if not pending:
+            return
+        try:
+            cron = self.env.ref(
+                'real_estate_management.ir_cron_generate_missing_ai_content',
+                raise_if_not_found=False)
+            if cron:
+                cron.sudo()._trigger()
+        except Exception as e:
+            _logger.warning("Could not schedule automatic AI content generation: %s", e)
 
     def generate_ai_content(self):
         """Generate AI content using FREE Google Gemini API"""
@@ -423,7 +488,6 @@ class Property(models.Model):
             'Content-Type': 'application/json'
         }
 
-        gemini_model = self.env['ir.config_parameter'].sudo().get_param('gemini.model', 'gemini-3.6-flash')
         payload = {
             'contents': [
                 {'parts': [{'text': prompt}]}
@@ -431,9 +495,14 @@ class Property(models.Model):
             'systemInstruction': {
                 'parts': [{'text': 'You are a real estate analyst. Return only JSON.'}]
             },
-            'generationConfig': self._json_generation_config(gemini_model, 8192),
+            'generationConfig': {
+                'temperature': 0.3,
+                'maxOutputTokens': 2500,
+                'responseMimeType': 'application/json'
+            }
         }
 
+        gemini_model = self.env['ir.config_parameter'].sudo().get_param('gemini.model', 'gemini-3.6-flash')
         gemini_url = (
             'https://generativelanguage.googleapis.com/v1beta/models/'
             f'{gemini_model}:generateContent?key={api_key}'
@@ -446,7 +515,7 @@ class Property(models.Model):
                 gemini_url,
                 headers=headers,
                 payload=payload,
-                timeout=90
+                timeout=30
             )
 
             _logger.info(f"📥 Response status: {response.status_code}")
@@ -457,11 +526,7 @@ class Property(models.Model):
                 return False
 
             response_data = response.json()
-            candidate = response_data['candidates'][0]
-            finish_reason = candidate.get('finishReason', '')
-            response_text = candidate['content']['parts'][0]['text'].strip()
-            if finish_reason == 'MAX_TOKENS':
-                _logger.warning("Gemini output hit maxOutputTokens for %s", self.name)
+            response_text = response_data['candidates'][0]['content']['parts'][0]['text'].strip()
 
             # Clean JSON
             if response_text.startswith('```'):
@@ -475,8 +540,7 @@ class Property(models.Model):
             except json.JSONDecodeError as e:
                 _logger.error(f"JSON parse error: {e}\nResponse: {response_text}")
                 snippet = response_text[:300] if response_text else '(empty response)'
-                reason = 'Response was cut off (token limit)' if finish_reason == 'MAX_TOKENS' else 'Could not parse AI response as JSON'
-                self.write({'ai_last_error': f"{reason}: {e}. Raw output: {snippet}"})
+                self.write({'ai_last_error': f"Could not parse AI response as JSON: {e}. Raw output: {snippet}"})
                 return False
 
             # Convert to HTML — handles both flat lists (simple sections) and
@@ -549,23 +613,6 @@ class Property(models.Model):
         if extras:
             block += "\n\nADDITIONAL LISTING NOTES:\n" + "\n".join(f"- {e}" for e in extras)
         return block
-
-    @staticmethod
-    def _json_generation_config(model_name, max_tokens=8192):
-        """Config for structured-JSON generation. Thinking tokens count against
-        maxOutputTokens, so thinking is minimised and the limit is generous;
-        otherwise the JSON gets cut off mid-string."""
-        config = {
-            'temperature': 0.3,
-            'maxOutputTokens': max_tokens,
-            'responseMimeType': 'application/json',
-        }
-        name = (model_name or '').lower()
-        if 'gemini-2.5' in name and 'pro' not in name:
-            config['thinkingConfig'] = {'thinkingBudget': 0}
-        elif name.startswith('gemini-3'):
-            config['thinkingConfig'] = {'thinkingLevel': 'low'}
-        return config
 
     @staticmethod
     def _qa_generation_config(model_name):
@@ -791,8 +838,8 @@ class Property(models.Model):
         models_to_try = []
         for m in (
             params.get_param('gemini.model', 'gemini-3.6-flash'),
-            params.get_param('gemini.fallback_model', 'gemini-2.5-flash'),
-            params.get_param('gemini.fallback_model_2', 'gemini-2.5-flash-lite'),
+            params.get_param('gemini.fallback_model', 'gemini-3.5-flash'),
+            params.get_param('gemini.fallback_model_2', 'gemini-3.5-flash-lite'),
         ):
             if m and m not in models_to_try:
                 models_to_try.append(m)
@@ -892,11 +939,12 @@ class Property(models.Model):
         if max_attempts is None:
             max_attempts = self.AI_MAX_ATTEMPTS
 
+        # Properties that were never tried come first (so a freshly created
+        # property is handled before old ones that keep failing).
         pending = self.search([
-            ('is_published', '=', True),
             ('ai_content_generated', '=', False),
             ('ai_generation_attempts', '<', max_attempts),
-        ], limit=batch_size, order='ai_last_attempt_date asc, id asc')
+        ], limit=batch_size, order='ai_generation_attempts asc, id desc')
 
         for prop in pending:
             try:
@@ -972,7 +1020,6 @@ class Property(models.Model):
             'Content-Type': 'application/json'
         }
 
-        gemini_model = self.env['ir.config_parameter'].sudo().get_param('gemini.model', 'gemini-3.6-flash')
         payload = {
             'contents': [
                 {'parts': [{'text': prompt}]}
@@ -980,9 +1027,14 @@ class Property(models.Model):
             'systemInstruction': {
                 'parts': [{'text': 'You are a real estate analyst. Return only JSON.'}]
             },
-            'generationConfig': self._json_generation_config(gemini_model, 4096),
+            'generationConfig': {
+                'temperature': 0.3,
+                'maxOutputTokens': 1500,
+                'responseMimeType': 'application/json'
+            }
         }
 
+        gemini_model = self.env['ir.config_parameter'].sudo().get_param('gemini.model', 'gemini-3.6-flash')
         gemini_url = (
             'https://generativelanguage.googleapis.com/v1beta/models/'
             f'{gemini_model}:generateContent?key={api_key}'
@@ -1008,7 +1060,7 @@ class Property(models.Model):
                 gemini_url,
                 headers=headers,
                 payload=payload,
-                timeout=90
+                timeout=30
             )
 
             if response.status_code != 200:
@@ -1103,29 +1155,24 @@ class Property(models.Model):
             return error_result(f"{type(e).__name__}: {e}")
 
     def action_regenerate_ai_content(self):
-        """Button to regenerate AI content"""
-        for rec in self:
-            success = rec.generate_ai_content()
-            if success:
-                return {
-                    'type': 'ir.actions.client',
-                    'tag': 'display_notification',
-                    'params': {
-                        'title': 'Success',
-                        'message': 'AI content regenerated successfully!',
-                        'type': 'success',
-                    }
-                }
-            else:
-                return {
-                    'type': 'ir.actions.client',
-                    'tag': 'display_notification',
-                    'params': {
-                        'title': 'Error',
-                        'message': 'Failed to generate AI content. Check logs.',
-                        'type': 'danger',
-                    }
-                }
+        """Button to regenerate AI content.
+
+        Shows a notification and then reloads the form automatically, so the
+        status bar (Generated / Pending), the red error box and the AI tabs
+        are up to date without pressing F5."""
+        self.ensure_one()
+        success = self.generate_ai_content()
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Success' if success else 'Error',
+                'message': ('AI content generated successfully!' if success
+                            else 'Failed to generate AI content. See the red box on the form for the reason.'),
+                'type': 'success' if success else 'danger',
+                'next': {'type': 'ir.actions.client', 'tag': 'soft_reload'},
+            }
+        }
 
     def action_regenerate_ai_content_bulk(self):
         """
@@ -1174,6 +1221,7 @@ class Property(models.Model):
                 'message': message,
                 'type': notif_type,
                 'sticky': failure_count > 0,
+                'next': {'type': 'ir.actions.client', 'tag': 'soft_reload'},
             }
         }
 
