@@ -401,8 +401,9 @@ class Property(models.Model):
 
     # ==================== UNIQUE VIEWS (one per IP address) ====================
     def register_unique_view(self, ip_address):
-        """Count a visit. `views` = number of different IP addresses that opened
-        this property, so refreshing the page or revisiting does not add views."""
+        """Count a visit. `views` = number of different DEVICES (rows keyed `dev:<cookie id>`)
+        that opened this property, so refreshing or revisiting does not add views.
+        Old IP-only rows are kept in the log but are no longer counted."""
         self.ensure_one()
         ip_address = (ip_address or '').strip()
         if not ip_address:
@@ -417,7 +418,7 @@ class Property(models.Model):
                     Log.create({'property_id': self.id, 'ip_address': ip_address})
             except Exception:
                 pass  # same visitor opened two tabs at once - already counted
-        unique = Log.search_count([('property_id', '=', self.id)])
+        unique = Log.search_count([('property_id', '=', self.id), ('ip_address', '=like', 'dev:%')])
         if self.views != unique:
             self.sudo().write({'views': unique})
         return unique

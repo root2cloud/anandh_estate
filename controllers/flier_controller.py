@@ -105,6 +105,37 @@ class PropertyFlierController(http.Controller):
             'bot', 'crawler', 'spider', 'whatsapp', 'telegram', 'facebookexternalhit',
             'slurp', 'preview', 'curl/', 'wget', 'python-requests', 'headless'))
 
+    DEVICE_COOKIE = 'pv_device'
+
+    @classmethod
+    def _track_view(cls, prop):
+        """Count a visit of `prop`: ONE view per device per property, however many times
+        the page is opened. A device = a browser holding the long-lived `pv_device`
+        cookie (so two phones on the same Wi-Fi are two views). Crawlers / link-preview
+        bots never count. Returns (views, device_id, new_device); the caller must pass
+        the last two to _attach_device_cookie() on its response."""
+        device_id = request.httprequest.cookies.get(cls.DEVICE_COOKIE) or ''
+        new_device = False
+        if not re.fullmatch(r'[0-9a-f]{32}', device_id):
+            device_id = uuid.uuid4().hex
+            new_device = True
+        try:
+            if cls._is_bot():
+                views = prop.views or 0
+            else:
+                views = prop.register_unique_view('dev:%s' % device_id)
+        except Exception:
+            _logger.exception('Flier: could not register property view')
+            views = prop.views or 0
+        return views, device_id, new_device
+
+    @classmethod
+    def _attach_device_cookie(cls, response, device_id, new_device):
+        if new_device:
+            response.set_cookie(cls.DEVICE_COOKIE, device_id, max_age=60 * 60 * 24 * 365,
+                                httponly=True, samesite='Lax')
+        return response
+
     @staticmethod
     def _highest_bid(prop):
         """Highest bid placed so far for a property (0.0 when there is none)."""
@@ -628,24 +659,8 @@ class PropertyFlierController(http.Controller):
         page_url = '%s/property/%s/info' % (self._public_base(base_url), prop.id)
         wa_text = 'Hi, I am interested in "%s" (%s).' % (prop.name, page_url)
 
-        # count this visit (one view per DEVICE); never break the page if it fails.
-        # A device is recognised by a long-lived cookie, so two phones on the same
-        # Wi-Fi / mobile network (same public IP) are counted separately.
-        # Link-preview bots (WhatsApp, Telegram, Google...) are not counted.
-        cookie_name = 'pv_device'
-        device_id = request.httprequest.cookies.get(cookie_name) or ''
-        new_device = False
-        if not re.fullmatch(r'[0-9a-f]{32}', device_id):
-            device_id = uuid.uuid4().hex
-            new_device = True
-        try:
-            if self._is_bot():
-                views_count = prop.views or 0
-            else:
-                views_count = prop.register_unique_view('dev:%s' % device_id)
-        except Exception:
-            _logger.exception('Flier: could not register property view')
-            views_count = prop.views or 0
+        # count this visit: one view per device per property (see _track_view)
+        views_count, device_id, new_device = self._track_view(prop)
 
         response = request.render('real_estate_management.property_info_page', {
             'property': prop,
@@ -664,9 +679,7 @@ class PropertyFlierController(http.Controller):
             'bid_count': self._bid_count(prop),
             'views_count': views_count,
         })
-        if new_device:
-            response.set_cookie(cookie_name, device_id, max_age=60 * 60 * 24 * 365,
-                                httponly=True, samesite='Lax')
+        self._attach_device_cookie(response, device_id, new_device)
         response.headers['Cache-Control'] = 'no-store'
         return response
 

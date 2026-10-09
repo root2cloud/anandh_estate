@@ -349,15 +349,14 @@ class RealEstateController(http.Controller):
         # data/ir_cron_ai_content.xml). The template already renders fine
         # without AI content (each AI section is wrapped in t-if), so the
         # page just shows those sections once the cron catches up.
-        try:
-            # one view per visitor IP address (refreshes do not add views)
-            from .flier_controller import PropertyFlierController
-            prop.register_unique_view(PropertyFlierController._client_ip())
-        except Exception as e:
-            _logger.error(f"Failed to update views for property {prop.id}: {e}")
-        return request.render('real_estate_management.property_detail_page', {
+        # one view per device per property (shared logic with the QR info page)
+        from .flier_controller import PropertyFlierController
+        _views, device_id, new_device = PropertyFlierController._track_view(prop)
+        response = request.render('real_estate_management.property_detail_page', {
             'property': prop,
         })
+        PropertyFlierController._attach_device_cookie(response, device_id, new_device)
+        return response
 
     # ─────────────────────────────────────────────────────────────
     # PROPERTY LISTING
