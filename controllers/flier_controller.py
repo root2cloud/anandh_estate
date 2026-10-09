@@ -28,6 +28,7 @@ import base64
 import json
 import logging
 import re
+import uuid
 import socket
 import ipaddress
 from urllib.parse import urlparse, urlencode
@@ -93,6 +94,16 @@ class PropertyFlierController(http.Controller):
             if first:
                 ip = first
         return ip
+
+    @staticmethod
+    def _is_bot():
+        """True for crawlers / link-preview fetchers, which must not count as views."""
+        ua = (request.httprequest.headers.get('User-Agent') or '').lower()
+        if not ua:
+            return True
+        return any(t in ua for t in (
+            'bot', 'crawler', 'spider', 'whatsapp', 'telegram', 'facebookexternalhit',
+            'slurp', 'preview', 'curl/', 'wget', 'python-requests', 'headless'))
 
     @staticmethod
     def _highest_bid(prop):
@@ -617,14 +628,26 @@ class PropertyFlierController(http.Controller):
         page_url = '%s/property/%s/info' % (self._public_base(base_url), prop.id)
         wa_text = 'Hi, I am interested in "%s" (%s).' % (prop.name, page_url)
 
-        # count this visit (one view per IP address); never break the page if it fails
+        # count this visit (one view per DEVICE); never break the page if it fails.
+        # A device is recognised by a long-lived cookie, so two phones on the same
+        # Wi-Fi / mobile network (same public IP) are counted separately.
+        # Link-preview bots (WhatsApp, Telegram, Google...) are not counted.
+        cookie_name = 'pv_device'
+        device_id = request.httprequest.cookies.get(cookie_name) or ''
+        new_device = False
+        if not re.fullmatch(r'[0-9a-f]{32}', device_id):
+            device_id = uuid.uuid4().hex
+            new_device = True
         try:
-            views_count = prop.register_unique_view(self._client_ip())
+            if self._is_bot():
+                views_count = prop.views or 0
+            else:
+                views_count = prop.register_unique_view('dev:%s' % device_id)
         except Exception:
             _logger.exception('Flier: could not register property view')
             views_count = prop.views or 0
 
-        return request.render('real_estate_management.property_info_page', {
+        response = request.render('real_estate_management.property_info_page', {
             'property': prop,
             'p': data,
             'gallery_all': gallery_all,
@@ -641,6 +664,11 @@ class PropertyFlierController(http.Controller):
             'bid_count': self._bid_count(prop),
             'views_count': views_count,
         })
+        if new_device:
+            response.set_cookie(cookie_name, device_id, max_age=60 * 60 * 24 * 365,
+                                httponly=True, samesite='Lax')
+        response.headers['Cache-Control'] = 'no-store'
+        return response
 
     @http.route('/property/<int:property_id>/qr.png', type='http', auth='public', website=True)
     def property_qr_image(self, property_id, **kwargs):
