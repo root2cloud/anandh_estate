@@ -263,19 +263,37 @@ a.btn-icon.btn-create-flier:hover {
 .pf-cn { font-size: 10px; font-weight: 600; word-break: break-all; }
 .pf-script-foot { font-family: 'Great Vibes', 'Brush Script MT', cursive; font-size: 24px; line-height: 1.05; color: var(--gold2); text-align: right; }
 
+/* Responsive tweaks apply to the on-screen view only.
+   The export clone (.fl-capture) always keeps the fixed 794px desktop layout. */
 @media (max-width: 820px) {
-  .pf-hero { height: 420px; }
-  .pf-title { font-size: 34px; }
-  .pf-titlebox { left: 130px; right: 14px; top: 70px; }
-  .pf-pricebox { transform: scale(.85); transform-origin: bottom right; }
-  .pf-script-top { font-size: 22px; }
+  .fl-sheet:not(.fl-capture) .pf-hero { height: 420px; }
+  .fl-sheet:not(.fl-capture) .pf-title { font-size: 34px; }
+  .fl-sheet:not(.fl-capture) .pf-titlebox { left: 130px; right: 14px; top: 70px; }
+  .fl-sheet:not(.fl-capture) .pf-pricebox { transform: scale(.85); transform-origin: bottom right; }
+  .fl-sheet:not(.fl-capture) .pf-script-top { font-size: 22px; }
 }
 @media (max-width: 640px) {
-  .pf-row3, .pf-info, .pf-bottom { grid-template-columns: 1fr; }
-  .pf-cols4 { grid-template-columns: 1fr 1fr; row-gap: 14px; }
-  .pf-col:nth-child(3) { border-left: 0; }
-  .pf-phone { font-size: 20px; }
-  .pf-script-foot, .pf-foot-logo { display: none; }
+  .fl-sheet:not(.fl-capture) .pf-row3,
+  .fl-sheet:not(.fl-capture) .pf-info,
+  .fl-sheet:not(.fl-capture) .pf-bottom { grid-template-columns: 1fr; }
+  .fl-sheet:not(.fl-capture) .pf-cols4 { grid-template-columns: 1fr 1fr; row-gap: 14px; }
+  .fl-sheet:not(.fl-capture) .pf-col:nth-child(3) { border-left: 0; }
+  .fl-sheet:not(.fl-capture) .pf-phone { font-size: 20px; }
+  .fl-sheet:not(.fl-capture) .pf-script-foot,
+  .fl-sheet:not(.fl-capture) .pf-foot-logo { display: none; }
+}
+
+/* ===== Export (PNG / PDF) capture clone =====
+   A hidden, fixed 794px wide copy of the active sheet is what gets rendered,
+   so the file always has the exact same ratio no matter the screen size. */
+.fl-capture-host {
+  position: fixed; left: 0; top: 0; width: 794px; z-index: -1; pointer-events: none;
+}
+.fl-capture-host .fl-sheet {
+  display: block !important;
+  width: 794px !important; min-width: 794px !important; max-width: none !important;
+  margin: 0 !important; box-shadow: none !important; border-radius: 0 !important;
+  transform: none !important; zoom: 1 !important;
 }
 
 /* rich (HTML) sections: overview / about / nearby */
@@ -299,6 +317,7 @@ a.btn-icon.btn-create-flier:hover {
   .fl-sheet.fd2.active, .fl-sheet.fd3.active, .fl-sheet.fd4.active { width: 794px; transform-origin: top left; zoom: .99; }
   .fl-stage { overflow: visible; }
   .no-print { display: none !important; }
+  .fl-capture-host { display: none !important; }
   .flier-page { background: #fff; padding: 0; }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
@@ -590,12 +609,23 @@ a.btn-icon.btn-create-flier:hover {
 /* clickable QR code (works inside printed / saved PDFs too) */
 a.fl-qr-link { display: block; line-height: 0; text-decoration: none; color: inherit; }
 
-/* QR info page: hide site chrome */
-body:has(.pi-page) header#top,
-body:has(.pi-page) #ai-news-ticker-box,
-body:has(.pi-page) .o_frontend_to_backend_nav,
-body:has(.pi-page) .o_frontend_to_backend_apps_menu,
-body:has(.pi-page) .o_frontend_to_backend_edit_btn,
-body:has(.pi-page) #oe_main_menu_navbar { display: none !important; }
-html:has(.pi-page) { scrollbar-width: none; }
-html:has(.pi-page)::-webkit-scrollbar, body:has(.pi-page)::-webkit-scrollbar { display: none; }
+/* ---- QR page: bidding ---- */
+.pi-bidbox { text-align: center; padding: 14px; margin-bottom: 12px; border-radius: 14px; border: 2px solid #d4a94f; background: linear-gradient(180deg, #0e2a63, #0b1f4b); color: #fff; }
+.pi-bidbox small { display: block; font-size: 10px; letter-spacing: 3px; color: #f3d58a; font-weight: 800; }
+.pi-bidbox b { display: block; font-family: 'Playfair Display', Georgia, serif; font-size: 34px; color: #f6d98a; line-height: 1.2; }
+.pi-bidbox span { font-size: 12px; opacity: .9; }
+.pi-fld-wide { grid-column: 1 / -1; }
+
+/* ---- QR page: board with bids and unique views (deep teal + gold, matches the navy/gold theme) ---- */
+.pi-board-sec { padding-top: 18px; }
+.pi-board { display: flex; align-items: stretch; justify-content: space-around; border-radius: 16px; padding: 16px 10px;
+  background: linear-gradient(135deg, #0f766e, #064e3b); border: 2px solid #d4a94f; color: #fff; box-shadow: 0 8px 20px rgba(6, 78, 59, .35); }
+.pi-board-item { flex: 1; text-align: center; }
+.pi-board-item i { font-size: 20px; color: #f3d58a; display: block; margin-bottom: 4px; }
+.pi-board-item b { display: block; font-family: 'Playfair Display', Georgia, serif; font-size: 36px; line-height: 1.1; color: #f6d98a; }
+.pi-board-item small { font-size: 10.5px; letter-spacing: 3px; font-weight: 800; color: #d1fae5; }
+.pi-board-sep { width: 1px; background: rgba(243, 213, 138, .5); margin: 4px 0; }
+
+/* ---- QR page: Contact us / WhatsApp buttons shown in the chat after 3 answers ---- */
+.pi-chat-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.pi-bubble .pi-btn { padding: 10px 14px; font-size: 13px; flex: 1 1 120px; }

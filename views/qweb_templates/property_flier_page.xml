@@ -7,7 +7,7 @@
             <t t-set="head">
                 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
                 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Great+Vibes&amp;family=Montserrat:wght@400;500;600;700;800&amp;family=Playfair+Display:wght@600;700;800&amp;display=swap"/>
-                <link rel="stylesheet" href="/real_estate_management/static/src/css/property_flier.css?v=9"/>
+                <link rel="stylesheet" href="/real_estate_management/static/src/css/property_flier.css?v=15"/>
                 <meta property="og:type" content="website"/>
                 <meta property="og:title" t-att-content="flier.get('name') or 'Property Flier'"/>
                 <meta property="og:description" t-att-content="flier.get('address') or flier.get('description') or ''"/>
@@ -236,7 +236,7 @@
                     </div>
                     <div class="pf-info pf-info-one" t-if="flier.get('nearby_html')">
                         <div class="pf-info-box">
-                            <h3><i class="fas fa-map-location-dot"></i> Location &amp; Nearby</h3>
+                            <h3><i class="fas fa-thumbs-up"></i> Advantages of this Property</h3>
                             <div class="fl-rich" t-out="flier['nearby_html']"/>
                         </div>
                     </div>
@@ -505,26 +505,68 @@
                     });
                     selectDesign(current);
 
+                    /* ---------- export helpers ----------
+                       The visible sheet is NEVER captured directly (it may be shrunk, scrolled or
+                       re-flowed by the phone / small-window layout). Instead a hidden fixed-width
+                       (794px) clone is rendered, so PNG and PDF always keep the exact flier ratio. */
+                    function prepareCapture() {
+                        var src = document.getElementById('flierSheet' + current);
+                        var host = document.createElement('div');
+                        host.className = 'fl-capture-host';
+                        var node = src.cloneNode(true);
+                        node.removeAttribute('id');
+                        node.classList.add('fl-capture', 'active');
+                        host.appendChild(node);
+                        document.body.appendChild(host);
+                        return {
+                            node: node,
+                            cleanup: function () { if (host.parentNode) { host.parentNode.removeChild(host); } }
+                        };
+                    }
+                    function waitAssets(node) {
+                        var jobs = [];
+                        node.querySelectorAll('img').forEach(function (img) {
+                            if (img.complete) { return; }
+                            jobs.push(new Promise(function (res) {
+                                img.addEventListener('load', res);
+                                img.addEventListener('error', res);
+                                setTimeout(res, 5000);
+                            }));
+                        });
+                        if (document.fonts &amp;&amp; document.fonts.ready) { jobs.push(document.fonts.ready); }
+                        return Promise.all(jobs);
+                    }
+
+                    /* done(blob, cap, w, h) - the caller must call cap.cleanup() when finished */
+                    function renderCapture(done) {
+                        var cap = prepareCapture();
+                        waitAssets(cap.node).then(function () {
+                            var w = Math.ceil(cap.node.offsetWidth);
+                            var h = Math.ceil(cap.node.offsetHeight);
+                            function viaCanvas() {
+                                if (typeof html2canvas === 'undefined') { done(null, cap, w, h); return; }
+                                html2canvas(cap.node, {
+                                    scale: 2, useCORS: true, backgroundColor: '#ffffff',
+                                    width: w, height: h, windowWidth: w, x: 0, y: 0, scrollX: 0, scrollY: 0
+                                }).then(function (c) { c.toBlob(function (b) { done(b, cap, w, h); }, 'image/png'); })
+                                  .catch(function () { done(null, cap, w, h); });
+                            }
+                            if (window.htmlToImage) {
+                                window.htmlToImage.toBlob(cap.node, {
+                                    pixelRatio: 2, cacheBust: true, backgroundColor: '#ffffff',
+                                    width: w, height: h,
+                                    style: { margin: '0', transform: 'none', maxWidth: 'none' }
+                                }).then(function (b) { if (b) { done(b, cap, w, h); } else { viaCanvas(); } })
+                                  .catch(viaCanvas);
+                            } else {
+                                viaCanvas();
+                            }
+                        });
+                    }
+
                     /* ---------- image rendering (PNG) ---------- */
                     function renderBlob(done) {
-                        var node = document.getElementById('flierSheet' + current);
-                        var prevMargin = node.style.margin;
-                        node.style.margin = '0';
-                        var origDone = done;
-                        done = function (b) { node.style.margin = prevMargin; origDone(b); };
-                        function viaCanvas() {
-                            if (typeof html2canvas === 'undefined') { done(null); return; }
-                            html2canvas(node, { scale: 2, useCORS: true, backgroundColor: null })
-                                .then(function (c) { c.toBlob(function (b) { done(b); }, 'image/png'); })
-                                .catch(function () { done(null); });
-                        }
-                        if (window.htmlToImage) {
-                            window.htmlToImage.toBlob(node, { pixelRatio: 2, cacheBust: true, width: node.offsetWidth, height: node.offsetHeight, style: { margin: '0', maxWidth: 'none', transform: 'none', boxShadow: 'none', borderRadius: '0' } })
-                                .then(function (b) { if (b) { done(b); } else { viaCanvas(); } })
-                                .catch(viaCanvas);
-                        } else {
-                            viaCanvas();
-                        }
+                        renderCapture(function (blob, cap) { cap.cleanup(); done(blob); });
                     }
                     function saveBlob(blob) {
                         if (!blob) { window.print(); return; }
@@ -544,14 +586,13 @@
                         fr.readAsDataURL(blob);
                     }
                     function buildPdf(done) {
-                        var node = document.getElementById('flierSheet' + current);
                         if (!window.jspdf) { done(null); return; }
-                        renderBlob(function (blob) {
-                            if (!blob) { done(null); return; }
+                        renderCapture(function (blob, cap, w, h) {
+                            if (!blob) { cap.cleanup(); done(null); return; }
                             blobToDataUrl(blob, function (dataUrl) {
                                 try {
-                                    var w = node.offsetWidth;
-                                    var h = node.offsetHeight;
+                                    var node = cap.node;
+                                    /* page = exactly the flier size, so the image fills the frame with no gaps or cropping */
                                     var doc = new window.jspdf.jsPDF({
                                         orientation: w > h ? 'l' : 'p',
                                         unit: 'px', format: [w, h], hotfixes: ['px_scaling']
@@ -574,8 +615,10 @@
                                                      { url: 'tel:' + digits });
                                         }
                                     }
-                                    done(doc.output('blob'));
-                                } catch (e) { done(null); }
+                                    var out = doc.output('blob');
+                                    cap.cleanup();
+                                    done(out);
+                                } catch (e) { cap.cleanup(); done(null); }
                             });
                         });
                     }
@@ -685,9 +728,8 @@
             <t t-set="head">
                 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
                 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&amp;family=Playfair+Display:wght@600;700;800&amp;display=swap"/>
-                <link rel="stylesheet" href="/real_estate_management/static/src/css/property_flier.css?v=9"/>
+                <link rel="stylesheet" href="/real_estate_management/static/src/css/property_flier.css?v=15"/>
                 <meta property="og:type" content="website"/>
-                <style>header#top, #ai-news-ticker-box, .o_frontend_to_backend_nav, .o_frontend_to_backend_apps_menu, .o_frontend_to_backend_edit_btn, #oe_main_menu_navbar { display: none !important; } html { scrollbar-width: none; } html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }</style>
                 <meta property="og:title" t-att-content="p.get('name')"/>
                 <meta property="og:description" t-att-content="p.get('address') or p.get('description') or ''"/>
                 <meta property="og:image" t-att-content="og_image"/>
@@ -765,7 +807,7 @@
                     <div class="pi-sec" id="piChatSec">
                         <h3><i class="fas fa-comments"></i> Chat with our Assistant</h3>
                         <div class="pi-chat">
-                            <div class="pi-chat-msgs" id="piChatMessages">
+                            <div class="pi-chat-msgs" id="piChatMessages" t-att-data-tel="tel_href" t-att-data-wa="wa_href">
                                 <div class="pi-bubble pi-bot">Hi! Ask me about this property, its location or pricing, or scroll down to register your details.</div>
                             </div>
                             <div class="pi-chat-form">
@@ -775,10 +817,32 @@
                         </div>
                     </div>
 
-                    <!-- registration -->
+                    <!-- bids + views board (red) -->
+                    <div class="pi-sec pi-board-sec">
+                        <div class="pi-board">
+                            <div class="pi-board-item">
+                                <i class="fas fa-gavel"></i>
+                                <b id="piBidCount" t-out="bid_count"/>
+                                <small>BIDS PLACED</small>
+                            </div>
+                            <div class="pi-board-sep"></div>
+                            <div class="pi-board-item">
+                                <i class="fas fa-eye"></i>
+                                <b id="piViewCount" t-out="views_count"/>
+                                <small>VIEWS</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- bidding + registration -->
                     <div class="pi-sec" id="piRegSec">
-                        <h3><i class="fas fa-user-plus"></i> Registration</h3>
-                        <p class="pi-desc">Fill out your details and we will get back to you.</p>
+                        <h3><i class="fas fa-gavel"></i> Place your Bid</h3>
+                        <div class="pi-bidbox">
+                            <small>CURRENT HIGHEST BID</small>
+                            <b id="piHighBid"><t t-if="highest_bid" t-out="highest_bid_display"/><t t-else="">No bids yet</t></b>
+                            <span id="piBidHint"><t t-if="highest_bid">Your bid must be higher than this amount.</t><t t-else="">Be the first to bid on this property!</t></span>
+                        </div>
+                        <p class="pi-desc">Fill out your details and your bid. We will get back to you.</p>
                         <form id="piRegForm" class="pi-reg" novalidate="novalidate" t-att-data-action="'/property/%s/flier/register' % property.id">
                             <input type="hidden" name="from_qr" value="1"/>
                             <div class="pi-fld"><label for="piRegName">Full Name *</label>
@@ -789,17 +853,10 @@
                                 <input type="email" id="piRegEmail" name="email" required="required"/><small class="pi-err" data-err="email"></small></div>
                             <div class="pi-fld"><label for="piRegAddress">Address *</label>
                                 <input type="text" id="piRegAddress" name="address" required="required"/><small class="pi-err" data-err="address"></small></div>
-                            <div class="pi-fld"><label for="piRegState">State *</label>
-                                <select id="piRegState" name="state_id" required="required">
-                                    <option value="">Select State</option>
-                                    <t t-foreach="states" t-as="st"><option t-att-value="st.id" t-out="st.name"/></t>
-                                </select><small class="pi-err" data-err="state_id"></small></div>
-                            <div class="pi-fld"><label for="piRegCity">City *</label>
-                                <input type="text" id="piRegCity" name="city" required="required"/><small class="pi-err" data-err="city"></small></div>
-                            <div class="pi-fld"><label for="piRegPin">Pincode *</label>
-                                <input type="text" id="piRegPin" name="pincode" inputmode="numeric" maxlength="6" required="required"/><small class="pi-err" data-err="pincode"></small></div>
+                            <div class="pi-fld pi-fld-wide"><label for="piRegBid">Your Bid Amount *</label>
+                                <input type="number" id="piRegBid" name="bid_amount" min="1" step="any" inputmode="decimal" required="required" placeholder="Enter the amount you offer"/><small class="pi-err" data-err="bid_amount"></small></div>
                             <div class="pi-reg-msg" id="piRegMsg" role="status"></div>
-                            <button type="submit" class="pi-btn pi-btn-gold pi-reg-submit" id="piRegSubmit">Submit Registration</button>
+                            <button type="submit" class="pi-btn pi-btn-gold pi-reg-submit" id="piRegSubmit">Submit Bid &amp; Registration</button>
                         </form>
                     </div>
 
@@ -834,6 +891,38 @@
                         msgs.scrollTop = msgs.scrollHeight;
                         return b;
                     }
+                    var answered = 0;
+                    function showContactButtons() {
+                        var tel = msgs.getAttribute('data-tel');
+                        var wa = msgs.getAttribute('data-wa');
+                        if (!tel &amp;&amp; !wa) { return; }
+                        var b = document.createElement('div');
+                        b.className = 'pi-bubble pi-bot';
+                        var t = document.createElement('div');
+                        t.textContent = 'Would you like to know more? Talk to us directly:';
+                        b.appendChild(t);
+                        var row = document.createElement('div');
+                        row.className = 'pi-chat-actions';
+                        if (tel) {
+                            var a1 = document.createElement('a');
+                            a1.href = tel;
+                            a1.className = 'pi-btn pi-btn-gold';
+                            a1.innerHTML = '&lt;i class="fas fa-phone-volume"&gt;&lt;/i&gt; Contact us';
+                            row.appendChild(a1);
+                        }
+                        if (wa) {
+                            var a2 = document.createElement('a');
+                            a2.href = wa;
+                            a2.target = '_blank';
+                            a2.rel = 'noopener';
+                            a2.className = 'pi-btn pi-btn-wa';
+                            a2.innerHTML = '&lt;i class="fab fa-whatsapp"&gt;&lt;/i&gt; WhatsApp';
+                            row.appendChild(a2);
+                        }
+                        b.appendChild(row);
+                        msgs.appendChild(b);
+                        msgs.scrollTop = msgs.scrollHeight;
+                    }
                     function ask() {
                         var q = (input.value || '').trim();
                         if (!q) { return; }
@@ -849,6 +938,10 @@
                                 wait.classList.remove('pi-loading');
                                 wait.textContent = d.success ? d.answer : (d.error || 'Sorry, something went wrong.');
                                 if (!d.success) { wait.classList.add('pi-error'); }
+                                if (d.success) {
+                                    answered += 1;
+                                    if (answered === 3) { showContactButtons(); }
+                                }
                             })
                             .catch(function () {
                                 wait.classList.remove('pi-loading');
@@ -884,10 +977,18 @@
                                     if (d.success) {
                                         form.reset();
                                         box.className = 'pi-reg-msg pi-ok';
-                                        box.textContent = 'Thank you! Your registration (' + d.reference + ') was submitted. We will get back to you soon.';
+                                        box.textContent = 'Thank you! Your bid (' + d.reference + ') was submitted. We will get back to you soon.';
+                                        var hb = document.getElementById('piHighBid');
+                                        if (hb &amp;&amp; d.highest_bid) { hb.textContent = d.highest_bid; }
+                                        var bc = document.getElementById('piBidCount');
+                                        if (bc &amp;&amp; d.bid_count !== undefined) { bc.textContent = d.bid_count; }
+                                        var hint = document.getElementById('piBidHint');
+                                        if (hint) { hint.textContent = 'Your bid must be higher than this amount.'; }
                                     } else {
                                         box.className = 'pi-reg-msg pi-bad';
                                         box.textContent = d.error || 'Could not submit. Please try again.';
+                                        var hb2 = document.getElementById('piHighBid');
+                                        if (hb2 &amp;&amp; d.highest_bid) { hb2.textContent = d.highest_bid; }
                                         Object.keys(d.errors || {}).forEach(function (k) {
                                             var f = form.querySelector('[name="' + k + '"]');
                                             var m = form.querySelector('[data-err="' + k + '"]');

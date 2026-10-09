@@ -25,3 +25,4 @@ access_agent_registration_reject_wizard,agent.registration.reject.wizard.access,
 access_customer_registration_reject_wizard,customer.registration.reject.wizard.access,model_customer_registration_reject_wizard,base.group_user,1,1,1,1
 access_property_ai_cache,property.ai.cache.access,model_property_ai_cache,base.group_user,1,1,1,1
 access_flier_registration_admin,flier.registration.admin,model_flier_registration,base.group_user,1,1,1,1
+access_property_view_log,property.view.log.access,model_property_view_log,base.group_user,1,1,1,1

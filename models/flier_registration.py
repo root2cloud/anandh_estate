@@ -15,6 +15,8 @@ class FlierRegistration(models.Model):
     currency_id = fields.Many2one(related='property_id.currency_id', string='Currency', readonly=True)
     property_price = fields.Monetary(related='property_id.price', currency_field='currency_id',
                                      string='Property Price', readonly=True)
+    bid_amount = fields.Monetary(string='Bid Amount', currency_field='currency_id', tracking=True,
+                                 help='Amount offered by the customer for this property.')
     customer_name = fields.Char(string='Full Name', required=True, tracking=True)
     phone = fields.Char(string='Phone Number', required=True, tracking=True)
     email = fields.Char(string='Email', required=True)

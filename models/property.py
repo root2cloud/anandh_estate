@@ -399,6 +399,29 @@ class Property(models.Model):
 
         return '\n'.join(f"- {f}" for f in facts)
 
+    # ==================== UNIQUE VIEWS (one per IP address) ====================
+    def register_unique_view(self, ip_address):
+        """Count a visit. `views` = number of different IP addresses that opened
+        this property, so refreshing the page or revisiting does not add views."""
+        self.ensure_one()
+        ip_address = (ip_address or '').strip()
+        if not ip_address:
+            return self.views
+        Log = self.env['property.view.log'].sudo()
+        log = Log.search([('property_id', '=', self.id), ('ip_address', '=', ip_address)], limit=1)
+        if log:
+            log.write({'view_count': log.view_count + 1, 'last_view': fields.Datetime.now()})
+        else:
+            try:
+                with self.env.cr.savepoint():
+                    Log.create({'property_id': self.id, 'ip_address': ip_address})
+            except Exception:
+                pass  # same visitor opened two tabs at once - already counted
+        unique = Log.search_count([('property_id', '=', self.id)])
+        if self.views != unique:
+            self.sudo().write({'views': unique})
+        return unique
+
     # ==================== AUTOMATIC AI CONTENT ====================
     @api.model_create_multi
     def create(self, vals_list):
@@ -497,7 +520,7 @@ class Property(models.Model):
             },
             'generationConfig': {
                 'temperature': 0.3,
-                'maxOutputTokens': 2500,
+                'maxOutputTokens': 8192,  # was 2500: the JSON answer got cut off mid-sentence
                 'responseMimeType': 'application/json'
             }
         }
@@ -1029,7 +1052,7 @@ class Property(models.Model):
             },
             'generationConfig': {
                 'temperature': 0.3,
-                'maxOutputTokens': 1500,
+                'maxOutputTokens': 4096,  # was 1500: avoid cut-off JSON
                 'responseMimeType': 'application/json'
             }
         }

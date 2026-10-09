@@ -28,8 +28,10 @@
                 <field name="customer_name"/>
                 <field name="phone"/>
                 <field name="email"/>
-                <field name="city"/>
-                <field name="state_id" optional="show"/>
+                <field name="bid_amount" sum="Total bids"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="city" optional="hide"/>
+                <field name="state_id" optional="hide"/>
                 <field name="zip_code" optional="hide"/>
                 <field name="status" widget="badge"
                        decoration-info="status=='new'"
@@ -69,6 +71,8 @@
                         <group string="Registered For">
                             <field name="property_id"/>
                             <field name="property_price"/>
+                            <field name="bid_amount"/>
+                            <field name="currency_id" invisible="1"/>
                             <field name="source"/>
                             <field name="submission_date"/>
                         </group>
@@ -110,6 +114,8 @@
                 <field name="email"/>
                 <field name="property_id"/>
                 <field name="city"/>
+                <filter string="With a bid" name="f_bid" domain="[('bid_amount', '&gt;', 0)]"/>
+                <separator/>
                 <filter string="New" name="f_new" domain="[('status', '=', 'new')]"/>
                 <filter string="Contacted" name="f_contacted" domain="[('status', '=', 'contacted')]"/>
                 <filter string="Closed" name="f_closed" domain="[('status', '=', 'closed')]"/>

@@ -350,7 +350,9 @@ class RealEstateController(http.Controller):
         # without AI content (each AI section is wrapped in t-if), so the
         # page just shows those sections once the cron catches up.
         try:
-            prop.write({'views': prop.views + 1})
+            # one view per visitor IP address (refreshes do not add views)
+            from .flier_controller import PropertyFlierController
+            prop.register_unique_view(PropertyFlierController._client_ip())
         except Exception as e:
             _logger.error(f"Failed to update views for property {prop.id}: {e}")
         return request.render('real_estate_management.property_detail_page', {

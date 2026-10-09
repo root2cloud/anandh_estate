@@ -73,6 +73,46 @@ class PropertyFlierController(http.Controller):
         return '\u20b9{:,.0f}'.format(v)
 
     @staticmethod
+    def _client_ip():
+        """Visitor IP address (also behind nginx / a reverse proxy)."""
+        import ipaddress
+        req = request.httprequest
+        ip = (req.remote_addr or '').strip()
+
+        def _is_internal(value):
+            try:
+                addr = ipaddress.ip_address(value)
+                return addr.is_private or addr.is_loopback
+            except ValueError:
+                return True
+
+        # behind nginx / docker the direct address is an internal one -> use the forwarded header
+        if not ip or _is_internal(ip):
+            forwarded = (req.headers.get('X-Forwarded-For') or req.headers.get('X-Real-IP') or '')
+            first = forwarded.split(',')[0].strip()
+            if first:
+                ip = first
+        return ip
+
+    @staticmethod
+    def _highest_bid(prop):
+        """Highest bid placed so far for a property (0.0 when there is none)."""
+        top = request.env['flier.registration'].sudo().search(
+            [('property_id', '=', prop.id), ('bid_amount', '>', 0)],
+            order='bid_amount desc, id asc', limit=1)
+        return top.bid_amount if top else 0.0
+
+    @staticmethod
+    def _bid_count(prop):
+        return request.env['flier.registration'].sudo().search_count(
+            [('property_id', '=', prop.id), ('bid_amount', '>', 0)])
+
+    @staticmethod
+    def _money_plain(prop, amount):
+        symbol = (prop.currency_id.symbol if prop.currency_id else '') or ''
+        return '%s%s' % (symbol, '{:,.0f}'.format(amount or 0))
+
+    @staticmethod
     def _landmark_list(text, limit=4):
         """Nearby-landmarks text -> short list of lines for the poster."""
         parts = re.split(r'[\n;]+|,\s*(?=[A-Za-z])', text or '')
@@ -477,8 +517,7 @@ class PropertyFlierController(http.Controller):
             return (post.get(key) or '').strip()
 
         name, phone, email = val('full_name'), val('phone'), val('email')
-        address, city, pincode = val('address'), val('city'), val('pincode')
-        state_raw = val('state_id')
+        address = val('address')
 
         errors = {}
         if not name:
@@ -490,15 +529,22 @@ class PropertyFlierController(http.Controller):
             errors['email'] = 'Enter a valid email address.'
         if not address:
             errors['address'] = 'Address is required.'
-        if not state_raw.isdigit():
-            errors['state_id'] = 'Please select a state.'
-        if not city:
-            errors['city'] = 'City is required.'
-        if not re.match(r'^[0-9]{6}$', pincode):
-            errors['pincode'] = 'Enter a 6-digit pincode.'
+
+        # bid: must be a positive number higher than the current highest bid
+        highest = self._highest_bid(prop)
+        try:
+            bid = float((val('bid_amount') or '').replace(',', ''))
+        except ValueError:
+            bid = 0.0
+        if bid <= 0:
+            errors['bid_amount'] = 'Enter your bid amount.'
+        elif bid <= highest:
+            errors['bid_amount'] = ('Your bid must be higher than the current highest bid (%s).'
+                                    % self._money_plain(prop, highest))
         if errors:
             return self._json({'success': False, 'errors': errors,
-                               'error': 'Please correct the highlighted fields.'})
+                               'error': 'Please correct the highlighted fields.',
+                               'highest_bid': self._money_plain(prop, highest) if highest else ''})
 
         # 1) the "Flyer Property Registrations" record shown in the backend
         try:
@@ -508,9 +554,7 @@ class PropertyFlierController(http.Controller):
                 'phone': phone,
                 'email': email,
                 'address': address,
-                'city': city,
-                'state_id': int(state_raw),
-                'zip_code': pincode,
+                'bid_amount': bid,
                 'source': 'qr' if post.get('from_qr') else 'flier',
                 'status': 'new',
             })
@@ -526,19 +570,18 @@ class PropertyFlierController(http.Controller):
                 'email': email,
                 'phone': phone,
                 'address': address,
-                'city': city,
-                'state_id': int(state_raw),
-                'zip_code': pincode,
                 'interested_in': 'buy',
-                'notes': 'Registered from the flier of "%s" (property ID %s). Flyer registration: %s.'
-                         % (prop.name, prop.id, flier_reg.name),
+                'notes': 'Registered from the flier of "%s" (property ID %s). Flyer registration: %s. Bid: %s.'
+                         % (prop.name, prop.id, flier_reg.name, self._money_plain(prop, bid)),
                 'status': 'submitted',
             })
             flier_reg.customer_registration_id = cust.id
         except Exception:
             _logger.exception('Flier: customer registration copy failed (flyer registration was saved)')
 
-        return self._json({'success': True, 'reference': flier_reg.name})
+        return self._json({'success': True, 'reference': flier_reg.name,
+                           'highest_bid': self._money_plain(prop, bid),
+                           'bid_count': self._bid_count(prop)})
 
     @http.route('/api/property/<int:property_id>/flier-data', type='http', auth='public',
                 website=True, methods=['GET'], csrf=False)
@@ -557,36 +600,6 @@ class PropertyFlierController(http.Controller):
     # ─────────────────────────────────────────────────────────────
     # QR landing page: what opens when the flier's QR code is scanned
     # ─────────────────────────────────────────────────────────────
-    _INFO_PAGE_CSS = (
-        '<style id="pi-no-chrome">'
-        'header#top, #ai-news-ticker-box, .o_frontend_to_backend_nav, '
-        '.o_frontend_to_backend_apps_menu, .o_frontend_to_backend_edit_btn, '
-        '#oe_main_menu_navbar { display: none !important; } '
-        'html { scrollbar-width: none; } '
-        'html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }'
-        '</style>'
-    )
-
-    def _render_info_without_chrome(self, values):
-        """Render the QR landing page for EVERYONE (public visitors and admins) without the
-        site navbar, the red TRENDING ticker, the admin corner icon or the scrollbar.
-        Done in Python so it does not depend on cached views/CSS or on a module upgrade."""
-        response = request.render('real_estate_management.property_info_page', values)
-        try:
-            body = response.render()
-            if isinstance(body, bytes):
-                body = body.decode('utf-8')
-            body = str(body)
-            if '</head>' in body:
-                body = body.replace('</head>', self._INFO_PAGE_CSS + '</head>', 1)
-            return request.make_response(body, headers=[
-                ('Content-Type', 'text/html; charset=utf-8'),
-                ('Cache-Control', 'no-cache'),
-            ])
-        except Exception:
-            _logger.exception('Info page: could not strip site chrome, serving normal page')
-            return response
-
     @http.route('/property/<int:property_id>/info', type='http', auth='public', website=True)
     def property_info_page(self, property_id, **kwargs):
         prop = request.env['property.property'].sudo().browse(property_id)
@@ -604,7 +617,14 @@ class PropertyFlierController(http.Controller):
         page_url = '%s/property/%s/info' % (self._public_base(base_url), prop.id)
         wa_text = 'Hi, I am interested in "%s" (%s).' % (prop.name, page_url)
 
-        return self._render_info_without_chrome({
+        # count this visit (one view per IP address); never break the page if it fails
+        try:
+            views_count = prop.register_unique_view(self._client_ip())
+        except Exception:
+            _logger.exception('Flier: could not register property view')
+            views_count = prop.views or 0
+
+        return request.render('real_estate_management.property_info_page', {
             'property': prop,
             'p': data,
             'gallery_all': gallery_all,
@@ -616,6 +636,10 @@ class PropertyFlierController(http.Controller):
             # chat assistant + registration form shown on this page
             'states': self._get_states(),
             'chat_property_id': prop.id,
+            'highest_bid': self._highest_bid(prop),
+            'highest_bid_display': self._money_plain(prop, self._highest_bid(prop)),
+            'bid_count': self._bid_count(prop),
+            'views_count': views_count,
         })
 
     @http.route('/property/<int:property_id>/qr.png', type='http', auth='public', website=True)
