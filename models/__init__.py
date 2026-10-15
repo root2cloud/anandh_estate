@@ -10,3 +10,4 @@ from . import res_partner
 from . import dashboard_models
 from . import flier_registration
 from . import property_view_log
+from . import property_listing_title

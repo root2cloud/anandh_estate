@@ -85,6 +85,7 @@
     </record>
 
     <menuitem id="menu_real_estate_customer"
+              groups="base.group_no_one"
               name="Customers"
               parent="menu_real_estate_root"
               action="action_real_estate_customer"

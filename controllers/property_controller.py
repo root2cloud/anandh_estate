@@ -253,6 +253,11 @@ class RealEstateController(http.Controller):
         category_colors = {}
         idx = 0
 
+        # Same address the flier QR uses: system parameter real_estate.flier_public_url,
+        # otherwise the address this page was opened on.
+        qr_base = (request.env['ir.config_parameter'].sudo().get_param('real_estate.flier_public_url')
+                   or request.httprequest.host_url or '').strip().rstrip('/')
+
         property_data = []
         for prop in map_properties:
             cat = prop.category_id.name if prop.category_id else 'Property'
@@ -278,6 +283,8 @@ class RealEstateController(http.Controller):
             property_data.append({
                 'id': prop.id,
                 'name': prop.name or '',
+                # ⭐ NEW: headline title shown on the home page cards
+                'listing_title': prop.listing_title or '',
                 'latitude': float(prop.latitude) if prop.latitude else None,
                 'longitude': float(prop.longitude) if prop.longitude else None,
                 'street': prop.street or '',
@@ -301,6 +308,8 @@ class RealEstateController(http.Controller):
                 # ⭐ Star rating, plus ready-to-inject HTML for the card list.
                 'rating': prop.rating or '0',
                 'rating_html': prop.rating_stars_html,
+                # QR scan page of this property (same link printed on its flier)
+                'info_url': '%s/property/%s/info' % (qr_base, prop.id),
             })
 
         _logger.info(f"🎯 RENDER - City: '{selected_city}', Properties: {len(property_data)}")
@@ -451,10 +460,13 @@ class RealEstateController(http.Controller):
 
             user = request.env.user
 
-            # ⭐ If user is logged in, pull details from their account. Otherwise, use submitted form inputs.
+            # ⭐ Owner details now come from the form (shown to everyone, last
+            # section of "Add a Property"). For a logged-in user the email is
+            # always their account email (that's what links the property to
+            # their dashboard); name / phone fall back to the account's.
             if not user._is_public():
-                customer_name = user.partner_id.name
-                phone_number = user.partner_id.phone or 'N/A'
+                customer_name = post.get('customer_name') or user.partner_id.name
+                phone_number = post.get('phone_number') or user.partner_id.phone or 'N/A'
                 email = user.partner_id.email or user.login
             else:
                 customer_name = post.get('customer_name')
@@ -464,6 +476,8 @@ class RealEstateController(http.Controller):
             property_vals = {
                 'customer_name': customer_name,
                 'property_name': post.get('property_name'),
+                # ⭐ NEW: headline title typed in the "Add a Property" form
+                'listing_title': (post.get('listing_title') or '').strip(),
                 'phone_number': phone_number,
                 'email': email,
                 'facing_direction': post.get('facing_direction'),
@@ -501,6 +515,15 @@ class RealEstateController(http.Controller):
             if agreement_file:
                 property_rec.agreement_document = base64.b64encode(agreement_file.read())
                 property_rec.agreement_filename = agreement_file.filename
+
+            # ⭐ Submitted with the "Add a Property" button on the Properties
+            # page: the property goes straight into Properties as
+            # "Pending Approval". AI content is generated once it is approved.
+            if post.get('add_property_popup'):
+                try:
+                    property_rec._create_pending_property()
+                except Exception:
+                    _logger.exception("Could not create the pending property for registration %s", property_rec.id)
 
             return request.render('real_estate_management.property_submission_success')
 

@@ -123,51 +123,16 @@
     }
 
     // =====================================================
-    // BOTTOM "PROFILE" INFO CARDS (Location + Photo) - update on hover
+    // PROPERTY CARD LIST ("N properties found" white band)
     // =====================================================
 
-    var psDefaultProfile = null; // captured once, lazily, so we can restore it
-
-    function captureDefaultProfile() {
-        if (psDefaultProfile !== null) return;
-        var titleEl = document.getElementById('psLocTitle');
-        var addrEl  = document.getElementById('psLocAddr');
-        var imgBody = document.getElementById('psImageCardBody');
-        psDefaultProfile = {
-            title: titleEl ? titleEl.innerHTML : '',
-            addr:  addrEl ? addrEl.innerHTML : '',
-            img:   imgBody ? imgBody.innerHTML : ''
-        };
+    // User-typed text (title, name, address) is escaped before going
+    // into innerHTML.
+    function escHtml(str) {
+        return String(str == null ? '' : str)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
-
-    function showPropertyProfile(p) {
-        if (!p) return;
-        captureDefaultProfile();
-        var titleEl = document.getElementById('psLocTitle');
-        var addrEl  = document.getElementById('psLocAddr');
-        var imgBody = document.getElementById('psImageCardBody');
-        if (titleEl) titleEl.textContent = p.name || 'Property';
-        if (addrEl)  addrEl.textContent  = p.full_address || p.city || '';
-        if (imgBody) {
-            var img = p.image_url || '/web/static/img/placeholder.png';
-            imgBody.innerHTML =
-                '<img src="' + img + '" onerror="this.src=\'/web/static/img/placeholder.png\'" alt="' + (p.name || '') + '"/>';
-        }
-    }
-
-    function restorePropertyProfile() {
-        if (psDefaultProfile === null) return;
-        var titleEl = document.getElementById('psLocTitle');
-        var addrEl  = document.getElementById('psLocAddr');
-        var imgBody = document.getElementById('psImageCardBody');
-        if (titleEl) titleEl.innerHTML = psDefaultProfile.title;
-        if (addrEl)  addrEl.innerHTML  = psDefaultProfile.addr;
-        if (imgBody) imgBody.innerHTML = psDefaultProfile.img;
-    }
-
-    // =====================================================
-    // LEFT-HAND PROPERTY CARD LIST (synced with the map)
-    // =====================================================
 
     function renderPropertyCardList(properties, categoryColors, markersById) {
         var listEl = document.getElementById('psCardsList');
@@ -178,50 +143,83 @@
             return;
         }
 
-        // ⭐ Sort low -> high by price for this strip only (map markers keep
-        // their original order). Plain price sort - no grouping by category.
+        // Sorted low -> high by price (map markers keep their own order).
         var sortedProperties = properties.slice().sort(function (a, b) {
             return (Number(a.price) || 0) - (Number(b.price) || 0);
         });
-
-        // ⭐ NEW - lookup by id, so hovering a card can also update the
-        // bottom profile cards (Location + Photo) with that property.
-        var propsById = {};
-        properties.forEach(function (p) { propsById[p.id] = p; });
 
         listEl.innerHTML = sortedProperties.map(function (p) {
             var color   = categoryColors[p.property_type] || '#4f46e5';
             var img     = p.image_url || '/web/static/img/placeholder.png';
             var premium = p.is_featured
                 ? '<span class="ps-card-premium">+ PREMIUM</span>' : '';
+            // Title is the headline; without one, the property name is used as the headline.
+            var hasTitle = !!p.listing_title;
+            var headline = hasTitle ? p.listing_title : p.name;
             return (
                 '<a href="/property/' + p.id + '" class="ps-card" data-pid="' + p.id + '">' +
                     '<div class="ps-card-img">' +
-                        '<img src="' + img + '" onerror="this.src=\'/web/static/img/placeholder.png\'" alt="' + (p.name || '') + '"/>' +
-                        '<span class="ps-card-badge" style="background:' + color + '">' + (p.property_type || 'Property') + '</span>' +
+                        '<img src="' + img + '" onerror="this.src=\'/web/static/img/placeholder.png\'" alt="' + escHtml(p.name) + '"/>' +
+                        '<span class="ps-card-badge" style="background:' + color + '">' + escHtml(p.property_type || 'Property') + '</span>' +
                         premium +
                     '</div>' +
                     '<div class="ps-card-body">' +
-                        '<div class="ps-card-price">' + formatINR(p.price) + '</div>' +
-                        '<div class="ps-card-name">' + (p.name || '') + '</div>' +
-                        '<div class="ps-card-loc"><i class="fas fa-map-marker-alt"/>' + (p.full_address || p.city || '') + '</div>' +
-                        '<div class="ps-card-rating">' + (p.rating_html || '') + '</div>' +
-                        '<div class="ps-card-type" style="color:' + color + '">' + (p.property_type || '') + '</div>' +
+                        '<div class="ps-card-title">' + escHtml(headline) + '</div>' +
+                        (hasTitle ? '<div class="ps-card-name">' + escHtml(p.name) + '</div>' : '') +
+                        '<div class="ps-card-loc"><i class="fas fa-map-marker-alt"></i>' + escHtml(p.full_address || p.city || '') + '</div>' +
+                        '<div class="ps-card-meta">' +
+                            '<div class="ps-card-rating">' + (p.rating_html || '') + '</div>' +
+                            '<div class="ps-card-type" style="color:' + color + '">' + escHtml(p.property_type || '') + '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    // QR code of this property (same one printed on its flier).
+                    // Clicking it opens the QR scan page (/property/<id>/info), not the card link.
+                    '<div class="ps-card-qr" data-info-url="' + escHtml(p.info_url || ('/property/' + p.id + '/info')) + '" title="Open the scan page">' +
+                        '<img src="/property/' + p.id + '/qr.png" loading="lazy" alt="QR code" ' +
+                            'data-qr="' + escHtml(p.info_url || (window.location.origin + '/property/' + p.id + '/info')) + '"/>' +
+                        '<span>Scan for details</span>' +
                     '</div>' +
                 '</a>'
             );
         }).join('');
 
-        // Hover a card -> show that property's profile in the bottom
-        // Location/Photo cards. (No longer opens/highlights anything on
-        // the map itself - hovering the card list stays map-independent.)
-        Array.prototype.forEach.call(listEl.querySelectorAll('.ps-card'), function (cardEl) {
-            var pid = cardEl.getAttribute('data-pid');
-            cardEl.addEventListener('mouseenter', function () {
-                showPropertyProfile(propsById[pid]);
-            });
-            cardEl.addEventListener('mouseleave', function () {
-                restorePropertyProfile();
+        bindQrCodes(listEl);
+    }
+
+    // Loads the small browser QR library only when it is needed.
+    function loadQrLib(cb) {
+        if (window.QRCode) { cb(); return; }
+        var sc = document.createElement('script');
+        sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+        sc.onload = cb;
+        document.head.appendChild(sc);
+    }
+
+    // If the server cannot draw /property/<id>/qr.png, draw the same QR in the browser.
+    function drawQrFallback(img) {
+        if (img.getAttribute('data-qr-fixed')) return;
+        img.setAttribute('data-qr-fixed', '1');
+        loadQrLib(function () {
+            try {
+                var tmp = document.createElement('div');
+                new QRCode(tmp, { text: img.getAttribute('data-qr'), width: 240, height: 240,
+                                  correctLevel: QRCode.CorrectLevel.M });
+                var canvas = tmp.querySelector('canvas');
+                if (canvas) img.src = canvas.toDataURL('image/png');
+            } catch (e) { img.parentNode.style.display = 'none'; }
+        });
+    }
+
+    function bindQrCodes(listEl) {
+        listEl.querySelectorAll('.ps-card-qr img').forEach(function (img) {
+            img.addEventListener('error', function () { drawQrFallback(img); });
+        });
+        // click on a QR -> scan page in a new tab; the card itself still opens the property
+        listEl.querySelectorAll('.ps-card-qr').forEach(function (box) {
+            box.addEventListener('click', function (ev) {
+                ev.preventDefault();
+                ev.stopPropagation();
+                window.open(box.getAttribute('data-info-url'), '_blank', 'noopener');
             });
         });
     }
@@ -502,16 +500,10 @@
                     marker.openPopup();
                     openPopupMarker = marker;
                     highlightCard(p.id, true);
-                    // ⭐ NEW: show this property's profile in the bottom
-                    // Location/Photo cards while hovering its map pin.
-                    showPropertyProfile(p);
                 });
 
                 marker.on('mouseout', function () {
                     highlightCard(p.id, false);
-                    // ⭐ NEW: revert the bottom profile cards back to default
-                    // once the pointer leaves this marker.
-                    restorePropertyProfile();
                     // ⭐ NEW: don't auto-close when popups are meant to stay
                     // permanently open - existing hover-close behavior is
                     // kept below, just skipped while this flag is on.

@@ -6,8 +6,7 @@
          Replaces the default website header with a single,
          professional navy + gold navbar used across every page:
          Logo (top-left) + "Real Estate Management" brand name,
-         followed by Properties / Customer Registration /
-         Agent Registration / Customer Dashboard / Agent Dashboard.
+         followed by Home / Properties (+ Sign In / account menu).
     ========================================================== -->
     <template id="real_estate_site_header" name="Real Estate Management Header" inherit_id="website.layout">
 
@@ -70,31 +69,12 @@
                         </button>
 
                         <div class="collapse navbar-collapse rem-navbar-collapse" id="remNavbarCollapse">
-                            <!-- ⭐ Determine once per page load whether the current
-                                 logged-in user is an Agent or a Customer, so the
-                                 "Customer Dashboard" / "Agent Dashboard" links can
-                                 be hidden from whichever role they don't belong to. -->
-                            <t t-set="rem_is_agent" t-value="(not request.env.user._is_public()) and bool(request.env['real.estate.agent'].sudo().search_count([('user_id', '=', request.env.user.id), ('is_active', '=', True)]))"/>
-                            <t t-set="rem_is_customer" t-value="(not request.env.user._is_public()) and bool(request.env.user.partner_id.sudo().is_real_estate_customer)"/>
                             <ul class="navbar-nav rem-nav ms-lg-auto align-items-lg-center">
                                 <li class="nav-item">
                                     <a class="nav-link rem-nav-link" href="/">Home</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link rem-nav-link" href="/properties">Properties</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link rem-nav-link" href="/customer/register">Customer Registration</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link rem-nav-link" href="/agent/register">Agent Registration</a>
-                                </li>
-                                <li class="nav-item" t-if="not rem_is_agent">
-                                    <a class="nav-link rem-nav-link" href="/my/customer/dashboard">Customer Dashboard
-                                    </a>
-                                </li>
-                                <li class="nav-item" t-if="not rem_is_customer">
-                                    <a class="nav-link rem-nav-link" href="/my/agent/dashboard">Agent Dashboard</a>
                                 </li>
 
                                 <t t-if="request.env.user._is_public()">

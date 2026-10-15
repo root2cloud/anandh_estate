@@ -7,7 +7,8 @@
     <menuitem id="menu_real_estate_properties" name="Properties"
               parent="menu_real_estate_root" action="real_estate_management.action_property_management" sequence="10"/>
 
-    <menuitem id="menu_property_categories" name="Property Categories"
+    <menuitem id="menu_property_categories"
+              groups="base.group_no_one" name="Property Categories"
               parent="menu_real_estate_root" action="real_estate_management.action_property_category" sequence="20"/>
     <!-- Property Submissions: menu_property_registration (sequence 15, property_registration_views.xml) -->
     <!-- Customer Registrations: menu_customer_registration (sequence 30, customer_registration_views.xml) -->

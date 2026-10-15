@@ -968,6 +968,7 @@ class Property(models.Model):
         pending = self.search([
             ('ai_content_generated', '=', False),
             ('ai_generation_attempts', '<', max_attempts),
+            ('approval_state', '!=', 'pending'),
         ], limit=batch_size, order='ai_generation_attempts asc, id desc')
 
         for prop in pending:

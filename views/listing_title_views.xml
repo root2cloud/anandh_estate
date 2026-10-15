@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Show the new "Listing Title" in the backend so admins can review / edit it -->
+
+    <record id="view_property_registration_form_listing_title" model="ir.ui.view">
+        <field name="name">property.registration.form.listing.title</field>
+        <field name="model">property.registration</field>
+        <field name="inherit_id" ref="real_estate_management.view_property_registration_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('oe_title')]" position="inside">
+                <label for="listing_title" class="oe_edit_only"/>
+                <h2>
+                    <field name="listing_title" placeholder="Listing Title (headline shown on the home page card)"/>
+                </h2>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_property_form_listing_title" model="ir.ui.view">
+        <field name="name">property.property.form.listing.title</field>
+        <field name="model">property.property</field>
+        <field name="inherit_id" ref="real_estate_management.view_property_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='seo_title']" position="before">
+                <field name="listing_title" placeholder="Headline shown on the home page card"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Approve button + approval status on Properties -->
+    <record id="view_property_form_approve_listing" model="ir.ui.view">
+        <field name="name">property.property.form.approve.listing</field>
+        <field name="model">property.property</field>
+        <field name="inherit_id" ref="real_estate_management.view_property_form"/>
+        <field name="priority">20</field>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_approve_listing" type="object" string="Approve"
+                        icon="fa-check" class="btn-success"
+                        invisible="approval_state != 'pending'"/>
+                <field name="approval_state" widget="badge"
+                       decoration-warning="approval_state == 'pending'"
+                       decoration-success="approval_state == 'approved'"
+                       decoration-danger="approval_state == 'rejected'"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_property_list_approve_listing" model="ir.ui.view">
+        <field name="name">property.property.list.approve.listing</field>
+        <field name="model">property.property</field>
+        <field name="inherit_id" ref="real_estate_management.view_property_list"/>
+        <field name="priority">20</field>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='is_published']" position="before">
+                <field name="approval_state" widget="badge"
+                       decoration-warning="approval_state == 'pending'"
+                       decoration-success="approval_state == 'approved'"
+                       decoration-danger="approval_state == 'rejected'"/>
+            </xpath>
+            <!-- ticking one or more properties shows an "Approve" button at the top -->
+            <xpath expr="//field[@name='name']" position="before">
+                <header>
+                    <button name="action_approve_listing" type="object" string="Approve"
+                            icon="fa-check" class="btn-success"/>
+                </header>
+            </xpath>
+        </field>
+    </record>
+</odoo>

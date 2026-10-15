@@ -42,6 +42,7 @@ A complete real estate management platform with:
         'views/customer_views.xml',
         'views/agent_views.xml',
         'views/agent_registration_views.xml',
+        'views/listing_title_views.xml',
         # 'views/portal_agent_views.xml',
 
         # Qweb Templates - Website

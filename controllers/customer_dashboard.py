@@ -65,7 +65,7 @@ class CustomerPortalDashboard(http.Controller):
         #    contact_email stored on the property, which is set to the
         #    customer's email at approval time.
         customer_email = (user.partner_id.email or user.login or '').strip()
-        domain = [('contact_email', '=ilike', customer_email)] if customer_email else [('id', '=', False)]
+        domain = [('contact_email', '=ilike', customer_email), ('approval_state', '=', 'approved')] if customer_email else [('id', '=', False)]
         properties = Property.search(domain, order="create_date desc")
 
         # 3. Calculate Statistics safely

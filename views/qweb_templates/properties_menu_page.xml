@@ -566,7 +566,95 @@
                 .property-grid { grid-template-columns: 1fr; }
                 .property-image { height: 220px; }
             }
+
+            /* ==============================
+               ➕ Add a Property button + pop-up form
+            ============================== */
+            .back-wrap { flex-wrap: wrap; gap: 0.75rem; }
+            .add-prop-btn {
+                display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer;
+                font-weight: 900; font-size: 0.95rem; color: #0B0F17;
+                background: var(--gold); border: none; border-radius: 14px;
+                padding: 0.6rem 1.1rem;
+                box-shadow: 0 18px 35px rgba(212,175,55,0.16);
+                transition: transform 0.25s ease, background 0.25s ease;
+            }
+            .add-prop-btn:hover { transform: translateY(-2px); background: var(--gold-dark); }
+
+            .apm-overlay {
+                display: none; position: fixed; inset: 0; z-index: 2000;
+                background: rgba(0,0,0,0.78); overflow-y: auto; padding: 32px 14px;
+            }
+            .apm-overlay.apm-open { display: block; }
+            body.apm-lock { overflow: hidden; }
+            .apm-panel {
+                position: relative; max-width: 1000px; margin: 0 auto;
+                background: var(--surface); color: var(--text);
+                border: 1px solid var(--border); border-radius: var(--radius-lg);
+                box-shadow: var(--shadow-md); padding: 34px 36px 30px;
+            }
+            .apm-close {
+                position: absolute; top: 14px; right: 16px; width: 38px; height: 38px;
+                border-radius: 50%; border: 1px solid var(--border); background: transparent;
+                color: var(--text); font-size: 18px; cursor: pointer;
+            }
+            .apm-close:hover { background: var(--gold-soft); }
+            .apm-head { text-align: center; margin-bottom: 26px; }
+            .apm-head h2 {
+                font-family: 'DM Serif Display', serif; font-weight: 400;
+                font-size: clamp(28px, 3.6vw, 44px); color: var(--text); margin: 0 0 10px; line-height: 1.2;
+            }
+            .apm-head p { color: var(--muted); margin: 0; font-size: 15px; }
+            .apm-section {
+                font-weight: 800; font-size: 13px; letter-spacing: 0.5px; text-transform: uppercase;
+                color: var(--gold); margin: 24px 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+            }
+            .apm-section:first-of-type { margin-top: 0; }
+            .apm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px 18px; }
+            .apm-field.apm-full { grid-column: 1 / -1; }
+            .apm-field label { display: block; font-size: 13px; font-weight: 700; color: rgba(248,250,252,0.85); margin-bottom: 6px; }
+            .apm-field label .apm-req { color: #f87171; }
+            .apm-field input[type="text"], .apm-field input[type="tel"], .apm-field input[type="email"],
+            .apm-field input[type="number"], .apm-field select {
+                width: 100%; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 12px 14px;
+                font-size: 14px; color: var(--text); background: var(--surface-2); outline: none;
+            }
+            .apm-field input::placeholder { color: rgba(248,250,252,0.35); }
+            .apm-field input:focus, .apm-field select:focus { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-soft); }
+            .apm-field small { display: block; margin-top: 5px; font-size: 11.5px; color: var(--muted); }
+            /* Title is typed in the same serif font it is displayed in */
+            .apm-field input.apm-title-input {
+                font-family: 'Playfair Display', 'DM Serif Display', serif; font-weight: 800;
+                font-size: clamp(22px, 2.4vw, 30px); padding: 12px 16px;
+            }
+            .apm-field input[type="file"] {
+                width: 100%; border: 2px dashed var(--border); border-radius: 12px; padding: 18px;
+                background: var(--surface-2); font-size: 14px; color: var(--text); cursor: pointer;
+            }
+            .apm-previews { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+            .apm-prev { position: relative; width: 96px; height: 96px; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+            .apm-prev img { width: 100%; height: 100%; object-fit: cover; display: block; }
+            .apm-prev span {
+                position: absolute; left: 0; right: 0; bottom: 0; text-align: center; font-size: 10px; font-weight: 800;
+                background: rgba(0,0,0,0.75); color: #fff; padding: 2px 0;
+            }
+            .apm-submit-row { margin-top: 28px; text-align: center; }
+            .apm-submit {
+                display: inline-flex; align-items: center; gap: 10px; border: none; cursor: pointer;
+                padding: 15px 42px; border-radius: 14px; font-weight: 900; font-size: 15px;
+                background: var(--gold); color: #0B0F17; box-shadow: 0 18px 35px rgba(212,175,55,0.16);
+                transition: transform 0.25s ease, background 0.25s ease;
+            }
+            .apm-submit:hover { transform: translateY(-2px); background: var(--gold-dark); }
+            .apm-submit:disabled { opacity: 0.7; cursor: wait; transform: none; }
+            .apm-note { margin: 14px 0 0; font-size: 12.5px; color: var(--muted); }
+            @media (max-width: 992px) { .apm-grid { grid-template-columns: repeat(2, 1fr); } }
+            @media (max-width: 600px) {
+                .apm-grid { grid-template-columns: 1fr; }
+                .apm-panel { padding: 28px 18px 24px; }
+            }
         </style>
+            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&amp;family=Playfair+Display:wght@800&amp;display=swap"/>
         </t>
         <main class="main-container">
 
@@ -658,6 +746,10 @@
                             <i class="fa fa-arrow-left"/>
                             Back to Home Page
                         </a>
+                        <button type="button" class="add-prop-btn" id="openAddProperty">
+                            <i class="fa fa-plus"/>
+                            Add a Property
+                        </button>
                     </div>
                 </div>
             </section>
@@ -765,6 +857,189 @@
 
                 </div>
             </section>
+
+
+            <!-- ➕ ADD A PROPERTY pop-up (opens from the "Add a Property" button above).
+                 Same fields as the customer property form + the new Title field. -->
+            <div class="apm-overlay" id="addPropertyModal" aria-hidden="true">
+                <div class="apm-panel" role="dialog" aria-modal="true" aria-labelledby="apmTitle">
+                    <button type="button" class="apm-close" id="apmClose" aria-label="Close">
+                        <i class="fa fa-times"/>
+                    </button>
+
+                    <div class="apm-head">
+                        <h2 id="apmTitle">Add a Property</h2>
+                        <p>Submit your property details. Our team reviews every listing before it goes live.</p>
+                    </div>
+
+                    <form action="/property/submit" method="post" enctype="multipart/form-data"
+                          id="apmForm" autocomplete="off">
+                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                        <input type="hidden" name="add_property_popup" value="1"/>
+
+                        <div class="apm-section">Property Details</div>
+                        <div class="apm-grid">
+                            <div class="apm-field apm-full">
+                                <label>Title <span class="apm-req">*</span></label>
+                                <input type="text" name="listing_title" class="apm-title-input"
+                                       maxlength="80" required="required"
+                                       placeholder="e.g., A Legacy of Luxury Living"/>
+                                <small>This headline is shown on your property card on the home page.</small>
+                            </div>
+                            <div class="apm-field">
+                                <label>Property Name <span class="apm-req">*</span></label>
+                                <input type="text" name="property_name" placeholder="e.g., Skyline Luxury Apartment" required="required"/>
+                            </div>
+                            <div class="apm-field">
+                                <label>Property Category <span class="apm-req">*</span></label>
+                                <select name="category" required="required">
+                                    <option value="">Choose category type</option>
+                                    <option value="residential">Residential</option>
+                                    <option value="commercial">Commercial</option>
+                                    <option value="agricultural">Agricultural</option>
+                                </select>
+                            </div>
+                            <div class="apm-field">
+                                <label>Built-up Area (sq. yards) <span class="apm-req">*</span></label>
+                                <input type="number" name="sq_yards" min="0" placeholder="250" required="required"/>
+                            </div>
+                            <div class="apm-field">
+                                <label>Expected Price (&#8377;) <span class="apm-req">*</span></label>
+                                <input type="number" name="price" min="0" placeholder="17500000" required="required"/>
+                            </div>
+                        </div>
+
+                        <div class="apm-section">Location Information</div>
+                        <div class="apm-grid">
+                            <div class="apm-field apm-full">
+                                <label>Complete Address <span class="apm-req">*</span></label>
+                                <input type="text" name="location" placeholder="Street address, building name, landmarks" required="required"/>
+                            </div>
+                            <div class="apm-field">
+                                <label>Locality / Area <span class="apm-req">*</span></label>
+                                <input type="text" name="place" placeholder="e.g., Jubilee Hills" required="required"/>
+                            </div>
+                            <div class="apm-field">
+                                <label>City <span class="apm-req">*</span></label>
+                                <input type="text" name="city" placeholder="e.g., Hyderabad" required="required"/>
+                            </div>
+                            <div class="apm-field">
+                                <label>State <span class="apm-req">*</span></label>
+                                <input type="text" name="state" placeholder="e.g., Telangana" required="required"/>
+                            </div>
+                        </div>
+
+                        <div class="apm-section">Property Images</div>
+                        <div class="apm-grid">
+                            <div class="apm-field apm-full">
+                                <input type="file" name="images" id="apmImages" accept="image/*" multiple="multiple" required="required"/>
+                                <small>JPG / PNG / WEBP. The first image is used as the cover.</small>
+                                <div class="apm-previews" id="apmPreviews"/>
+                            </div>
+                        </div>
+
+                        <div class="apm-section">Property Owner Information</div>
+                        <t t-set="apm_logged_in" t-value="not request.env.user._is_public()"/>
+                        <div class="apm-grid">
+                            <div class="apm-field">
+                                <label>Owner Name <span class="apm-req">*</span></label>
+                                <input type="text" name="customer_name" placeholder="Full legal name" required="required"
+                                       t-att-value="request.env.user.partner_id.name if apm_logged_in else None"/>
+                            </div>
+                            <div class="apm-field">
+                                <label>Phone Number <span class="apm-req">*</span></label>
+                                <input type="tel" name="phone_number" placeholder="+91 98765 43210" required="required"
+                                       t-att-value="request.env.user.partner_id.phone if apm_logged_in else None"/>
+                            </div>
+                            <div class="apm-field">
+                                <label>Email <span class="apm-req">*</span></label>
+                                <input type="email" name="email" placeholder="you@example.com" required="required"
+                                       t-att-value="(request.env.user.partner_id.email or request.env.user.login) if apm_logged_in else None"
+                                       t-att-readonly="'readonly' if apm_logged_in else None"/>
+                                <small t-if="apm_logged_in">Linked to your account email.</small>
+                            </div>
+                        </div>
+
+                        <div class="apm-submit-row">
+                            <button type="submit" class="apm-submit" id="apmSubmit">
+                                <i class="fa fa-paper-plane"/> Submit Property for Review
+                            </button>
+                            <p class="apm-note"><i class="fa fa-shield"/> Your information is secure and will be reviewed within 24 hours.</p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <script type="text/javascript">
+                (function () {
+                    var modal = document.getElementById('addPropertyModal');
+                    if (!modal) return;
+                    var openBtn = document.getElementById('openAddProperty');
+                    var closeBtn = document.getElementById('apmClose');
+
+                    function openModal() {
+                        modal.classList.add('apm-open');
+                        modal.setAttribute('aria-hidden', 'false');
+                        document.body.classList.add('apm-lock');
+                    }
+                    function closeModal() {
+                        modal.classList.remove('apm-open');
+                        modal.setAttribute('aria-hidden', 'true');
+                        document.body.classList.remove('apm-lock');
+                    }
+
+                    if (openBtn) openBtn.addEventListener('click', openModal);
+                    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+                    // click on the dark area outside the panel closes it
+                    modal.addEventListener('mousedown', function (e) {
+                        if (e.target === modal) closeModal();
+                    });
+                    document.addEventListener('keydown', function (e) {
+                        if (e.key === 'Escape') closeModal();
+                    });
+                    // /properties#add-property opens it straight away
+                    if (window.location.hash === '#add-property') openModal();
+
+                    // image previews
+                    var files = document.getElementById('apmImages');
+                    var box = document.getElementById('apmPreviews');
+                    if (files &amp;&amp; box) {
+                        files.addEventListener('change', function () {
+                            box.innerHTML = '';
+                            Array.prototype.forEach.call(files.files, function (f, i) {
+                                if (!f.type || f.type.indexOf('image/') !== 0) return;
+                                var reader = new FileReader();
+                                reader.onload = function (e) {
+                                    var d = document.createElement('div');
+                                    d.className = 'apm-prev';
+                                    var img = document.createElement('img');
+                                    img.src = e.target.result;
+                                    d.appendChild(img);
+                                    if (i === 0) {
+                                        var tag = document.createElement('span');
+                                        tag.textContent = 'COVER';
+                                        d.appendChild(tag);
+                                    }
+                                    box.appendChild(d);
+                                };
+                                reader.readAsDataURL(f);
+                            });
+                        });
+                    }
+
+                    // stop double submissions while images upload
+                    var form = document.getElementById('apmForm');
+                    var btn = document.getElementById('apmSubmit');
+                    var sent = false;
+                    if (form) {
+                        form.addEventListener('submit', function (e) {
+                            if (sent) { e.preventDefault(); return; }
+                            sent = true;
+                            if (btn) { btn.disabled = true; btn.textContent = 'Submitting...'; }
+                        });
+                    }
+                })();
+            </script>
 
         </main>
 

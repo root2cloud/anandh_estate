@@ -18,7 +18,7 @@
         <field name="name">flier.registration.list</field>
         <field name="model">flier.registration</field>
         <field name="arch" type="xml">
-            <list string="Flyer Property Registrations"
+            <list string="Enquiry"
                   decoration-info="status=='new'"
                   decoration-warning="status=='contacted'"
                   decoration-muted="status=='closed'">
@@ -46,7 +46,7 @@
         <field name="name">flier.registration.form</field>
         <field name="model">flier.registration</field>
         <field name="arch" type="xml">
-            <form string="Flyer Property Registration">
+            <form string="Enquiry">
                 <header>
                     <button name="action_mark_contacted" type="object" string="Mark Contacted"
                             class="btn-primary" invisible="status != 'new'"/>
@@ -107,7 +107,7 @@
         <field name="name">flier.registration.search</field>
         <field name="model">flier.registration</field>
         <field name="arch" type="xml">
-            <search string="Flyer Property Registrations">
+            <search string="Enquiry">
                 <field name="name"/>
                 <field name="customer_name"/>
                 <field name="phone"/>
@@ -131,23 +131,23 @@
 
     <!-- ==================== ACTION ==================== -->
     <record id="action_flier_registration" model="ir.actions.act_window">
-        <field name="name">Flyer Property Registrations</field>
+        <field name="name">Enquiry</field>
         <field name="res_model">flier.registration</field>
         <field name="view_mode">list,form</field>
         <field name="search_view_id" ref="view_flier_registration_search"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
-                No flyer registrations yet!
+                No enquiries yet!
             </p>
             <p>
-                Registrations submitted from a property flyer (or the page opened by its QR code) appear here.
+                Enquiries submitted from a property flyer (or the page opened by its QR code) appear here.
             </p>
         </field>
     </record>
 
     <!-- ==================== MENU ==================== -->
     <menuitem id="menu_flier_registration"
-              name="Flyer Property Registrations"
+              name="Enquiry"
               parent="menu_real_estate_root"
               action="action_flier_registration"
               sequence="35"/>

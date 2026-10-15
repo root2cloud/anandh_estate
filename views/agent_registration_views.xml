@@ -384,6 +384,7 @@
     <!-- ==================== MENU ==================== -->
 
     <menuitem id="menu_agent_registration"
+              groups="base.group_no_one"
               name="Agent Registrations"
               parent="menu_real_estate_root"
               action="action_agent_registration"

@@ -11,6 +11,8 @@ class PropertyRegistration(models.Model):
 
     customer_name = fields.Char(string='Customer Name*', required=True)
     property_name = fields.Char(string='Property Name*', required=True)
+    # Headline shown on the home page card (styled like "A Legacy of Excellence")
+    listing_title = fields.Char(string='Listing Title')
     phone_number = fields.Char(string='Phone Number*', required=True)
     place = fields.Char(string='Place*', required=True)
     category = fields.Selection([
@@ -172,7 +174,63 @@ class PropertyRegistration(models.Model):
             'contact_phone': self.phone_number or 'N/A',
             'contact_email': self.email or 'noreply@example.com',
             'seo_title': self.property_name or 'Property Listing',
+            'listing_title': self.listing_title or '',
         }
+
+    def _ensure_portal_user(self):
+        """Create the customer's contact + portal login if they do not have
+        one yet (unchanged logic, moved out of action_approve so it can be
+        reused for properties that already exist at approval time)."""
+        self.ensure_one()
+        if self.email:
+            partner = self.env['res.partner'].sudo().search([('email', '=', self.email)], limit=1)
+            if not partner:
+                partner = self.env['res.partner'].sudo().create({
+                    'name': self.customer_name,
+                    'email': self.email,
+                    'phone': self.phone_number,
+                    'city': self.city,
+                })
+
+            user = self.env['res.users'].sudo().search([('login', '=', self.email)], limit=1)
+            if not user:
+                portal_group = self.env.ref('base.group_portal')
+                user = self.env['res.users'].sudo().with_context(no_reset_password=False).create({
+                    'name': self.customer_name,
+                    'login': self.email,
+                    'email': self.email,
+                    'partner_id': partner.id,
+                    'groups_id': [(6, 0, [portal_group.id])],
+                })
+                user.action_reset_password()
+                self.is_portal_active = True
+            else:
+                self.is_portal_active = True
+
+    def _create_pending_property(self):
+        """Create the property.property record right away (state 'Pending
+        Approval', not published, no AI yet) so the submission shows up in
+        Properties. Used by the website "Add a Property" button."""
+        self.ensure_one()
+        if self.property_id:
+            return self.property_id
+        vals = self._prepare_property_vals()
+        vals.update({
+            'title_status': 'pending',
+            'property_website_url': 'https://example.com',
+            'registration_charges': 7.0,
+            'emi_available': True,
+            'nearby_landmarks': 'To be updated',
+            'approval_state': 'pending',
+            'is_published': False,
+        })
+        prop = self.env['property.property'].with_context(default_status=False).create(vals)
+        self.property_id = prop.id
+        attachments = self.env['ir.attachment'].search([
+            ('res_model', '=', 'property.registration'), ('res_id', '=', self.id)])
+        for attach in attachments:
+            attach.copy({'res_model': 'property.property', 'res_id': prop.id})
+        return prop
 
     def action_approve(self):
         for rec in self:
@@ -188,6 +246,12 @@ class PropertyRegistration(models.Model):
             # logic below exactly as before.
             if rec.property_id:
                 rec._sync_to_property()
+                # ⭐ property added with the website "Add a Property" button:
+                # it already exists as "Pending Approval" -> approve + publish
+                # it (publishing starts the AI content generation).
+                if rec.source != 'agent':
+                    rec._ensure_portal_user()
+                rec.property_id._mark_listing_approved()
                 if rec.source == 'agent':
                     # ⭐ FIX: only mark it approved so it now shows up in
                     # the backend "Property Listings" - it was
@@ -221,31 +285,7 @@ class PropertyRegistration(models.Model):
             for attach in attachments:
                 attach.copy({'res_model': 'property.property', 'res_id': property_obj.id})
 
-            # Portal User Creation Logic
-            if rec.email:
-                partner = self.env['res.partner'].sudo().search([('email', '=', rec.email)], limit=1)
-                if not partner:
-                    partner = self.env['res.partner'].sudo().create({
-                        'name': rec.customer_name,
-                        'email': rec.email,
-                        'phone': rec.phone_number,
-                        'city': rec.city,
-                    })
-
-                user = self.env['res.users'].sudo().search([('login', '=', rec.email)], limit=1)
-                if not user:
-                    portal_group = self.env.ref('base.group_portal')
-                    user = self.env['res.users'].sudo().with_context(no_reset_password=False).create({
-                        'name': rec.customer_name,
-                        'login': rec.email,
-                        'email': rec.email,
-                        'partner_id': partner.id,
-                        'groups_id': [(6, 0, [portal_group.id])],
-                    })
-                    user.action_reset_password()
-                    rec.is_portal_active = True
-                else:
-                    rec.is_portal_active = True
+            rec._ensure_portal_user()
 
             rec.status = 'approved'
 
@@ -288,7 +328,7 @@ class PropertyRegistration(models.Model):
             'state', 'country_id', 'location', 'price', 'sq_yards', 'category',
             'facing_direction', 'road_width', 'image', 'aadhar_document',
             'aadhar_filename', 'agreement_document', 'agreement_filename',
-            'description',
+            'description', 'listing_title',
         }
         if sync_fields.intersection(vals.keys()):
             for rec in self:
@@ -306,6 +346,8 @@ class PropertyRegistration(models.Model):
             # keeps it off the public site.
             if record.source == 'agent' and record.property_id:
                 record.property_id.is_published = False
+            if record.property_id and record.property_id.approval_state == 'pending':
+                record.property_id.approval_state = 'rejected'
 
             if record.create_uid and record.create_uid.email:
                 mail_template = self.env.ref('real_estate_management.mail_template_property_rejection',
